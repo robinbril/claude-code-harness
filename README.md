@@ -106,6 +106,20 @@ Na de `install.sh` / `install.ps1`-route staan de hooks in
 `remoteControlAtStartup`. Let op: `auto` slaat permissie-prompts over, dus kijk
 het na voor je het inschakelt.
 
+## Statusline (optioneel)
+
+Wil je context-gebruik, actieve tools, agents en todo-voortgang in je
+terminal-statusbar, gebruik dan
+[claude-hud](https://github.com/jarrodwatts/claude-hud) van Jarrod Watts. Het
+draait op Claude Code's eigen statusline-API, geen apart venster of tmux nodig:
+
+```
+/plugin install claude-hud
+/claude-hud:setup
+```
+
+Kleuren en layout pas je aan in `~/.claude/plugins/claude-hud/config.json`.
+
 ## Herkomst
 
 De methodologie-basis komt uit Superpowers v5.1.0, MIT-licentie (zie `LICENSE`).
