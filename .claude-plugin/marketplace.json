@@ -1,11 +1,11 @@
 {
   "name": "claude-code-harness",
-  "description": "A focused Claude Code harness built on Superpowers (MIT): methodology + craft skills, autonomous build (supergoal), decision council, and humanizer/commit guard hooks.",
+  "description": "A focused Claude Code harness built on Superpowers (MIT): methodology, frontend and craft skills, autonomous build (supergoal), decision council, and humanizer/commit guard hooks.",
   "plugins": [
     {
       "name": "claude-code-harness",
-      "description": "16 skills plus humanizer-guard and commit-guard hooks for Claude Code.",
-      "version": "1.1.0",
+      "description": "20 skills plus humanizer-guard and commit-guard hooks for Claude Code.",
+      "version": "1.2.0",
       "source": "./"
     }
   ]

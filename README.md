@@ -38,7 +38,11 @@ Craft, dagelijks bruikbaar, ook zonder code:
 |---|---|
 | `humanizer` | Elke tekst zonder AI-randje (mail, post, vacaturetekst) |
 | `frontend-design` | Een verzorgde, niet-template UI of pagina |
+| `designing-beautiful-websites` | UX-strategie, IA, wireframes en visueel design van begin tot eind |
+| `design-an-interface` | Meerdere radicaal verschillende interface-opties genereren via parallelle agents |
 | `landing-page-design` | Pagina's die converteren (campagne, vacature, lead) |
+| `vercel-react-best-practices` | React/Next.js performance-regels van Vercel Engineering |
+| `vercel-react-view-transitions` | Vloeiende route- en element-animaties met de View Transition API |
 | `office-docs` | PowerPoint, Excel en Word programmatisch maken |
 
 De loop: brainstorm, plan, TDD, debug, verify. `grill` vraagt je plan eerst stuk
@@ -96,18 +100,11 @@ Twee guard-hooks zitten in `hooks/`. Als plugin laden ze vanzelf via
   `__pycache__`). Emails en em-dashes komen als waarschuwing. Zet eigen patronen (een
   naam, bedrijf, hostname) in `.harness-blocklist` in de repo-root, één regex per regel.
 
-Handmatig inschakelen na de script-install, wijs naar de hooks in je gekloonde repo:
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      { "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "node \"/pad/naar/claude-code-harness/hooks/humanizer-guard.js\"" }] },
-      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "node \"/pad/naar/claude-code-harness/hooks/commit-guard.js\"" }] }
-    ]
-  }
-}
-```
+Na de `install.sh` / `install.ps1`-route staan de hooks in
+`~/.claude/claude-code-harness/hooks/`. Merge dan `settings.example.json` in je
+`~/.claude/settings.json` om ze aan te zetten, samen met `defaultMode: auto` en
+`remoteControlAtStartup`. Let op: `auto` slaat permissie-prompts over, dus kijk
+het na voor je het inschakelt.
 
 ## Herkomst
 
