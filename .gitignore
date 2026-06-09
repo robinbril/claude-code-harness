@@ -1,0 +1,8 @@
+# machine-local artifacts
+.supergoal/
+*.bak-*
+*.bak.*
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

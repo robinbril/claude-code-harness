@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Supergoal plan review</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --ink: #1b1b1f;
+    --muted: #6b6b73;
+    --line: #e6e6ea;
+    --accent: #6c8ebf;
+    --accent-soft: #dae8fc;
+    --green: #5d8a3a;
+    --green-soft: #d5e8d4;
+    --amber: #b58900;
+    --amber-soft: #fff2cc;
+    --red: #b85450;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 28px 80px; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 24px;
+    border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 24px; }
+  h1 { font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 18px; font-weight: 600; margin: 36px 0 14px; letter-spacing: -0.005em; }
+  h3 { font-size: 15px; font-weight: 600; margin: 18px 0 8px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 18px 20px; margin: 0 0 12px; }
+  .phase { border-left: 3px solid var(--accent); padding-left: 14px; margin: 10px 0; }
+  .phase .name { font-weight: 600; }
+  .phase .deps { color: var(--muted); font-size: 13px; }
+  .pill { display: inline-block; font-size: 11px; line-height: 1;
+    padding: 4px 8px; border-radius: 999px; margin-left: 6px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+  .pill.tool { background: var(--green-soft); color: var(--green); border-color: var(--green-soft); }
+  .pill.judge { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
+  .pill.deliv { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-soft); }
+  .pill.consis { background: #f0e6f6; color: #6a3d8c; border-color: #f0e6f6; }
+  .risks li { margin: 6px 0; }
+  .alts li { margin: 6px 0; color: var(--ink); }
+  .alts li b { color: var(--red); }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 16px; margin: 8px 0; }
+  details > summary { cursor: pointer; font-weight: 600; }
+  details > summary::marker { color: var(--muted); }
+  footer { color: var(--muted); font-size: 13px; margin-top: 36px; padding-top: 16px;
+    border-top: 1px solid var(--line); }
+  .diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px; margin: 6px 0 18px; }
+  .diagram svg { display: block; width: 100%; height: auto; max-height: 560px; }
+  code { background: #f3f3f5; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  .stack { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 13px; }
+  .stack span { white-space: nowrap; }
+  .self-critique { background: var(--amber-soft); border-color: #f0d878; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div>
+    <h1>{{TASK_TITLE}}</h1>
+    <div class="meta">{{PHASE_COUNT}} phases &middot; generated {{TIMESTAMP}}</div>
+  </div>
+  <div class="meta">.supergoal/review.html</div>
+</header>
+
+<section>
+  <h2>Stack</h2>
+  <div class="card">
+    <div class="stack">
+      <span><b>Stack:</b> {{STACK}}</span>
+      <span><b>Pkg:</b> {{PKG}}</span>
+      <span><b>Build:</b> <code>{{BUILD_CMD}}</code></span>
+      <span><b>Test:</b> <code>{{TEST_CMD}}</code></span>
+      <span><b>Lint:</b> <code>{{LINT_CMD}}</code></span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Architecture</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1080 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Supergoal architecture diagram">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+        </marker>
+        <marker id="arrowred" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#b85450"/>
+        </marker>
+        <marker id="arrowgreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#5d8a3a"/>
+        </marker>
+      </defs>
+
+      <text x="40" y="28" font-size="14" font-weight="600" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" fill="#1b1b1f">Context assembly, then generator builds and an independent evaluator proves</text>
+
+      <g font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#1b1b1f">
+
+        <rect x="40" y="60" width="120" height="60" rx="6" fill="#FFE6CC" stroke="#D79B00" stroke-width="2"/>
+        <text x="100" y="95" text-anchor="middle" font-weight="600">User task</text>
+
+        <rect x="200" y="60" width="160" height="60" rx="6" fill="#E1D5E7" stroke="#9673A6" stroke-width="2"/>
+        <text x="280" y="85" text-anchor="middle" font-weight="600">Orchestrator</text>
+        <text x="280" y="104" text-anchor="middle" font-size="10" fill="#666">Stage 0-1: memory + intake</text>
+
+        <rect x="400" y="60" width="170" height="60" rx="6" fill="#D5E8D4" stroke="#82B366" stroke-width="2"/>
+        <text x="485" y="85" text-anchor="middle" font-weight="600">Planner + Rewriter</text>
+        <text x="485" y="104" text-anchor="middle" font-size="10" fill="#666">Stage 2a</text>
+
+        <rect x="610" y="40" width="430" height="200" rx="6" fill="#F5F5F5" stroke="#999" stroke-width="2"/>
+        <text x="630" y="62" font-size="13" font-weight="600">Cross-Corpus Retrieval (Stage 2b)</text>
+        <text x="630" y="78" font-size="10" fill="#666">parallel subagents where available</text>
+
+        <rect x="630" y="95" width="90" height="55" rx="6" fill="#D5E8D4" stroke="#82B366"/>
+        <text x="675" y="118" text-anchor="middle">Code</text>
+        <text x="675" y="134" text-anchor="middle" font-size="10" fill="#666">recon + grep</text>
+
+        <rect x="730" y="95" width="90" height="55" rx="6" fill="#D5E8D4" stroke="#82B366"/>
+        <text x="775" y="118" text-anchor="middle">Docs</text>
+        <text x="775" y="134" text-anchor="middle" font-size="10" fill="#666">Web / Context7</text>
+
+        <rect x="830" y="95" width="90" height="55" rx="6" fill="#D5E8D4" stroke="#82B366"/>
+        <text x="875" y="118" text-anchor="middle">MCPs</text>
+        <text x="875" y="134" text-anchor="middle" font-size="10" fill="#666">connected</text>
+
+        <rect x="930" y="95" width="100" height="55" rx="6" fill="#D5E8D4" stroke="#82B366"/>
+        <text x="980" y="118" text-anchor="middle">Skills</text>
+        <text x="980" y="134" text-anchor="middle" font-size="10" fill="#666">skill-finder</text>
+
+        <text x="630" y="180" font-size="11" font-style="italic" fill="#666">snippets carry their source, no raw dumps</text>
+        <text x="630" y="198" font-size="11" font-style="italic" fill="#666">each worker writes context/{corpus}.md</text>
+
+        <rect x="610" y="280" width="320" height="62" rx="6" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="2"/>
+        <text x="770" y="305" text-anchor="middle" font-weight="600">Sufficient-Context + Adversarial Prober</text>
+        <text x="770" y="324" text-anchor="middle" font-size="10" fill="#666">Stage 2c, max 3 rounds</text>
+
+        <rect x="960" y="280" width="80" height="62" rx="6" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="2"/>
+        <text x="1000" y="306" text-anchor="middle" font-weight="600">Synthesis</text>
+        <text x="1000" y="324" text-anchor="middle" font-size="10" fill="#666">Stage 3</text>
+
+        <rect x="800" y="390" width="170" height="60" rx="6" fill="#E1D5E7" stroke="#9673A6" stroke-width="2"/>
+        <text x="885" y="415" text-anchor="middle" font-weight="600">Decompose phases</text>
+        <text x="885" y="434" text-anchor="middle" font-size="10" fill="#666">Stage 4-5</text>
+
+        <rect x="580" y="390" width="200" height="60" rx="6" fill="#FFF2CC" stroke="#D6B656" stroke-width="2"/>
+        <text x="680" y="412" text-anchor="middle" font-weight="600">Plan Review (HTML + text)</text>
+        <text x="680" y="431" text-anchor="middle" font-size="10" fill="#666">human gate, Stage 6</text>
+
+        <rect x="360" y="390" width="200" height="60" rx="6" fill="#DAE8FC" stroke="#6C8EBF" stroke-width="2"/>
+        <text x="460" y="408" text-anchor="middle" font-weight="600">/goal run</text>
+        <text x="460" y="423" text-anchor="middle" font-size="10" fill="#666">generator builds,</text>
+        <text x="460" y="436" text-anchor="middle" font-size="10" fill="#666">evaluator gates + audits</text>
+
+        <rect x="360" y="475" width="200" height="50" rx="6" fill="#D5E8D4" stroke="#82B366" stroke-width="2"/>
+        <text x="460" y="505" text-anchor="middle" font-weight="600">Done</text>
+      </g>
+
+      <g stroke="#888" stroke-width="2" fill="none">
+        <line x1="160" y1="90" x2="195" y2="90" marker-end="url(#arrow)"/>
+        <line x1="360" y1="90" x2="395" y2="90" marker-end="url(#arrow)"/>
+        <path d="M 570 90 L 605 90" marker-end="url(#arrow)"/>
+        <line x1="770" y1="240" x2="770" y2="278" marker-end="url(#arrow)"/>
+        <path d="M 1000 342 L 1000 360 L 885 360 L 885 388" marker-end="url(#arrow)"/>
+        <line x1="800" y1="420" x2="782" y2="420" marker-end="url(#arrow)"/>
+        <line x1="580" y1="420" x2="562" y2="420" marker-end="url(#arrow)"/>
+        <line x1="460" y1="450" x2="460" y2="473" marker-end="url(#arrow)"/>
+      </g>
+
+      <g stroke="#5d8a3a" stroke-width="3" fill="none">
+        <line x1="930" y1="310" x2="958" y2="310" marker-end="url(#arrowgreen)"/>
+      </g>
+      <text x="945" y="304" text-anchor="middle" font-size="10" fill="#5d8a3a" font-style="italic" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">sufficient</text>
+
+      <g stroke="#b85450" stroke-width="2" stroke-dasharray="6 4" fill="none">
+        <path d="M 610 310 L 485 310 L 485 122" marker-end="url(#arrowred)"/>
+      </g>
+      <text x="495" y="270" font-size="10" fill="#b85450" font-style="italic" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">insufficient: gaps + reasons</text>
+      <text x="495" y="284" font-size="10" fill="#b85450" font-style="italic" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">(loop, max 3 rounds)</text>
+
+      <g font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#444">
+        <rect x="40" y="380" width="14" height="14" fill="#FFE6CC" stroke="#D79B00"/>
+        <text x="60" y="392">Input</text>
+        <rect x="40" y="400" width="14" height="14" fill="#E1D5E7" stroke="#9673A6"/>
+        <text x="60" y="412">Orchestration / planning</text>
+        <rect x="40" y="420" width="14" height="14" fill="#D5E8D4" stroke="#82B366"/>
+        <text x="60" y="432">Retrieval corpus</text>
+        <rect x="40" y="440" width="14" height="14" fill="#DAE8FC" stroke="#6C8EBF"/>
+        <text x="60" y="452">Judge / synthesis / exec</text>
+        <rect x="40" y="460" width="14" height="14" fill="#FFF2CC" stroke="#D6B656"/>
+        <text x="60" y="472">Human gate</text>
+        <line x1="40" y1="492" x2="54" y2="492" stroke="#b85450" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="60" y="496">Insufficient-context loop</text>
+      </g>
+    </svg>
+    <div class="meta" style="margin-top:6px">Self-contained diagram. Editable source: <code>~/.claude/skills/supergoal/docs/architecture.drawio</code> (optional, requires drawio).</div>
+  </div>
+</section>
+
+<section>
+  <h2>Phases</h2>
+  {{PHASES_HTML}}
+</section>
+
+<section>
+  <h2>Alternatives considered</h2>
+  <div class="card">
+    <ul class="alts">
+      {{ALTERNATIVES_HTML}}
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Decisions &amp; sources</h2>
+  <p class="meta">Per planning decision: the scenarios that were offered, which one was picked, and the articles behind it. This is what brought you up to speed as the architect.</p>
+  <!-- {{DECISIONS_HTML}} shape, one card per decision:
+       <div class="card">
+         <h3>Decision: the question</h3>
+         <ul class="alts">
+           <li><b>Scenario A</b> <span class="pill">chosen</span>: trade-off in one line</li>
+           <li>Scenario B: trade-off in one line</li>
+         </ul>
+         <p class="meta">Sources</p>
+         <ul><li><a href="URL">Title</a>: one-line summary</li></ul>
+       </div> -->
+  {{DECISIONS_HTML}}
+</section>
+
+<section>
+  <h2>Top risks &amp; mitigations</h2>
+  <div class="card">
+    <ol class="risks">
+      {{RISKS_HTML}}
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>Self-critique</h2>
+  <div class="card self-critique">
+    {{SELF_CRITIQUE_HTML}}
+  </div>
+</section>
+
+<section>
+  <h2>Per-phase rationale</h2>
+  {{RATIONALE_DETAILS_HTML}}
+</section>
+
+<section>
+  <h2>What happens when you say "Start now"</h2>
+  <div class="card">
+    <ol>
+      <li>A pre-flight smoke check runs the deduplicated mandatory commands against the current state.</li>
+      <li>If green, a single <code>/goal</code> line is printed for you to paste.</li>
+      <li>Per phase, the <b>generator</b> does the work and prints raw evidence (commands, files, observations) with no verdict.</li>
+      <li>An <b>independent evaluator</b> in a separate context re-runs every check itself against repository ground truth and the running artifact, blind to the generator's account, and returns ACCEPT or REJECT.</li>
+      <li>Behavior is proven empirically: the evaluator drives the real app (preview, endpoint, CLI, e2e) and observes it, not just "tests pass".</li>
+      <li>REJECT triggers 3-strike recovery: retry, then a focused fix spec, then rollback to the phase baseline, then handoff.</li>
+      <li>After the last phase the evaluator runs a final audit against the original plan before the run completes.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  Source files in <code>.supergoal/</code>: <code>ROADMAP.md</code>, <code>STATE.md</code>,
+  <code>THINKING.md</code>, <code>phases/phase-N.md</code>, <code>phases/phase-N-rationale.md</code>.
+  This HTML is generated, not editable. Adjust the markdown files and the skill will re-render.
+</footer>
+
+</main>
+</body>
+</html>

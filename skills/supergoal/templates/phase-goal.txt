@@ -1,0 +1,64 @@
+# Phase spec template: write to .supergoal/phases/phase-N.md
+#
+# This is a free-form work spec the executing agent reads from disk.
+# No char budget. The agent follows .supergoal/PROTOCOL.md for the
+# execution loop, failure recovery, and memory writeback.
+#
+# Replace {{...}} placeholders. Keep the SUPERGOAL_PHASE_START block
+# verbatim so validate-phase.sh and the runtime can anchor on it.
+
+SUPERGOAL_PHASE_START
+Phase: {{N}} of {{TOTAL}} - {{PHASE_NAME}}
+Task: {{ONE_LINE_TASK}}
+Type: {{TAGS}}
+Mandatory commands: {{COMMANDS_CSV}}
+Acceptance criteria: {{CRIT_COUNT}}
+Evidence required: {{EVIDENCE_CSV}}
+Depends on phases: {{DEPS}}
+Validation classes: {{CLASSES_CSV}}
+Team: {{TEAM_OR_SOLO}}
+Skills needed: {{SKILLS_NEEDED}}
+Rollback target: {{ROLLBACK_TARGET}}
+
+## Why
+
+{{WHY_ONE_SENTENCE}}
+
+## Work
+
+- {{WORK_BULLET_1}}
+- {{WORK_BULLET_2}}
+- ...
+
+## Acceptance criteria (each carries a [class]; the evaluator re-runs each)
+
+Behavior-producing phases must include at least one [empirical] criterion (the running artifact observed, not just tests passing).
+
+- [{{CLASS_1}}] {{CRITERION_1}}
+- [{{CLASS_2}}] {{CRITERION_2}}
+- ...
+
+## Mandatory commands (run each, surface last ~10 lines + exit code)
+
+- {{COMMAND_1}}
+- {{COMMAND_2}}
+- ...
+
+## Evidence required in transcript
+
+- {{EVIDENCE_1}}
+- {{EVIDENCE_2}}
+- ...
+
+## Notes
+
+{{ANY_PHASE_SPECIFIC_GUIDANCE}}
+
+---
+
+During execution the generator prints SUPERGOAL_PHASE_START (above),
+does the work, then prints SUPERGOAL_PHASE_EVIDENCE (raw output and
+observations, no verdict). The independent evaluator then prints
+SUPERGOAL_EVAL_VERDICT (ACCEPT or REJECT); only on ACCEPT come
+MEMORY_SAVED and SUPERGOAL_PHASE_DONE. On REJECT the agent follows the
+3-strike recovery in .supergoal/PROTOCOL.md.
