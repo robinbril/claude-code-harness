@@ -1,9 +1,5 @@
 {
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "skipAutoPermissionPrompt": true,
-  "remoteControlAtStartup": true,
+  "_comment_auto_mode": "OPTIONEEL en NIET aanbevolen als default: 'defaultMode: auto' + 'skipAutoPermissionPrompt: true' slaan alle tool-permissie-prompts over. Voeg dit alleen toe als je bewust voor auto-mode kiest, niet door dit blok klakkeloos te mergen.",
   "hooks": {
     "PreToolUse": [
       {
@@ -21,6 +17,28 @@
           {
             "type": "command",
             "command": "node \"$HOME/.claude/claude-code-harness/hooks/commit-guard.js\""
+          },
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/claude-code-harness/hooks/env-assert-guard.js\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/claude-code-harness/hooks/verified-claim-guard.js\""
+          },
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/claude-code-harness/hooks/spec-gate.js\""
+          },
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/claude-code-harness/hooks/stop-render-audit.js\""
           }
         ]
       }
