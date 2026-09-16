@@ -40,6 +40,8 @@ Craft, dagelijks bruikbaar, ook zonder code:
 |---|---|
 | `humanizer` | Elke tekst zonder AI-randje (mail, post, vacaturetekst) |
 | `frontend-design` | Een verzorgde, niet-template UI of pagina |
+| `emil-design-eng` | UI-polish, interacties en motion volgens Emil Kowalski |
+| `apple-design` | Apple-principes voor interface, typografie en vloeiende motion |
 | `designing-beautiful-websites` | UX-strategie, IA, wireframes en visueel design van begin tot eind |
 | `design-an-interface` | Meerdere radicaal verschillende interface-opties genereren via parallelle agents |
 | `landing-page-design` | Pagina's die converteren (campagne, vacature, lead) |
@@ -80,6 +82,15 @@ project; de trigger-omschrijvingen overlappen bewust.
 | `brandkit` | Merkidentiteit en brand-guidelines-boards, geen UI-code |
 | `full-output-enforcement` | Geen designstijl: dwingt volledige, onafgekapte code-output af |
 
+`emil-design-eng` en `apple-design` komen ongewijzigd uit
+[emilkowalski/skills](https://github.com/emilkowalski/skills), MIT. De lokale
+`LICENSE` in beide skillmappen blijft bij verspreiding staan.
+
+De volledige web- en designset van Emil zit erbij: `animate`, `animate-expo`,
+`animation-vocabulary`, `apple-design`, `ask-sonner`, `emil-design-eng`,
+`find-animation-opportunities`, `improve-animations`, `mobile-native`,
+`pick-ui-library`, `prototype` en `review-animations`.
+
 ## Installeren (Claude Code)
 
 Clone de repo:
@@ -87,6 +98,13 @@ Clone de repo:
 ```bash
 git clone https://github.com/robinbril/claude-code-harness.git
 cd claude-code-harness
+```
+
+Installeer alleen deze set in Claude Code en Codex, zonder andere skills te
+vervangen:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-emil-design-skills.ps1
 ```
 
 **Windows**, in PowerShell:
@@ -113,6 +131,54 @@ kiezen. Je hoeft niks te onthouden.
 > het `/`-menu en de Skill-tool.
 
 ## Hooks
+
+### Projectstructuur die blijft staan
+
+De `/projectstructuur`-skill doet twee dingen: een bestaande repository eerst
+in kaart brengen voordat je na expliciete opdracht veilig verhuist, of een nieuwe
+repository direct met een klein contract starten. Vijf of zes hoofdgebieden is een
+goed moment om te toetsen of een junior ze begrijpt, geen harde limiet. Een infrarepo hoeft dus niet ineens een lege `frontend/`
+te krijgen. Start nieuw met:
+
+```powershell
+node scripts/project-structure-init.js --repo . --areas app,infra,tests,docs
+```
+
+Start bestaand met:
+
+```powershell
+node scripts/project-structure-inventory.js --repo .
+```
+
+Het contract benoemt per gebied de verantwoordelijkheid, expliciete rootbestanden
+en alleen controleerbare afhankelijkheidsregels. Draai daarna lokaal:
+
+```powershell
+node scripts/project-structure-check.js --repo .
+```
+
+Kopieer voor CI `templates/github-workflows/project-structure.yml` naar
+`.github/workflows/`. De checker doet bewust niets in een repo zonder
+`.project-structure.json`; zo worden bestaande repos niet plotseling geblokkeerd.
+Het policy-bestand is door de agent-hook beschermd. Alleen een bewuste menselijke
+migratie met `PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE=1` mag het aanpassen.
+
+Claude Code en Codex kunnen Write/Edit, patchbestemmingen en herkenbare shellwrites vooraf blokkeren.
+Cursor biedt alleen een shell-hook: shellwrites zijn daar beschermd, directe
+editorwrites niet. Zonder contract geeft de guard geen structuurverbod.
+Dit is geen universele shell- of JavaScript-parser: CI draait daarom altijd de
+volledige checker. Het blijft een regressieguard, geen magische schoonmaakbeurt voor bestaande repos.
+De policy-escape is een technische governancegrens, geen bewijs van menselijke
+toestemming. Na de installatie herstart je de betrokken agent.
+
+Installeer of update alle drie de lokale adapters met:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-project-structure.ps1
+```
+
+De installateur maakt alleen bij een echte configwijziging een timestamp-back-up
+naast die config. Een tweede run voegt geen dubbele hooks toe.
 
 De guard-hooks zitten in `hooks/`. Als plugin laden ze vanzelf via
 `hooks/hooks.json`. Bij de `install.sh`-route wijs je ze handmatig aan in je
