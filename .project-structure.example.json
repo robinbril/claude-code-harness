@@ -1,9 +1,13 @@
 {
-  "allowedDirectories": ["frontend", "backend", "integrations", "infra", "docs", "tests", "scripts", "config"],
-  "allowedRootFiles": ["Makefile"],
+  "areas": {
+    "app": { "responsibility": "Product code and its internal modules" },
+    "infra": { "responsibility": "Runtime, deployment and service configuration" },
+    "tests": { "responsibility": "Behaviour checks and fixtures" },
+    "docs": { "responsibility": "Product and architecture documentation" }
+  },
+  "allowedRootFiles": ["package.json", "package-lock.json", "compose.yml", "Makefile"],
   "boundariesDocument": "docs/architecture.md",
-  "forbiddenImports": [
-    { "from": "frontend", "to": "backend" },
-    { "from": "backend", "to": "frontend" }
+  "forbiddenDependencies": [
+    { "from": "app", "to": "infra" }
   ]
 }

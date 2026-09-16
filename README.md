@@ -134,11 +134,24 @@ kiezen. Je hoeft niks te onthouden.
 
 ### Projectstructuur die blijft staan
 
-Voor een nieuw project kun je `.project-structure.example.json` kopiëren naar
-`.project-structure.json` en alleen de mappen invullen die dat project echt heeft.
-Daarmee voorkom je nieuwe rommel in de root, kun je een paar verkeerde imports
-verbieden en leg je grenzen vast in `docs/architecture.md`. Een infrarepo hoeft dus
-niet ineens een lege `frontend/` te krijgen. Draai lokaal:
+De `project-structure`-skill doet twee dingen: een bestaande repository eerst
+in kaart brengen voordat je na expliciete opdracht veilig verhuist, of een nieuwe
+repository direct met een klein contract starten. Vijf of zes hoofdgebieden is een
+goed moment om te toetsen of een junior ze begrijpt, geen harde limiet. Een infrarepo hoeft dus niet ineens een lege `frontend/`
+te krijgen. Start nieuw met:
+
+```powershell
+node scripts/project-structure-init.js --repo . --areas app,infra,tests,docs
+```
+
+Start bestaand met:
+
+```powershell
+node scripts/project-structure-inventory.js --repo .
+```
+
+Het contract benoemt per gebied de verantwoordelijkheid, expliciete rootbestanden
+en alleen controleerbare afhankelijkheidsregels. Draai daarna lokaal:
 
 ```powershell
 node scripts/project-structure-check.js --repo .

@@ -6,7 +6,7 @@ const guard = require('./project-structure-guard.js');
 function patchInputs(patch, cwd) {
   const edits = []; let file;
   for (const line of patch.split(/\r?\n/)) {
-    const header = line.match(/^\*\*\* (?:Add|Update) File: (.+)$/);
+    const header = line.match(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/);
     if (header) { file = path.resolve(cwd, header[1]); edits.push(file); }
   }
   return edits;

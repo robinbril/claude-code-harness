@@ -30,9 +30,13 @@ function Ensure-Hook($hooks, $eventName, $matcher, $command) {
 New-Item -ItemType Directory -Force -Path "$claude\hooks", "$claude\skills", "$claude\commands", "$codex\hooks", "$codex\skills", "$cursor\skills-cursor", $cursor | Out-Null
 Copy-Item "$source\hooks\project-structure-guard.js" "$claude\hooks" -Force
 Copy-Item "$source\scripts\project-structure-check.js" "$claude\hooks" -Force
+Copy-Item "$source\scripts\project-structure-init.js" "$claude\hooks" -Force
+Copy-Item "$source\scripts\project-structure-inventory.js" "$claude\hooks" -Force
 Copy-Item "$source\hooks\codex-project-structure-adapter.cjs" "$codex\hooks" -Force
 Copy-Item "$source\hooks\project-structure-guard.js" "$codex\hooks" -Force
 Copy-Item "$source\scripts\project-structure-check.js" "$codex\hooks" -Force
+Copy-Item "$source\scripts\project-structure-init.js" "$codex\hooks" -Force
+Copy-Item "$source\scripts\project-structure-inventory.js" "$codex\hooks" -Force
 Copy-Item "$source\skills\project-structure" "$claude\skills" -Recurse -Force
 Copy-Item "$source\skills\project-structure" "$codex\skills" -Recurse -Force
 Copy-Item "$source\skills\project-structure" "$cursor\skills-cursor" -Recurse -Force
@@ -55,7 +59,7 @@ $codexConfig = Read-Config $codexFile '{}'
 if (-not $codexConfig.hooks) { $codexConfig | Add-Member NoteProperty hooks ([pscustomobject]@{}) }
 if (-not ($codexConfig.hooks.PSObject.Properties.Name -contains 'PreToolUse')) { $codexConfig.hooks | Add-Member NoteProperty PreToolUse @() }
 $codexCommand = "node `"$codex/hooks/codex-project-structure-adapter.cjs`""
-$codexBashChanged = Ensure-Hook $codexConfig.hooks 'PreToolUse' '^Bash$' $codexCommand
+$codexBashChanged = Ensure-Hook $codexConfig.hooks 'PreToolUse' '^(Bash|functions\.(exec|exec_command)|shell_command)$' $codexCommand
 $codexWriteChanged = Ensure-Hook $codexConfig.hooks 'PreToolUse' '^(functions\.)?(apply_patch|Edit|Write)$' $codexCommand
 $codexChanged = $codexBashChanged -or $codexWriteChanged
 if ($codexChanged) { Save-Config $codexFile $codexConfig }

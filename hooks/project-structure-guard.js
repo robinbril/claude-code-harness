@@ -39,20 +39,16 @@ function check(data) {
     ? [input.file_path || input.path]
     : shellTargets(String(input.command || input.cmd || data.command || ''), cwd);
   const root = gitRoot(cwd);
+  const command = String(input.command || input.cmd || data.command || '');
   const project = checker.findProject(root);
-  const policyEdits = targets.filter(target => path.basename(target) === '.project-structure.json');
-  if (!project) {
-    const newAreas = targets.filter(target => {
-      const relative = path.relative(root, target).split(path.sep);
-      return relative.length > 1 && !UNCONTRACTED_EXCEPTIONS.has(relative[0]) && !fs.existsSync(path.join(root, relative[0]));
-    });
-    if (newAreas.length) return [`new top-level area ${path.relative(root, newAreas[0])} needs .project-structure.json first`];
+  if (project && /(?:Remove-Item|Move-Item|Rename-Item)\b[^\r\n;]*\.project-structure\.json/i.test(command) && process.env.PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE !== '1') {
+    return ['.project-structure.json is protected. A human may make a deliberate migration with PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE=1.'];
   }
+  const policyEdits = targets.filter(target => path.basename(target) === '.project-structure.json');
   if (project && policyEdits.length && process.env.PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE !== '1') {
     return ['.project-structure.json is protected. A human may make a deliberate migration with PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE=1.'];
   }
   if (name === 'Write' || name === 'Edit') return checker.validateWrite(targets[0], cwd).errors;
-  const command = String(input.command || input.cmd || data.command || '');
   return targets.flatMap(target => checker.validateWrite(target, cwd).errors);
 }
 function main(raw, cursor) {
