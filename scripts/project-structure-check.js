@@ -72,7 +72,7 @@ function dependencyViolations(root, policy) {
     const source = fs.readFileSync(path.join(root, rel), 'utf8');
     for (const rule of policy.forbiddenDependencies || []) {
       if (from !== rule.from) continue;
-      const specifiers = [...source.matchAll(/(?:from\s*|import\s*|require\s*\()(['\"])([^'\"]+)\1/g)].map(match => match[2]);
+      const specifiers = [...source.matchAll(/(?:from\s*|import\s*(?:\(\s*)?|require\s*\()(['\"])([^'\"]+)\1/g)].map(match => match[2]);
       const violates = specifiers.some(specifier => {
         if (!specifier.startsWith('.')) return specifier === rule.to || specifier.startsWith(`${rule.to}/`);
         const destination = normalize(path.relative(root, path.resolve(path.dirname(path.join(root, rel)), specifier)));
