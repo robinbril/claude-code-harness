@@ -35,7 +35,7 @@ function check(data) {
   const cwd = data.cwd || data.workspace_root || process.cwd();
   const name = data.tool_name || '';
   const input = data.tool_input || {};
-  const targets = name === 'Write' || name === 'Edit'
+  const targets = name === 'Write' || name === 'Edit' || name === 'Delete'
     ? [input.file_path || input.path]
     : shellTargets(String(input.command || input.cmd || data.command || ''), cwd);
   const root = gitRoot(cwd);
@@ -48,6 +48,7 @@ function check(data) {
   if (project && policyEdits.length && process.env.PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE !== '1') {
     return ['.project-structure.json is protected. A human may make a deliberate migration with PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE=1.'];
   }
+  if (name === 'Delete') return [];
   if (name === 'Write' || name === 'Edit') return checker.validateWrite(targets[0], cwd).errors;
   return targets.flatMap(target => checker.validateWrite(target, cwd).errors);
 }

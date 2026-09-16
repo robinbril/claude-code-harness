@@ -1,12 +1,12 @@
 ---
-name: project-structure
-description: Design, safely restructure, and enforce a repository layout that a junior can understand. Use for a new repository or an explicitly authorised cleanup of an existing one.
+name: projectstructuur
+description: Ontwerp, herstructureer veilig en bewaak een repositoryindeling die een junior begrijpt. Gebruik bij een nieuwe repo of een expliciet geautoriseerde opschoning van een bestaande repo.
 ---
 
-# Project structure
+# Projectstructuur
 
-Use this skill to make a repository explain itself through a few clear places,
-not to shuffle files until they look tidy.
+Gebruik deze skill als `/projectstructuur`. Laat een repository zichzelf uitleggen
+via een paar duidelijke plekken, niet door bestanden alleen netjes te husselen.
 
 ## Hard rules
 
@@ -21,26 +21,35 @@ not to shuffle files until they look tidy.
   change production configuration without explicit authority.
 - The checker proves only objective rules: area count, root entries and selected
   dependency directions. It cannot prove the layout is well designed.
+- Hooks inspect direct write tools, patch destinations and common shell commands.
+  They are not a universal shell or JavaScript parser, so CI must run the full
+  checker after a change.
 
 ## Existing repository: inspect, decide, migrate
 
-1. Run `node scripts/project-structure-inventory.js --repo .` and read the
+1. Bootstrap the helpers in the target repository first. Copy this skill's
+   `tools/` directory to `.harness/projectstructuur/tools/`; copy
+   `tools/project-structure.yml` to `.github/workflows/project-structure.yml`
+   only after reviewing the target's existing CI. In the commands below,
+   `node .harness/projectstructuur/tools/<tool>.js` is the portable form. A
+   harness repository may use its equivalent `scripts/` path.
+2. Run `node .harness/projectstructuur/tools/project-structure-inventory.js --repo .` and read the
    result. Then inspect callers, imports, Docker/Compose build contexts,
    mounts, CI workflows, deploy scripts and README references for every part
    under consideration.
-2. Write a compact map before moving anything: current item, responsibility,
+3. Write a compact map before moving anything: current item, responsibility,
    evidence of status, callers/runtime references, proposed destination and
    migration risk. Treat a bridge that relays Slack or WhatsApp to an agent seat
    as a bridge, not an MCP server; keep a separate MCP adapter with the product
    it exposes. Group a search engine and its adapter under search, with their
    internal roles documented.
-3. Choose three to six areas that describe the product. Do not manufacture
+4. Choose the areas that describe the product. Do not manufacture
    `frontend` and `backend` for an infrastructure repository. Put scripts,
    Caddy snippets, Compose files and assets with the responsibility they serve,
    not one directory deeper merely to hide root clutter.
-4. Present the map and proposed contract for approval. Installing a contract is
+5. Present the map and proposed contract for approval. Installing a contract is
    not a migration and must never be described as one.
-5. After explicit approval, move one responsibility at a time. Update imports,
+6. After explicit approval, move one responsibility at a time. Update imports,
    build contexts, mounts, command scripts, CI, deploy paths and README in the
    same change. Run the entrypoint and behaviour tests that exercise each moved
    path. Keep uncertain or disabled material intact and report it separately.
@@ -48,11 +57,11 @@ not to shuffle files until they look tidy.
 ## New repository: choose, contract, enforce
 
 1. Identify the product and runtime first. Select only the areas it needs.
-2. Start a draft with `node scripts/project-structure-init.js --repo . --areas app,infra,tests,docs`.
+2. Start a draft with `node .harness/projectstructuur/tools/project-structure-init.js --repo . --areas app,infra,tests,docs`.
 3. Replace every placeholder responsibility. List allowed root files and write
    the boundaries document. Add dependency rules only for source forms the
    checker supports.
-4. Run `node scripts/project-structure-check.js --repo .` before enabling the
+4. Run `node .harness/projectstructuur/tools/project-structure-check.js --repo .` before enabling the
    hooks and CI.
 
 ## Contract

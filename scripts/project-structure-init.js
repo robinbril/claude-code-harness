@@ -8,7 +8,7 @@ const args = process.argv.slice(2);
 const value = name => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
 const root = path.resolve(value('--repo') || process.cwd());
 const names = String(value('--areas') || '').split(',').map(name => name.trim()).filter(Boolean);
-if (!names.length || names.length > 6) throw Error('Use --areas with one to six comma-separated areas.');
+if (!names.length) throw Error('Use --areas with one or more comma-separated areas.');
 const policyFile = path.join(root, '.project-structure.json');
 if (fs.existsSync(policyFile)) throw Error('.project-structure.json already exists; edit it deliberately instead.');
 const areas = Object.fromEntries(names.map(name => [name, { responsibility: 'Describe this area before relying on the contract.' }]));

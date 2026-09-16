@@ -26,8 +26,29 @@ function Ensure-Hook($hooks, $eventName, $matcher, $command) {
     }
     return $false
 }
+function Remove-Legacy-CodexBashHook($hooks) {
+    $changed = $false
+    $kept = @()
+    foreach ($entry in @($hooks.PreToolUse)) {
+        if ($entry.matcher -ne '^Bash$') { $kept += $entry; continue }
+        $remaining = @($entry.hooks | Where-Object { $_.command -notmatch 'codex-project-structure-adapter' })
+        if ($remaining.Count -ne @($entry.hooks).Count) { $changed = $true }
+        if ($remaining.Count) { $entry.hooks = $remaining; $kept += $entry }
+    }
+    $hooks.PreToolUse = $kept
+    return $changed
+}
+function Migrate-OldSkill($root, $backupRoot) {
+    $old = Join-Path $root 'project-structure'
+    if (-not (Test-Path $old)) { return }
+    New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
+    Move-Item -LiteralPath $old -Destination (Join-Path $backupRoot "project-structure-$stamp")
+}
 
 New-Item -ItemType Directory -Force -Path "$claude\hooks", "$claude\skills", "$claude\commands", "$codex\hooks", "$codex\skills", "$cursor\skills-cursor", $cursor | Out-Null
+Migrate-OldSkill "$claude\skills" "$claude\skill-backups\projectstructuur"
+Migrate-OldSkill "$codex\skills" "$codex\skill-backups\projectstructuur"
+Migrate-OldSkill "$cursor\skills-cursor" "$cursor\skill-backups\projectstructuur"
 Copy-Item "$source\hooks\project-structure-guard.js" "$claude\hooks" -Force
 Copy-Item "$source\scripts\project-structure-check.js" "$claude\hooks" -Force
 Copy-Item "$source\scripts\project-structure-init.js" "$claude\hooks" -Force
@@ -37,10 +58,17 @@ Copy-Item "$source\hooks\project-structure-guard.js" "$codex\hooks" -Force
 Copy-Item "$source\scripts\project-structure-check.js" "$codex\hooks" -Force
 Copy-Item "$source\scripts\project-structure-init.js" "$codex\hooks" -Force
 Copy-Item "$source\scripts\project-structure-inventory.js" "$codex\hooks" -Force
-Copy-Item "$source\skills\project-structure" "$claude\skills" -Recurse -Force
-Copy-Item "$source\skills\project-structure" "$codex\skills" -Recurse -Force
-Copy-Item "$source\skills\project-structure" "$cursor\skills-cursor" -Recurse -Force
-Copy-Item "$source\commands\project-structure.md" "$claude\commands" -Force
+Copy-Item "$source\skills\projectstructuur" "$claude\skills" -Recurse -Force
+Copy-Item "$source\skills\projectstructuur" "$codex\skills" -Recurse -Force
+Copy-Item "$source\skills\projectstructuur" "$cursor\skills-cursor" -Recurse -Force
+foreach ($target in @("$claude\skills\projectstructuur\tools", "$codex\skills\projectstructuur\tools", "$cursor\skills-cursor\projectstructuur\tools")) {
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    Copy-Item "$source\scripts\project-structure-check.js" $target -Force
+    Copy-Item "$source\scripts\project-structure-init.js" $target -Force
+    Copy-Item "$source\scripts\project-structure-inventory.js" $target -Force
+    Copy-Item "$source\templates\github-workflows\project-structure.yml" $target -Force
+}
+Copy-Item "$source\commands\projectstructuur.md" "$claude\commands" -Force
 
 $claudeFile = "$claude\settings.json"
 if (-not (Test-Path $claudeFile)) { [System.IO.File]::WriteAllText($claudeFile, '{"hooks":{"PreToolUse":[]}}', (New-Object System.Text.UTF8Encoding($false))) }
@@ -59,9 +87,10 @@ $codexConfig = Read-Config $codexFile '{}'
 if (-not $codexConfig.hooks) { $codexConfig | Add-Member NoteProperty hooks ([pscustomobject]@{}) }
 if (-not ($codexConfig.hooks.PSObject.Properties.Name -contains 'PreToolUse')) { $codexConfig.hooks | Add-Member NoteProperty PreToolUse @() }
 $codexCommand = "node `"$codex/hooks/codex-project-structure-adapter.cjs`""
+$codexLegacyChanged = Remove-Legacy-CodexBashHook $codexConfig.hooks
 $codexBashChanged = Ensure-Hook $codexConfig.hooks 'PreToolUse' '^(Bash|functions\.(exec|exec_command)|shell_command)$' $codexCommand
 $codexWriteChanged = Ensure-Hook $codexConfig.hooks 'PreToolUse' '^(functions\.)?(apply_patch|Edit|Write)$' $codexCommand
-$codexChanged = $codexBashChanged -or $codexWriteChanged
+$codexChanged = $codexLegacyChanged -or $codexBashChanged -or $codexWriteChanged
 if ($codexChanged) { Save-Config $codexFile $codexConfig }
 
 $cursorFile = "$cursor\hooks.json"

@@ -134,7 +134,7 @@ kiezen. Je hoeft niks te onthouden.
 
 ### Projectstructuur die blijft staan
 
-De `project-structure`-skill doet twee dingen: een bestaande repository eerst
+De `/projectstructuur`-skill doet twee dingen: een bestaande repository eerst
 in kaart brengen voordat je na expliciete opdracht veilig verhuist, of een nieuwe
 repository direct met een klein contract starten. Vijf of zes hoofdgebieden is een
 goed moment om te toetsen of een junior ze begrijpt, geen harde limiet. Een infrarepo hoeft dus niet ineens een lege `frontend/`
@@ -163,11 +163,11 @@ Kopieer voor CI `templates/github-workflows/project-structure.yml` naar
 Het policy-bestand is door de agent-hook beschermd. Alleen een bewuste menselijke
 migratie met `PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE=1` mag het aanpassen.
 
-Claude Code en Codex kunnen Write/Edit en herkenbare shellwrites vooraf blokkeren.
+Claude Code en Codex kunnen Write/Edit, patchbestemmingen en herkenbare shellwrites vooraf blokkeren.
 Cursor biedt alleen een shell-hook: shellwrites zijn daar beschermd, directe
-editorwrites niet. Zonder contract blokkeert de guard elke nieuwe hoofdmap in de
-git-root; bestaande mappen en gewone rootbestanden blijven doorlopen.
-Dit is een regressieguard, geen magische schoonmaakbeurt voor bestaande repos.
+editorwrites niet. Zonder contract geeft de guard geen structuurverbod.
+Dit is geen universele shell- of JavaScript-parser: CI draait daarom altijd de
+volledige checker. Het blijft een regressieguard, geen magische schoonmaakbeurt voor bestaande repos.
 De policy-escape is een technische governancegrens, geen bewijs van menselijke
 toestemming. Na de installatie herstart je de betrokken agent.
 

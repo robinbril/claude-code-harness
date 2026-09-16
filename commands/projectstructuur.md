@@ -1,4 +1,4 @@
-For a new repository, run
+Gebruik `/projectstructuur`. Voor een nieuwe repository, run
 `node scripts/project-structure-init.js --repo . --areas app,infra,tests,docs`,
 then fill in each responsibility before relying on the contract. For an existing
 repository, start with `node scripts/project-structure-inventory.js --repo .`.

@@ -67,14 +67,18 @@ function dependencyViolations(root, policy) {
     if (!areaNames(policy).includes(rule.from) || !areaNames(policy).includes(rule.to)) errors.push(`dependency rule ${rule.from} -> ${rule.to} names an unknown area`);
   }
   walk(root, rel => {
-    if (!SOURCE_EXTENSIONS.has(path.extname(rel))) return;
+    if (!SOURCE_EXTENSIONS.has(path.extname(rel)) || path.extname(rel) === '.py') return;
     const from = normalize(rel).split('/')[0];
     const source = fs.readFileSync(path.join(root, rel), 'utf8');
     for (const rule of policy.forbiddenDependencies || []) {
       if (from !== rule.from) continue;
-      const target = rule.to.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const expression = new RegExp(`(?:from\\s*|require\\s*\\(|import\\s*\\()(['\"][^'\"]*(?:^|/)${target}(?:/|['\"]))`, 'g');
-      if (expression.test(source)) errors.push(`${normalize(rel)} depends on forbidden ${rule.to}/ area`);
+      const specifiers = [...source.matchAll(/(?:from\s*|import\s*|require\s*\()(['\"])([^'\"]+)\1/g)].map(match => match[2]);
+      const violates = specifiers.some(specifier => {
+        if (!specifier.startsWith('.')) return specifier === rule.to || specifier.startsWith(`${rule.to}/`);
+        const destination = normalize(path.relative(root, path.resolve(path.dirname(path.join(root, rel)), specifier)));
+        return destination === rule.to || destination.startsWith(`${rule.to}/`);
+      });
+      if (violates) errors.push(`${normalize(rel)} depends on forbidden ${rule.to}/ area`);
     }
   });
   return errors;
