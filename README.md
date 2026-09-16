@@ -40,6 +40,8 @@ Craft, dagelijks bruikbaar, ook zonder code:
 |---|---|
 | `humanizer` | Elke tekst zonder AI-randje (mail, post, vacaturetekst) |
 | `frontend-design` | Een verzorgde, niet-template UI of pagina |
+| `emil-design-eng` | UI-polish, interacties en motion volgens Emil Kowalski |
+| `apple-design` | Apple-principes voor interface, typografie en vloeiende motion |
 | `designing-beautiful-websites` | UX-strategie, IA, wireframes en visueel design van begin tot eind |
 | `design-an-interface` | Meerdere radicaal verschillende interface-opties genereren via parallelle agents |
 | `landing-page-design` | Pagina's die converteren (campagne, vacature, lead) |
@@ -79,6 +81,10 @@ project; de trigger-omschrijvingen overlappen bewust.
 | `imagegen-frontend-mobile` | Genereert alleen app-schermconcepten, geen code |
 | `brandkit` | Merkidentiteit en brand-guidelines-boards, geen UI-code |
 | `full-output-enforcement` | Geen designstijl: dwingt volledige, onafgekapte code-output af |
+
+`emil-design-eng` en `apple-design` komen ongewijzigd uit
+[emilkowalski/skills](https://github.com/emilkowalski/skills), MIT. De lokale
+`LICENSE` in beide skillmappen blijft bij verspreiding staan.
 
 ## Installeren (Claude Code)
 
