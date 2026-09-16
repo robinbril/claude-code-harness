@@ -1,0 +1,9 @@
+{
+  "allowedDirectories": ["frontend", "backend", "integrations", "infra", "docs", "tests", "scripts", "config"],
+  "allowedRootFiles": ["Makefile"],
+  "boundariesDocument": "docs/architecture.md",
+  "forbiddenImports": [
+    { "from": "frontend", "to": "backend" },
+    { "from": "backend", "to": "frontend" }
+  ]
+}

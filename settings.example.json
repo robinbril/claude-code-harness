@@ -7,6 +7,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node \"$HOME/.claude/claude-code-harness/hooks/project-structure-guard.js\""
+          },
+          {
+            "type": "command",
             "command": "node \"$HOME/.claude/claude-code-harness/hooks/humanizer-guard.js\""
           }
         ]
@@ -14,6 +18,10 @@
       {
         "matcher": "Bash",
         "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/claude-code-harness/hooks/project-structure-guard.js\""
+          },
           {
             "type": "command",
             "command": "node \"$HOME/.claude/claude-code-harness/hooks/commit-guard.js\""

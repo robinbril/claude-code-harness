@@ -114,6 +114,41 @@ kiezen. Je hoeft niks te onthouden.
 
 ## Hooks
 
+### Projectstructuur die blijft staan
+
+Voor een nieuw project kun je `.project-structure.example.json` kopiëren naar
+`.project-structure.json` en alleen de mappen invullen die dat project echt heeft.
+Daarmee voorkom je nieuwe rommel in de root, kun je een paar verkeerde imports
+verbieden en leg je grenzen vast in `docs/architecture.md`. Een infrarepo hoeft dus
+niet ineens een lege `frontend/` te krijgen. Draai lokaal:
+
+```powershell
+node scripts/project-structure-check.js --repo .
+```
+
+Kopieer voor CI `templates/github-workflows/project-structure.yml` naar
+`.github/workflows/`. De checker doet bewust niets in een repo zonder
+`.project-structure.json`; zo worden bestaande repos niet plotseling geblokkeerd.
+Het policy-bestand is door de agent-hook beschermd. Alleen een bewuste menselijke
+migratie met `PROJECT_STRUCTURE_ALLOW_POLICY_CHANGE=1` mag het aanpassen.
+
+Claude Code en Codex kunnen Write/Edit en herkenbare shellwrites vooraf blokkeren.
+Cursor biedt alleen een shell-hook: shellwrites zijn daar beschermd, directe
+editorwrites niet. Zonder contract blokkeert de guard elke nieuwe hoofdmap in de
+git-root; bestaande mappen en gewone rootbestanden blijven doorlopen.
+Dit is een regressieguard, geen magische schoonmaakbeurt voor bestaande repos.
+De policy-escape is een technische governancegrens, geen bewijs van menselijke
+toestemming. Na de installatie herstart je de betrokken agent.
+
+Installeer of update alle drie de lokale adapters met:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-project-structure.ps1
+```
+
+De installateur maakt alleen bij een echte configwijziging een timestamp-back-up
+naast die config. Een tweede run voegt geen dubbele hooks toe.
+
 De guard-hooks zitten in `hooks/`. Als plugin laden ze vanzelf via
 `hooks/hooks.json`. Bij de `install.sh`-route wijs je ze handmatig aan in je
 `~/.claude/settings.json` (zie onder). Alle hooks hebben `node` nodig.
