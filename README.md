@@ -86,6 +86,11 @@ project; de trigger-omschrijvingen overlappen bewust.
 [emilkowalski/skills](https://github.com/emilkowalski/skills), MIT. De lokale
 `LICENSE` in beide skillmappen blijft bij verspreiding staan.
 
+De volledige web- en designset van Emil zit erbij: `animate`, `animate-expo`,
+`animation-vocabulary`, `apple-design`, `ask-sonner`, `emil-design-eng`,
+`find-animation-opportunities`, `improve-animations`, `mobile-native`,
+`pick-ui-library`, `prototype` en `review-animations`.
+
 ## Installeren (Claude Code)
 
 Clone de repo:
@@ -93,6 +98,13 @@ Clone de repo:
 ```bash
 git clone https://github.com/robinbril/claude-code-harness.git
 cd claude-code-harness
+```
+
+Installeer alleen deze set in Claude Code en Codex, zonder andere skills te
+vervangen:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-emil-design-skills.ps1
 ```
 
 **Windows**, in PowerShell:
