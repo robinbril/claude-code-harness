@@ -10,7 +10,7 @@
  *
  * Only scans prose files (.md/.txt/.rst/.mdx). Code regions are stripped first,
  * so tells inside fenced/inline code never trigger. Code, JSON, config are exempt
- * by extension. Matches Robin's CLAUDE.md humanizer rules.
+ * by extension.
  */
 
 // Egregious tells -> block. Keep this list tight to avoid false-positive blocks.
