@@ -3,24 +3,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$HOME/.claude/claude-code-harness/hooks/humanizer-guard.js\""
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "node \"$HOME/.claude/claude-code-harness/hooks/commit-guard.js\""
-          },
-          {
-            "type": "command",
-            "command": "node \"$HOME/.claude/claude-code-harness/hooks/env-assert-guard.js\""
           }
         ]
       }
@@ -31,14 +18,6 @@
           {
             "type": "command",
             "command": "node \"$HOME/.claude/claude-code-harness/hooks/verified-claim-guard.js\""
-          },
-          {
-            "type": "command",
-            "command": "node \"$HOME/.claude/claude-code-harness/hooks/spec-gate.js\""
-          },
-          {
-            "type": "command",
-            "command": "node \"$HOME/.claude/claude-code-harness/hooks/stop-render-audit.js\""
           }
         ]
       }

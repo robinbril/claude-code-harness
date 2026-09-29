@@ -1,7 +1,7 @@
 {
   "name": "claude-code-harness",
-  "description": "A focused Claude Code harness: 20 skills (methodology, frontend/craft, autonomous build via supergoal, decision council) plus humanizer and commit-guard hooks. Built on Superpowers (MIT).",
-  "version": "1.2.0",
+  "description": "A focused Claude Code harness: methodology, frontend design and craft skills, autonomous build via supergoal, decision council, plus commit-guard and verified-claim-guard hooks. Built on Superpowers (MIT).",
+  "version": "1.3.0",
   "homepage": "https://github.com/robinbril/claude-code-harness",
   "repository": "https://github.com/robinbril/claude-code-harness",
   "license": "MIT",

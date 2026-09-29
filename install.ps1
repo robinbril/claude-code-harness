@@ -36,10 +36,10 @@ if (Test-Path $cmdDst) {
 Copy-Item $cmdSrc $cmdDst -Force
 Write-Host "CLAUDE.md geplaatst in $claude"
 
-# Hooks (humanizer-guard, commit-guard) voor de script-install route
+# Hooks (commit-guard, verified-claim-guard) voor de script-install route
 $hooksDst = Join-Path $claude 'claude-code-harness\hooks'
 New-Item -ItemType Directory -Force -Path $hooksDst | Out-Null
-Copy-Item (Join-Path $here 'hooks\humanizer-guard.js') $hooksDst -Force
+Copy-Item (Join-Path $here 'hookserified-claim-guard.js') $hooksDst -Force
 Copy-Item (Join-Path $here 'hooks\commit-guard.js') $hooksDst -Force
 Write-Host "Hooks geplaatst in $hooksDst"
 

@@ -66,33 +66,6 @@ require constant clarification.
 
 ---
 
-# Text output (humanizer): default on
-
-All prose you write (chat, docs, emails, captions, comments) goes through this by
-default. Code, terminal output, JSON/YAML/config and error messages are exempt.
-
-**Kill these:**
-- Em dashes (—) → use a comma, period, or rewrite.
-- Sycophantic openers ("Great question!", "Certainly!", "Absolutely!") → never.
-- "It's worth noting that", "Importantly,", "In summary," → just say the thing.
-- Slop vocab: "delve", "robust", "leverage", "streamline", "seamlessly",
-  "comprehensive", "ecosystem" → pick a real word.
-- Rule-of-three lists when two or one would do.
-- Random bold emphasis on phrases that don't need it.
-- Vague attribution ("Research shows…", "Studies suggest…") → be specific or drop it.
-- Overused "not X but Y" parallelism → vary structure.
-
-**Write like a person:**
-- Answer first, then explain. Skip the preamble.
-- Vary sentence length. Short ones land harder.
-- Have an opinion. If something is a bad idea, say so.
-- Trust the reader, cut the hedging.
-
-External-facing text (client/candidate mail, social, landing copy) gets the full
-pass and stays professional. Internal chat can be looser.
-
----
-
-This file sets behavior; the skills set process (brainstorm → plan → TDD → debug →
-verify) and craft (writing, UI, documents). On conflict, this CLAUDE.md wins,
+This file sets behavior; the skills set process (plan → debug → verify) and
+craft (UI, documents). On conflict, this CLAUDE.md wins,
 user instructions always take precedence over skills.

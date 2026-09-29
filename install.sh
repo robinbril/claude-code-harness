@@ -33,10 +33,10 @@ fi
 cp "${here}/CLAUDE.md" "${claude}/CLAUDE.md"
 echo "CLAUDE.md geplaatst in ${claude}"
 
-# Hooks (humanizer-guard, commit-guard) voor de script-install route
+# Hooks (commit-guard, verified-claim-guard) voor de script-install route
 hooks_dst="${claude}/claude-code-harness/hooks"
 mkdir -p "$hooks_dst"
-cp "${here}/hooks/humanizer-guard.js" "${here}/hooks/commit-guard.js" "$hooks_dst/"
+cp "${here}/hooks/commit-guard.js" "${here}/hooks/verified-claim-guard.js" "$hooks_dst/"
 echo "Hooks geplaatst in ${hooks_dst}"
 
 echo ""
