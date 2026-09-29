@@ -10,6 +10,7 @@
 //   2. VERIFIED without observation -> "your VERIFIED is not backed by a tool call"
 //   3. (UNVERIFIED, or VERIFIED with an observation) -> pass
 //
+// A failed tool call (is_error or non-zero exit) is not an observation.
 // stop_hook_active prevents a loop. Fail open on any parse error.
 'use strict';
 
@@ -47,6 +48,21 @@ function isObservation(b) {
   return false;
 }
 
+function hasSuccessfulOutput(result) {
+  if (result.is_error) return false;
+  const text = typeof result.content === 'string' ? result.content
+    : (result.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+  if (!text.trim()) return false;
+  if (/Process exited with code (?!0\b)\d+/i.test(text)) return false;
+  try {
+    const value = JSON.parse(text);
+    if (value.isError || value.is_error) return false;
+    if ('exit_code' in value && value.exit_code !== 0) return false;
+    if (value.session_id || value.cell_id) return false;
+  } catch (_) { /* Plain text is the normal Claude tool-result format. */ }
+  return true;
+}
+
 function isRealUserEntry(e) {
   if (!e || !e.message || e.message.role !== 'user' || e.isMeta) return false;
   const c = e.message.content;
@@ -81,6 +97,17 @@ function main(raw) {
   if (lastUser < 0) return 0;
   const turn = entries.slice(lastUser + 1);
 
+  const successfulCalls = new Set();
+  for (const entry of turn) {
+    const content = entry.message && entry.message.content;
+    if (!Array.isArray(content)) continue;
+    for (const result of content) {
+      if (result.type === 'tool_result' && hasSuccessfulOutput(result)) {
+        successfulCalls.add(result.tool_use_id);
+      }
+    }
+  }
+
   let mutated = false;
   let observed = false;
   let lastText = '';
@@ -91,7 +118,7 @@ function main(raw) {
       if (b && b.type === 'tool_use') {
         if (MUTATING_TOOLS.has(b.name)) mutated = true;
         else if (b.name === 'Bash' && b.input && MUTATING_BASH.test(b.input.command || '')) mutated = true;
-        if (isObservation(b)) observed = true;
+        if (isObservation(b) && successfulCalls.has(b.id)) observed = true;
       }
       if (b && b.type === 'text' && b.text) { lastText = b.text; turnText += b.text + '\n'; }
     }
