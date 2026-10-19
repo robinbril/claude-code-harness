@@ -57,13 +57,15 @@ function git(cwd, args) {
   }
 }
 
-// Splits a command line into segments of words. Quotes group words; && || ; | and newlines end a segment.
+// Splits a command line into segments of words. Quotes group words; && || ; | and newlines
+// end a segment; ( and ) become their own segments so a subshell's `cd` can be scoped.
 function segments(cmd) {
   const out = [];
   let words = [];
   let word = null;
   let quote = null;
   const end = () => { if (word !== null) { words.push(word); word = null; } };
+  const flush = () => { end(); if (words.length) out.push(words); words = []; };
   for (let i = 0; i < cmd.length; i++) {
     const ch = cmd[i];
     if (quote) {
@@ -75,20 +77,18 @@ function segments(cmd) {
     if (ch === '"' || ch === "'") { quote = ch; word = word ?? ''; continue; }
     if (ch === '\\' && i + 1 < cmd.length) { word = (word ?? '') + cmd[++i]; continue; }
     if (/\s/.test(ch) && ch !== '\n') { end(); continue; }
-    if (ch === '\n' || ch === ';' || ch === '&' || ch === '|') {
-      end();
-      if (words.length) out.push(words);
-      words = [];
-      continue;
-    }
+    if (ch === '\n' || ch === ';' || ch === '&' || ch === '|') { flush(); continue; }
+    if ((ch === '(' || ch === ')') && word === null) { flush(); out.push([ch]); continue; }
     word = (word ?? '') + ch;
   }
-  end();
-  if (words.length) out.push(words);
+  flush();
   return out;
 }
 
 const hasExpansion = (s) => /[$`]/.test(s);
+const isGit = (w) => w === 'git' || path.basename(w) === 'git';
+// Shell keywords that can precede a command in the same segment.
+const LEADING = new Set(['{', '}', 'then', 'do', 'else', 'elif', 'if', 'while', 'until', '!', 'time']);
 
 function resolveDir(base, target) {
   if (hasExpansion(target)) throw new Unsupported(`path with a shell expansion: ${target}`);
@@ -96,23 +96,26 @@ function resolveDir(base, target) {
   return path.resolve(base, expanded);
 }
 
-// Parses one `git ... commit ...` segment into { dir, all, paths }.
-function parseCommit(words, dir) {
+// Reads `git [global options] <sub> <args>`; returns { sub, dir, args } or null.
+function parseGit(words, dir) {
   let i = 1;
-  while (i < words.length && words[i] !== 'commit') {
+  while (i < words.length && words[i].startsWith('-')) {
     const w = words[i];
     if (w === '-C') { dir = resolveDir(dir, words[i + 1] || ''); i += 2; continue; }
     if (w === '-c') { i += 2; continue; }
     if (/^--(git-dir|work-tree|namespace)\b/.test(w)) throw new Unsupported(`git ${w}`);
-    if (w.startsWith('-')) { i += 1; continue; }
-    return null; // another subcommand, e.g. `git log --grep commit`
+    i += 1;
   }
-  if (words[i] !== 'commit') return null;
+  if (i >= words.length) return null;
+  return { sub: words[i], dir, args: words.slice(i + 1) };
+}
+
+function parseCommitArgs(args) {
   let all = false;
   const paths = [];
   let onlyPaths = false;
-  for (i += 1; i < words.length; i++) {
-    const w = words[i];
+  for (let i = 0; i < args.length; i++) {
+    const w = args[i];
     if (onlyPaths) { paths.push(w); continue; }
     if (w === '--') { onlyPaths = true; continue; }
     if (w === '--all') { all = true; continue; }
@@ -128,53 +131,92 @@ function parseCommit(words, dir) {
     paths.push(w);
   }
   for (const p of paths) if (hasExpansion(p)) throw new Unsupported(`path with a shell expansion: ${p}`);
-  return { dir, all, paths };
+  return { all, paths };
 }
 
-// Finds every git commit in the command, following `cd` the way the shell would.
+// `git add` / `git stage` earlier in the same command stages files the commit will record.
+function parseAddArgs(args) {
+  let all = false;
+  let update = false;
+  const paths = [];
+  for (const w of args) {
+    if (w === '-A' || w === '--all') all = true;
+    else if (w === '-u' || w === '--update') update = true;
+    else if (w.startsWith('--pathspec-from-file')) throw new Unsupported('git add --pathspec-from-file');
+    else if (w === '--' || w.startsWith('-')) continue;
+    else if (hasExpansion(w)) throw new Unsupported(`path with a shell expansion: ${w}`);
+    else paths.push(w);
+  }
+  return { all, update, paths };
+}
+
+// Finds every git commit in the command, following `cd`, subshells and earlier `git add`.
 function findCommits(cmd, cwd) {
   const commits = [];
+  const adds = [];
+  const stack = [];
   let dir = cwd;
+  let sawGitCommit = false;
   for (const words of segments(cmd)) {
+    if (words.length === 1 && words[0] === '(') { stack.push(dir); continue; }
+    if (words.length === 1 && words[0] === ')') { dir = stack.pop() ?? dir; continue; }
     let w = words;
-    while (w.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(w[0])) {
-      if (ENV_OVERRIDE.test(w[0])) {
-        if (w.slice(1).some((x) => x === 'git')) throw new Unsupported(w[0].split('=')[0]);
-      }
+    while (w.length && (LEADING.has(w[0]) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(w[0]))) {
+      if (ENV_OVERRIDE.test(w[0]) && w.slice(1).some(isGit)) throw new Unsupported(w[0].split('=')[0]);
       w = w.slice(1);
     }
     if (!w.length) continue;
+    const gitAt = w.findIndex(isGit);
+    if (gitAt >= 0 && w.slice(gitAt + 1).includes('commit')) sawGitCommit = true;
     if (w[0] === 'cd') { dir = resolveDir(dir, w[1] || os.homedir()); continue; }
-    if (w[0] === 'git') {
-      const c = parseCommit(w, dir);
-      if (c) commits.push(c);
+    if (isGit(w[0])) {
+      const g = parseGit(w, dir);
+      if (!g) continue;
+      if (g.sub === 'add' || g.sub === 'stage') adds.push({ dir: g.dir, ...parseAddArgs(g.args) });
+      if (g.sub === 'commit') commits.push({ dir: g.dir, ...parseCommitArgs(g.args), adds: [...adds] });
       continue;
     }
     if (WRAPPERS.has(path.basename(w[0])) && /\bgit\b[\s\S]*\bcommit\b/.test(w.slice(1).join(' '))) {
       throw new Unsupported(`git commit inside \`${w[0]}\``);
     }
   }
+  // A git commit the parser saw but could not place is refused, never waved through.
+  if (sawGitCommit && !commits.length) throw new Unsupported('a git commit form this guard does not recognise');
   return commits;
 }
 
+// NUL-separated names, so paths with spaces or accents survive git's quoting.
+function names(dir, args) {
+  return git(dir, [...args.slice(0, 1), '-z', ...args.slice(1)]).split('\0').filter(Boolean);
+}
+function topOf(dir) { return git(dir, ['rev-parse', '--show-toplevel']).trim(); }
+
 // The files a commit will record, each with a reader for the version it records.
-function commitContents({ dir, all, paths }) {
-  const top = git(dir, ['rev-parse', '--show-toplevel']).trim();
-  if (!top) return { top: null, files: [] };
-  const lines = (s) => s.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+function commitContents({ dir, all, paths, adds }) {
+  const top = topOf(dir);
+  if (!top) return { top: null, files: new Map() };
   const files = new Map();
-  for (const f of lines(git(top, ['diff', '--cached', '--name-only', '--diff-filter=d']))) {
+  const fromTree = (root, f) => () => { try { return fs.readFileSync(path.join(root, f), 'utf8'); } catch (_) { return ''; } };
+  for (const f of names(top, ['diff', '--cached', '--name-only', '--diff-filter=d'])) {
     files.set(f, () => git(top, ['show', `:${f}`]));
   }
-  const fromTree = (f) => () => { try { return fs.readFileSync(path.join(top, f), 'utf8'); } catch (_) { return ''; } };
   if (all) {
-    for (const f of lines(git(top, ['diff', '--name-only', '--diff-filter=d']))) files.set(f, fromTree(f));
+    for (const f of names(top, ['diff', '--name-only', '--diff-filter=d'])) files.set(f, fromTree(top, f));
   }
   if (paths.length) {
     // Let git resolve the pathspecs from the command's own directory; --full-name makes them top-relative.
-    for (const f of lines(git(dir, ['ls-files', '--full-name', '--cached', '--', ...paths]))) {
-      if (fs.existsSync(path.join(top, f))) files.set(f, fromTree(f));
+    for (const f of names(dir, ['ls-files', '--full-name', '--cached', '--', ...paths])) {
+      if (fs.existsSync(path.join(top, f))) files.set(f, fromTree(top, f));
     }
+  }
+  for (const add of adds) {
+    const addTop = topOf(add.dir);
+    if (!addTop) continue;
+    const found = [];
+    if (add.all || add.update) found.push(...names(addTop, ['diff', '--name-only', '--diff-filter=d']));
+    if (add.all) found.push(...names(addTop, ['ls-files', '--others', '--exclude-standard']));
+    if (add.paths.length) found.push(...names(add.dir, ['ls-files', '--full-name', '--cached', '--others', '--exclude-standard', '--', ...add.paths]));
+    for (const f of found) if (fs.existsSync(path.join(addTop, f))) files.set(f, fromTree(addTop, f));
   }
   return { top, files };
 }
