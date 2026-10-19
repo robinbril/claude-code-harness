@@ -8,10 +8,14 @@ const { spawnSync } = require('node:child_process');
 const POLICY_FILE = '.project-structure.json';
 const ESSENTIAL_ROOT_FILES = new Set(['README.md', 'LICENSE', '.gitignore', '.gitattributes', '.editorconfig', POLICY_FILE]);
 const HIDDEN_ROOT_DIRS = new Set(['.git', '.github', '.claude', '.codex', '.cursor', '.harness']);
-const SOURCE_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.py']);
+// The dependency check reads JS-style import and require syntax only.
+const SOURCE_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx']);
 const RECOMMENDED_MAX_AREAS = 6;
 
-function readJson(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+function readJson(file) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch (error) { throw Error(`${file}: ${error.message}`); }
+}
 // Gitignored build output (node_modules, .venv) is not part of the layout.
 function gitIgnored(root, names) {
   if (!names.length) return new Set();
@@ -68,13 +72,23 @@ function walk(root, visit, relative = '') {
     if (entry.isDirectory()) walk(root, visit, rel); else visit(rel);
   }
 }
+// Files git does not ignore; outside a git repo, every file except .git and node_modules.
+function projectFiles(root) {
+  const result = spawnSync('git', ['-C', root, 'ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8' });
+  if (result.status === 0) {
+    return result.stdout.split(/\r?\n/).filter(Boolean).map(file => file.split('/').join(path.sep)).filter(rel => fs.existsSync(path.join(root, rel)));
+  }
+  const files = [];
+  walk(root, rel => files.push(rel));
+  return files;
+}
 function dependencyViolations(root, policy) {
   const errors = [];
   for (const rule of policy.forbiddenDependencies || []) {
     if (!areaNames(policy).includes(rule.from) || !areaNames(policy).includes(rule.to)) errors.push(`dependency rule ${rule.from} -> ${rule.to} names an unknown area`);
   }
-  walk(root, rel => {
-    if (!SOURCE_EXTENSIONS.has(path.extname(rel)) || path.extname(rel) === '.py') return;
+  for (const rel of projectFiles(root)) {
+    if (!SOURCE_EXTENSIONS.has(path.extname(rel))) continue;
     const from = normalize(rel).split('/')[0];
     const source = fs.readFileSync(path.join(root, rel), 'utf8');
     for (const rule of policy.forbiddenDependencies || []) {
@@ -87,7 +101,7 @@ function dependencyViolations(root, policy) {
       });
       if (violates) errors.push(`${normalize(rel)} depends on forbidden ${rule.to}/ area`);
     }
-  });
+  }
   return errors;
 }
 function validateProject(root) {
@@ -110,11 +124,14 @@ function main(argv) {
   const index = argv.indexOf('--repo');
   if (index >= 0) return validateProject(argv[index + 1] || process.cwd());
   const pathIndex = argv.indexOf('--path');
-  if (pathIndex >= 0) return validateWrite(argv[pathIndex + 1], argv[argv.indexOf('--cwd') + 1] || process.cwd());
+  if (pathIndex >= 0) {
+    const cwdIndex = argv.indexOf('--cwd');
+    return validateWrite(argv[pathIndex + 1], cwdIndex >= 0 && argv[cwdIndex + 1] ? argv[cwdIndex + 1] : process.cwd());
+  }
   throw Error('Use --repo <directory> or --path <file> --cwd <directory>.');
 }
 if (require.main === module) {
   try { const result = main(process.argv.slice(2)); if (result.advice && result.advice.length) process.stderr.write(result.advice.map(item => `[project-structure] advice: ${item}`).join('\n') + '\n'); if (result.errors.length) { process.stderr.write(result.errors.map(error => `[project-structure] ${error}`).join('\n') + '\n'); process.exitCode = 2; } }
   catch (error) { process.stderr.write(`[project-structure] ${error.message}\n`); process.exitCode = 2; }
 }
-module.exports = { findProject, policyAdvice, validatePolicy, validatePath, validateProject, validateWrite, RECOMMENDED_MAX_AREAS };
+module.exports = { findProject, projectFiles, policyAdvice, validatePolicy, validatePath, validateProject, validateWrite, RECOMMENDED_MAX_AREAS };

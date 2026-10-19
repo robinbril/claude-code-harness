@@ -1,6 +1,6 @@
 import type { E2EConfig } from 'e2e';
 import { web } from '@e2e-dev/web';
-// From poort ≥ 0.4.0 (`npx -y github:Reforge-Recruitment/poort init`). Adjust the
+// From poort v0.4.0 (`npx -y github:Reforge-Recruitment/poort#v0.4.0 init`). Adjust the
 // relative path if this config sits in a subfolder, e.g. '../.poort/...'.
 import { claudeSeat } from './.poort/integrations/e2e-claude-seat.mjs';
 

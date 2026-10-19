@@ -82,6 +82,6 @@ Antwoord-eerst: wat er staat, met per fase het gate-bewijs (command + uitkomst).
 ## UI-bewijs
 
 Elke fase of gate die iets in een browser bewijst, gebruikt een echte render met een vooraf opgeschreven verwachting:
-- Statische render: `node scripts/shoot.js <url|bestand> <out.png> [selector]` uit deze harness, of `npx playwright screenshot`. Lees het vooraf opgeschreven feit af.
-- Flow of gedrag (klik, zoek, navigeer): een e2e-test met skill `e2e` (`npx e2e run`).
+- Statische render: `node scripts/shoot.js <url|bestand> <out.png> [selector]` uit deze harness, of `npx --no-install playwright screenshot` (lokaal geinstalleerd). Lees het vooraf opgeschreven feit af.
+- Flow of gedrag (klik, zoek, navigeer): een e2e-test met skill `e2e` (`npx --no-install e2e run`).
 - Ingelogde of hover-state met echte data: de eigen browser van de gebruiker. Pagina's met klant- of persoonsgegevens nooit naar een extern model.

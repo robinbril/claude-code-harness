@@ -93,6 +93,10 @@ setup_repo() { # bouwt $TMP/<naam>/{origin.git,work}; $1 = naam, $2 = met dev-br
     commit hotfix.txt "fix" "hotfix op main"
     git push -q origin main
   fi
+  git rev-parse --verify --quiet refs/remotes/origin/main >/dev/null || {
+    echo "setup_repo $1 faalde: geen origin/main"
+    exit 1
+  }
 }
 
 echo "# e2e: hygiene.sh"
@@ -134,12 +138,12 @@ echo "## Scenario 4: foute invoer"
 OUT="$(bash "$SCRIPT" "$TMP/bestaat-niet" 2>&1)"
 RC=$?
 expect "melding bij onbekend pad" 'Repo niet gevonden' "$OUT"
-[ "$RC" = 2 ] && ok "exitcode 2 bij onbekend pad" || bad "exitcode 2 bij onbekend pad (kreeg $RC)"
+if [ "$RC" = 2 ]; then ok "exitcode 2 bij onbekend pad"; else bad "exitcode 2 bij onbekend pad (kreeg $RC)"; fi
 mkdir -p "$TMP/geen-git"
 OUT="$(bash "$SCRIPT" "$TMP/geen-git" 2>&1)"
 RC=$?
 expect "melding bij map zonder git" 'Geen git-repo' "$OUT"
-[ "$RC" = 2 ] && ok "exitcode 2 bij map zonder git" || bad "exitcode 2 bij map zonder git (kreeg $RC)"
+if [ "$RC" = 2 ]; then ok "exitcode 2 bij map zonder git"; else bad "exitcode 2 bij map zonder git (kreeg $RC)"; fi
 
 echo "## Scenario 5: script verandert niets aan de repo"
 cd "$TMP/full/work" || exit 1
@@ -152,7 +156,7 @@ AFTER="$(
   git for-each-ref --format='%(refname) %(objectname)' refs/heads
   git status --porcelain
 )"
-[ "$BEFORE" = "$AFTER" ] && ok "lokale branches en werkmap ongewijzigd" || bad "lokale branches of werkmap gewijzigd"
+if [ "$BEFORE" = "$AFTER" ]; then ok "lokale branches en werkmap ongewijzigd"; else bad "lokale branches of werkmap gewijzigd"; fi
 
 echo
 echo "Resultaat: $PASS geslaagd, $FAIL mislukt"

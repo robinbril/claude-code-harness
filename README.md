@@ -147,5 +147,6 @@ skill-map: `find-bugs` uit [getsentry/skills](https://github.com/getsentry/skill
 (Apache-2.0), `make-interfaces-feel-better` van
 [jakubkrehel](https://github.com/jakubkrehel/make-interfaces-feel-better) (MIT), `e2e` uit
 [tester-army/e2e](https://github.com/tester-army/e2e) (Apache-2.0) en `batch-grill-me`, gebaseerd
-op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) (MIT). Alle skills zijn
-generiek, zonder persoonlijke of bedrijfsspecifieke inhoud.
+op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) (MIT). De skills zijn
+generiek, met een uitzondering: `e2e-rules` verwijst naar `poort`, een interne Reforge-repo,
+om e2e-modellen op je eigen Claude-abonnement te draaien.

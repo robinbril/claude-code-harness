@@ -51,8 +51,9 @@ vervangen elkaar niet.
 
 ```bash
 git branch backup/pre-squash          # vangnet, niet overslaan
-git reset origin/main                  # mixed reset: commits weg, werk blijft
-                                       # alleen correct als origin/main niet bewoog sinds je aftakte; anders: git reset HEAD~<N>
+base_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD || echo origin/main)
+                                       # takt de branch af van een andere branch (bijv. dev): zet base_branch daarop
+git reset "$(git merge-base HEAD "$base_branch")"   # mixed reset naar het aftakpunt: commits weg, werk blijft
 # per thema:
 git add <paden van thema 1> && git commit -m "feat: ..."
 # ... herhaal per thema

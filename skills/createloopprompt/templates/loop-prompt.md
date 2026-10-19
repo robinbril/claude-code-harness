@@ -76,7 +76,7 @@ Two possible endings. Output ONLY one of them.
 ## Result
 [What changed]
 ## Files changed
-- [file]: [reason]
+- `[file]`: [reason]
 ## Validation
 - [command]: [pass/fail/not run + reason]
 ## Edge cases checked

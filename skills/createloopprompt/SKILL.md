@@ -19,7 +19,7 @@ Als de gebruiker bestanden of repo-context heeft genoemd: lees zelf de relevante
 
 ## Stap 2 - Routeer eerst naar de loop-collectie (Claude Code)
 
-In Claude Code bestaat een collectie gespecialiseerde, token-zuinige loop-skills. Die orchestreren verse subagents met ingebouwde state-file, harde caps en per-ronde-verificatie, wat vrijwel altijd beter is dan één agent die een lange monolithische prompt afwerkt. **Match de taak hier eerst tegen.** Genereer pas een losse prompt (stap 3+) als geen skill past, of als het doel Cursor/Codex is (daar bestaan deze skills niet).
+In Claude Code bestaat een collectie gespecialiseerde, token-zuinige loop-skills. Ze werken met state-files en harde stopregels; workergebruik en verificatie verschillen per skill. Dat is vrijwel altijd beter dan één agent die een lange monolithische prompt afwerkt. **Match de taak hier eerst tegen.** Genereer pas een losse prompt (stap 3+) als geen skill past, of als het doel Cursor/Codex is (daar bestaan deze skills niet).
 
 | Taak | Route naar | Ingebouwde cap |
 |------|-----------|----------------|
@@ -29,8 +29,9 @@ In Claude Code bestaat een collectie gespecialiseerde, token-zuinige loop-skills
 | Onbekende hoeveelheid vinden (bugs/dead code/audit/claims) | **speur-loop** | 2 droge rondes |
 | Wachten op externe state (CI/deploy/DNS/health) + actie bij verandering | **waak-loop** | eindcriterium |
 | Einddoel end-to-end shippen (recon → plan → bouw → polijst → fix → verify) | **keten-loop** | per fase |
+| Eén uitkomst in deze sessie naar af brengen, met bewijs per stap | **/goal** | stopt alleen bij echte beslispunten |
 
-Past er een: adviseer die skill (`/fix-loop`, `/bouw-loop`, `/polijst-loop`, `/speur-loop`, `/waak-loop`, `/keten-loop`) met één regel waarom, en stop. Genereer dan géén losse prompt, dat zou de agent-orchestratie dupliceren met een zwakkere single-agent-variant. Twijfel tussen twee (bv. bug in een feature): noem beide met de doorslaggevende vraag. Alleen bij geen match, of een expliciet niet-Claude-Code-doel, ga je door naar stap 3.
+Past er een: adviseer die skill (`/fix-loop`, `/bouw-loop`, `/polijst-loop`, `/speur-loop`, `/waak-loop`, `/keten-loop`, `/goal`) met één regel waarom, en stop. Genereer dan géén losse prompt, dat zou de agent-orchestratie dupliceren met een zwakkere single-agent-variant. Twijfel tussen twee (bv. bug in een feature): noem beide met de doorslaggevende vraag. Alleen bij geen match, of een expliciet niet-Claude-Code-doel, ga je door naar stap 3.
 
 ## Stap 3 - Kies het looptype (fallback: standalone prompt)
 

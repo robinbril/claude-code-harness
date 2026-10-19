@@ -32,8 +32,8 @@ Schrijf de rubric (met de ankers) in `.loops/polijst/state.md`, zie de vorm onde
 ## Stopcondities (hard)
 
 - Gemiddelde >= 9: klaar.
-- Winst < 0.5 punt t.o.v. vorige ronde: plateau, stop. Meer rondes zijn dan ruis.
-- **Plateau onder 7**: blijft de score twee rondes onder 7 hangen, escaleer de judge en fix-worker naar `model: "opus"` voor een ronde voor je opgeeft; een sonnet-plateau is soms een sonnet-plafond.
+- **Plateau onder 7** (gaat voor de gewone plateau-stop): blijft de score twee rondes onder 7 hangen, escaleer de judge en fix-worker naar `model: "opus"` voor een ronde voor je opgeeft; een sonnet-plateau is soms een sonnet-plafond.
+- Winst < 0.5 punt t.o.v. vorige ronde, met score >= 7 of na die opus-ronde: plateau, stop. Meer rondes zijn dan ruis.
 - 4 rondes: stop hoe dan ook.
 - Een as die daalt na een fix: draai die fix terug voor je verder gaat.
 - Elke stop (klaar, plateau, 4 rondes, opgegeven): zet eerst `Status: DONE` in de state-file, zodat een volgende aanroep niet hervat op een afgeronde run.
@@ -64,6 +64,6 @@ Score-verloop per ronde (compact tabelletje), wat de grootste sprongen gaf, wat 
 ## UI-bewijs
 
 Elke fase of gate die iets in een browser bewijst, gebruikt een echte render met een vooraf opgeschreven verwachting:
-- Statische render: `node scripts/shoot.js <url|bestand> <out.png> [selector]` uit deze harness, of `npx playwright screenshot`. Lees het vooraf opgeschreven feit af.
-- Flow of gedrag (klik, zoek, navigeer): een e2e-test met skill `e2e` (`npx e2e run`).
+- Statische render: `node scripts/shoot.js <url|bestand> <out.png> [selector]` uit deze harness, of `npx --no-install playwright screenshot` (lokaal geinstalleerd). Lees het vooraf opgeschreven feit af.
+- Flow of gedrag (klik, zoek, navigeer): een e2e-test met skill `e2e` (`npx --no-install e2e run`).
 - Ingelogde of hover-state met echte data: de eigen browser van de gebruiker. Pagina's met klant- of persoonsgegevens nooit naar een extern model.

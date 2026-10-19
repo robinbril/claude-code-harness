@@ -61,7 +61,7 @@ Lees ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens sectie 
 - In een nieuwe sessie `/context`: hoeveel kosten de skill-beschrijvingen?
 - Dode verwijzingen zoeken: elke skillnaam en elk pad dat in een `SKILL.md`, `CLAUDE.md` of hook staat, bestaat.
 
-**Per release:** versie ophogen in `plugin.json` en `marketplace.json`, beide hooks een keer laten afgaan (een commit met een nep-secret, een klaar-claim zonder tool-call), en de README bijwerken.
+**Per release:** versie ophogen in `plugin.json` en `marketplace.json`, beide hooks een keer laten afgaan: een commit met een nep-secret in een wegwerp-worktree (`git worktree add ../hook-test`, daarna `git worktree remove --force ../hook-test`), en een klaar-claim zonder tool-call, en de README bijwerken.
 
 **Controle:** de gebruikstelling staat genoteerd bij de release, en beide hooks blokkeren wat ze horen te blokkeren.
 

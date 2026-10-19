@@ -32,7 +32,7 @@ repos:
     hooks:
       - id: bash-syntax
         name: bash syntax check
-        entry: bash -n
+        entry: bash -c 'for f in "$@"; do bash -n "$f" || exit 1; done' --
         language: system
         files: \.sh$
       - id: skill-frontmatter

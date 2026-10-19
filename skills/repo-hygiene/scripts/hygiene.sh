@@ -28,6 +28,7 @@ if [ -z "${MAIN:-}" ]; then
   MAIN=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##')
   [ -z "$MAIN" ] && { ref_exists main && MAIN=main || MAIN=master; }
 fi
+ref_exists "$MAIN" || echo "WARN: origin/$MAIN bestaat niet; vergelijkingen met $MAIN zijn onvolledig"
 if [ -z "${DEV:-}" ]; then
   for c in dev develop development acceptance staging; do ref_exists "$c" && {
     DEV=$c
@@ -61,6 +62,9 @@ echo
 # Merged PR heads (vangt squash/rebase merges die git zelf niet ziet)
 MERGED_PR_HEADS=""
 [ $HAS_GH -eq 1 ] && MERGED_PR_HEADS=$(gh pr list --state merged --limit 300 --json headRefName -q '.[].headRefName' 2>/dev/null)
+if [ "$(printf '%s\n' "$MERGED_PR_HEADS" | grep -c .)" -ge 300 ]; then
+  echo "WARN: 300 gemergede PR's opgehaald (limiet); oudere squash-merges kunnen als STALE of actief verschijnen"
+fi
 OPEN_PR_HEADS=""
 [ $HAS_GH -eq 1 ] && OPEN_PR_HEADS=$(gh pr list --state open --limit 200 --json headRefName -q '.[].headRefName' 2>/dev/null)
 
@@ -107,7 +111,7 @@ echo
 # Lokale branches
 echo "## 3. Lokale branches"
 gone=$(git for-each-ref --format='%(refname:short) %(upstream:track)' refs/heads | awk '$2=="[gone]"{print $1}')
-merged_local=$(git branch --format='%(refname:short)' --merged "origin/$MAIN" | grep -vxE "$MAIN|${DEV:-__none__}")
+merged_local=$(git branch --format='%(refname:short)' --merged "origin/$MAIN" 2>/dev/null | grep -vxF -e "$MAIN" -e "${DEV:-__none__}")
 [ -n "$gone" ] && {
   echo "- upstream verwijderd (kan weg):"
   echo "$gone" | sed 's/^/    /'
@@ -116,7 +120,9 @@ merged_local=$(git branch --format='%(refname:short)' --merged "origin/$MAIN" | 
   echo "- lokaal al gemerged in $MAIN (kan weg):"
   echo "$merged_local" | sed 's/^/    /'
 }
-[ -z "$gone$merged_local" ] && echo "- OK, niets op te ruimen"
+if [ -z "$gone$merged_local" ]; then
+  if ref_exists "$MAIN"; then echo "- OK, niets op te ruimen"; else echo "- onbekend: origin/$MAIN ontbreekt"; fi
+fi
 echo
 
 # Open PRs
