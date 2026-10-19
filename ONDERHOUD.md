@@ -29,7 +29,7 @@ Lees ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens sectie 
    | 1 | Methodiek | `skill-finder`, `systematic-debugging`, `council`, `batch-grill-me`, `projectstructuur` |
    | 2 | Kwaliteit en git | `find-bugs`, `commit-discipline`, `repo-hygiene` |
    | 3 | Loops en autonoom bouwen | `goal`, `supergoal`, `keten-loop`, `bouw-loop`, `polijst-loop`, `fix-loop`, `speur-loop`, `waak-loop`, `createloopprompt` |
-   | 4 | Frontend-design | `design-taste-frontend`, `redesign-existing-projects`, `emil-design-eng`, `make-interfaces-feel-better`, `ux-heuristics`, `frontend-gotchas` |
+   | 4 | Frontend-design | `design-taste-frontend`, `redesign-existing-projects`, `emil-design-eng`, `make-interfaces-feel-better`, `ux-heuristics`, `frontend-gotchas`, `fixing-accessibility`, `transitions-dev` |
    | 5 | E2E-tests | `e2e`, `e2e-rules` |
    | 6 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `diagram-design` |
    | 7 | Hooks | `commit-guard`, `verified-claim-guard` |

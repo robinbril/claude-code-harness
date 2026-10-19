@@ -40,6 +40,8 @@ Bouwen en beoordelen van UI. Kern:
 | `make-interfaces-feel-better` | Details die een interface verzorgd laten voelen: schaduw, typografie, micro-interacties |
 | `ux-heuristics` | Usability-audit: Nielsen, Krug, cognitive walkthrough |
 | `frontend-gotchas` | Terugkerende frontend-valkuilen voor je ze inbouwt |
+| `fixing-accessibility` | Toegankelijkheid auditen en fixen: ARIA, toetsenbord, focus, contrast, formulierfouten |
+| `transitions-dev` | Kant-en-klare CSS-transities: dropdowns, modals, badges, toasts, tabs |
 | `data-visualization` | Grafiektype kiezen uit de data-relatie voor je een chart bouwt |
 | `diagram-design` | Architectuur-, flow- en andere diagrammen als HTML/SVG |
 
@@ -146,7 +148,9 @@ uitvechten via blinde peer-review en een synthese. Overgenomen met licentie in d
 skill-map: `find-bugs` uit [getsentry/skills](https://github.com/getsentry/skills)
 (Apache-2.0), `make-interfaces-feel-better` van
 [jakubkrehel](https://github.com/jakubkrehel/make-interfaces-feel-better) (MIT), `e2e` uit
-[tester-army/e2e](https://github.com/tester-army/e2e) (Apache-2.0) en `batch-grill-me`, gebaseerd
+[tester-army/e2e](https://github.com/tester-army/e2e) (Apache-2.0), `fixing-accessibility` uit
+[ibelick/ui-skills](https://github.com/ibelick/ui-skills) (MIT), `transitions-dev` van
+[Jakubantalik](https://github.com/Jakubantalik/transitions-dev) (MIT) en `batch-grill-me`, gebaseerd
 op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) (MIT). De skills zijn
 generiek, met een uitzondering: `e2e-rules` verwijst naar `poort`, een interne Reforge-repo,
 om e2e-modellen op je eigen Claude-abonnement te draaien.
