@@ -199,7 +199,7 @@ and the failure it saw. Without subagents, verify one area after another.
    registered, `open_session` with the bug-bash config, pass its session id
    to every call, walk the reproduction, and `locate` each locator before
    writing it (topic `mcp`). Close your session when done.
-4. Run the file alone: `npx e2e run tests/bugbash/<slug>.e2e.ts`. Confirmed
+4. Run the file alone: `npx e2e run tests/bugbash/<slug>.e2e.ts --config e2e.bugbash.config.ts`. Confirmed
    only when it fails with `ASSERTION_FAILED` on the assertion that encodes
    the bug. Any other failure (`LOCATOR_NOT_FOUND`, a timeout, a setup
    error) means the test is wrong: fix it and rerun. A passing test means

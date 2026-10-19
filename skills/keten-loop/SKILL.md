@@ -10,7 +10,7 @@ argument-hint: >-
 
 Jij bent de chain-orchestrator. Einddoel: $ARGUMENTS
 
-Zelfde moat als supergoal (niks is klaar tot iets onafhankelijks het bewijst tegen de oorspronkelijke opdracht), maar met een fractie van de tokens: **plan zwaar, voer licht uit, verifieer eenmaal scherp per gate.** Geen council, geen dubbele evaluatie per fase, geen Codex; alles Claude (Fable orchestreert, sonnet bouwt, opus judged het eind).
+Zelfde moat als supergoal (niks is klaar tot iets onafhankelijks het bewijst tegen de oorspronkelijke opdracht), maar met een fractie van de tokens: **plan zwaar, voer licht uit, verifieer eenmaal scherp per gate.** Geen council, geen dubbele evaluatie per fase, geen Codex; alles Claude (Opus orchestreert, Sonnet bouwt, Opus keurt het eind).
 
 Wanneer NIET keten maar supergoal: een one-way-door architectuurkeuze, een migratie van 15+ fasen, of een taak waar een verkeerde richting duur is. Dan is de council + dubbele evaluatie de premie waard. Keten is voor de middag-tot-dag klus die je vertrouwt maar niet wilt babysitten.
 
@@ -26,7 +26,7 @@ Elke schakel is een bestaande loop-skill; sla over wat niet van toepassing is en
 
 Draai het speur-loop-patroon met 2-3 lenzen, max 2 rondes, gericht op: conventies, risico-plekken voor deze taak, herbruikbare bestaande code. Ken je de codebase al uit deze sessie of memory: skip, een regel melden.
 
-### 2. PLAN (Fable, hoofdsessie, de enige dure denk-stap)
+### 2. PLAN (Opus, hoofdsessie, de enige dure denk-stap)
 
 Vertaal het einddoel naar 2-6 fasen in `.loops/keten/state.md` (zie de vorm onderaan). Per fase: scope (2-5 zinnen), **een toetsbaar gate-criterium** (command + verwachte uitkomst, deliverable-pad, of observeerbaar gedrag van het draaiende artefact), en de loop die hem uitvoert. Minstens een fase draagt een empirisch criterium (het artefact echt draaien, niet alleen tests groen). Ambigue scope: stel nu een scherpe vraag, niet halverwege. Grote taak (>6 fasen, one-way-doors): stop en adviseer supergoal i.p.v. door te plannen.
 
@@ -36,7 +36,7 @@ Draai de mandatory commands van fase 1 eenmaal tegen de huidige staat. Al rood o
 
 ### 3. Per fase: SHIP + GATE
 
-- Voer de fase uit via het bouw-loop-patroon (verse sonnet-workers per story, jij verifieert per story).
+- Voer de fase uit met de loop die het plan voor deze fase noemt: bouw-loop (verse sonnet-workers per story, jij verifieert per story), fix-loop of polijst-loop, elk volgens zijn eigen regels.
 - **Gate**: een verse evaluator-agent (laat model-parameter weg, of `model: "opus"` bij een kritieke fase) die alleen krijgt: het gate-criterium en de opdracht alles zelf vast te stellen tegen de repo en het draaiende artefact, blind voor worker-rapporten. Een pass per gate, geen tweede opinie.
 - REJECT: een herstelronde via het fix-loop-patroon met de evaluator-bevindingen als input, dan eenmalig opnieuw de gate. Weer REJECT: fase BLOCKED, chain gaat door waar dat kan, eindrapport meldt het hard.
 - Na een geslaagde gate: werk de state-file bij (fase afgevinkt) en schrijf een eventuele niet-voor-de-hand-liggende learning naar memory (API-eigenaardigheid, faalpatroon+fix, bevestigde voorkeur).

@@ -168,7 +168,8 @@ CI mode is on when `CI` is set (not `0` or `false`): `retries` 1,
 # GITHUB_TOKEN in the run step's env.
 name: e2e
 on:
-  pull_request:
+  # Trusted runs only: this job reads secrets. Run pull requests in a separate,
+  # secret-free workflow (replay from .e2e/cache/) or behind an approval-gated environment.
   push:
     branches: [main]
 permissions:

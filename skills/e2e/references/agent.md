@@ -327,7 +327,10 @@ Reference: https://e2e.tester.army/docs/agents
 
 ## In CI
 
-Run the suite, agent steps included, on every pull request, passing the key
-the config's model reads (`env: { AI_GATEWAY_API_KEY }` for `gateway()`)
-from secrets. Sharing `.e2e/cache/` lets CI replay verified action steps
+Run the suite, agent steps included, in a trusted workflow: on pushes to the
+main branch, or on pull requests only behind an approval-gated environment.
+Only there pass the key the config's model reads (`env: { AI_GATEWAY_API_KEY }`
+for `gateway()`) and test credentials from secrets: a pull-request run executes
+code from the pull request and must not see secrets. A secret-free pull-request
+workflow can still replay `.e2e/cache/`, which replays verified action steps
 without model calls; CI defaults (`read-only` cache, retries): topic running.

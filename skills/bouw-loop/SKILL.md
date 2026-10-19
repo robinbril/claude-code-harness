@@ -15,7 +15,7 @@ Bestaat `.loops/bouw/plan.md` met open (niet-afgevinkte) stories en `Status: IN_
 
 ## Stap 0: plan (de enige dure stap)
 
-Is er al een tasklist (pad meegegeven of `.loops/bouw/plan.md` bestaat), lees die. Anders maak je hem zelf in de hoofdsessie (Fable, dit mag kosten):
+Is er al een tasklist (pad meegegeven of `.loops/bouw/plan.md` bestaat), lees die. Anders maak je hem zelf in de hoofdsessie (Opus, dit mag kosten):
 
 - Recon: lees de relevante code, snap de conventies.
 - Knip de taak in stories van elk max ~300 gewijzigde regels over max ~4 bestanden (past in een worker-context). Per story: een titel, 2-5 zinnen spec, **een toetsbaar acceptatiecriterium** (command + verwacht resultaat, of deliverable-pad, of observeerbaar gedrag), en optioneel `dependsOn: <story-nrs>`.

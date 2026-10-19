@@ -51,7 +51,7 @@ Per iteratie:
 
 ## Escalatie en stop
 
-- Escaleer de diagnose-worker naar `model: "opus"` (of laat de model-parameter weg zodat hij Fable erft) zodra **een** van deze geldt: 2x identieke failure, of 3 iteraties zonder een enkele groene stap. Geef expliciet mee welke hypotheses al sneuvelden, zodat opus niet hetzelfde pad herhaalt. Een failure die elke keer net anders is telt niet als vooruitgang die de escalatie uitstelt.
+- Escaleer de diagnose-worker naar `model: "opus"` (of laat de model-parameter weg zodat hij de hoofdsessie erft) zodra **een** van deze geldt: 2x identieke failure, of 3 iteraties zonder een enkele groene stap. Geef expliciet mee welke hypotheses al sneuvelden, zodat opus niet hetzelfde pad herhaalt. Een failure die elke keer net anders is telt niet als vooruitgang die de escalatie uitstelt.
 - Kreeg je een "+Nk"-token-directief: stop met nieuwe workers zodra het budget onder ~50k zakt, rond af en rapporteer de reststand.
 - 5 iteraties zonder groen: STOP. Zet `Status: BLOCKED`, rapporteer de pogingen, de beste hypothese en wat een mens moet aanleveren. Eindeloos branden is verboden.
 

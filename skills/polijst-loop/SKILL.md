@@ -25,7 +25,7 @@ Schrijf de rubric (met de ankers) in `.loops/polijst/state.md`, zie de vorm onde
 
 ## De loop (max 4 rondes)
 
-1. **Judge** (Agent, verse context per ronde, nooit hergebruiken). `model: "sonnet"` voor mechanische assen; laat het model-parameter weg (Fable) als smaak de kern is. De judge observeert het ECHTE artefact: bij UI via preview-tools (snapshot, inspect, screenshot, resize naar mobile), bij tekst de file zelf, bij code de diff plus de files. Verwacht terug: score per as tegen de ankers, totaal, en de **top-3 concreetste fixes** (met file/regel of element). Zijn er meer dan 3 kritieke problemen, noem ze wel maar fix de top-3 deze ronde.
+1. **Judge** (Agent, verse context per ronde, nooit hergebruiken). `model: "sonnet"` voor mechanische assen; laat het model-parameter weg (hoofdsessie, Opus) als smaak de kern is. De judge observeert het ECHTE artefact: bij UI via preview-tools (snapshot, inspect, screenshot, resize naar mobile), bij tekst de file zelf, bij code de diff plus de files. Verwacht terug: score per as tegen de ankers, totaal, en de **top-3 concreetste fixes** (met file/regel of element). Zijn er meer dan 3 kritieke problemen, noem ze wel maar fix de top-3 deze ronde.
 2. **Fix-worker** (Agent, `model: "sonnet"`). Voert alleen die top-3 uit, chirurgisch. Niet "en passant" andere dingen verbouwen.
 3. **Re-score** door een verse judge (zelfde rubric + ankers, blind voor de vorige scores). Log de ronde in de state-file.
 
@@ -36,6 +36,7 @@ Schrijf de rubric (met de ankers) in `.loops/polijst/state.md`, zie de vorm onde
 - **Plateau onder 7**: blijft de score twee rondes onder 7 hangen, escaleer de judge en fix-worker naar `model: "opus"` voor een ronde voor je opgeeft; een sonnet-plateau is soms een sonnet-plafond.
 - 4 rondes: stop hoe dan ook.
 - Een as die daalt na een fix: draai die fix terug voor je verder gaat.
+- Elke stop (klaar, plateau, 4 rondes, opgegeven): zet eerst `Status: DONE` in de state-file, zodat een volgende aanroep niet hervat op een afgeronde run.
 
 ## State-file vorm
 

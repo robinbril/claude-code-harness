@@ -61,6 +61,7 @@ Kies de ScheduleWakeup-delay op wat je bewaakt, nooit op een rond getal:
 - Een check per wake; geen "nu ik toch wakker ben"-extra werk.
 - De state-file is het geheugen; de conversatie niet.
 - Max-wakes bereikt zonder trigger: stop met een eerlijke laatste stand, niet stilletjes doorslapen.
+- Elke eindstop (trigger afgehandeld, deadline, max-wakes): zet eerst `Status: DONE` in de state-file, zodat een volgende aanroep niet hervat op een afgeronde run.
 
 ## UI-bewijs
 

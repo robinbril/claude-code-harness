@@ -38,6 +38,7 @@ Deze skill-invocatie is je opt-in voor Workflow. Per ronde:
 - 2 opeenvolgende rondes met 0 fresh findings: droog, klaar. **Droogte gaat voor de ronde-cap**: op een grote repo die nog fresh oplevert stop je niet op een teller met de put nog vol.
 - De ronde-cap is een vangnet tegen niet-convergeren, geen doel: zonder budget-directief max 5 rondes (niet 3, dat sneed grote repos te vroeg af); met een "+Nk"-budget `while (budget.remaining() > 50_000)`. Stop je op de cap terwijl de laatste ronde nog fresh gaf: meld expliciet dat de put nog niet droog was.
 - Meld altijd wat NIET gedekt is (lens niet gedraaid, directory geskipt); stille truncatie is verboden.
+- Elke stop (droog, ronde-cap, budget): zet eerst `Status: DONE` in de state-file, zodat een volgende aanroep niet hervat op een afgeronde run.
 
 ## State-file vorm
 
