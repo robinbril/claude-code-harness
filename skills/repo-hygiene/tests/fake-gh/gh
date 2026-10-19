@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Nep-gh voor de e2e-tests: doet alsof er een GitHub-remote is met vaste PR's.
+case "$*" in
+  "repo view"*) exit 0 ;;
+  *"pr list --state merged"*) echo "squashed-feature" ;;
+  *"pr list --state open"*"headRefName -q"*) echo "open-feature" ;;
+  *"pr list --state open"*) echo "- #7 open-feature -> dev | mergeable=CONFLICTING | upd 2026-10-01 | Test PR" ;;
+  *"run list --status failure"*) echo "- feature-x: CI | 2026-10-01 | https://example.test/run/1" ;;
+  *"run list"*) echo '[{"workflowName":"CI","status":"completed","conclusion":"success","createdAt":"2026-10-01T00:00:00Z","url":"https://example.test/run/2"}]' ;;
+  *) exit 1 ;;
+esac

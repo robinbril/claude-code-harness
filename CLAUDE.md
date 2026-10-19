@@ -64,6 +64,51 @@ For multi-step tasks, state a brief plan:
 Strong success criteria let you loop independently. Weak criteria ("make it work")
 require constant clarification.
 
+## 5. Verify Before "Done"
+
+- "Done" exists only after a tool call that proves it: a test, build, curl, render or query.
+  End with `VERIFIED: <what ran> -> <real output>` or `UNVERIFIED: <why not>`. Enforced by
+  `verified-claim-guard`.
+- Something a human must see: a real render (`node scripts/shoot.js`) or an e2e run (skill `e2e`).
+
+## 6. Look It Up, Don't Assume
+
+- Identifiers, existing concepts, where it really runs, every call site: read the source before typing.
+- Follow the contract of two sibling implementations.
+
+## 7. Structure
+
+- Files 200 to 400 lines; 800 is the hard limit. A file growing past it gets split by
+  responsibility before you build on. Functions under 50 lines, nesting at most 4.
+- The root explains the project: entrypoints, manifests, README and config that tooling needs there.
+- Folders are named for their responsibility. New project: group by feature. Existing repo: follow
+  the layout that is already there.
+- Dependencies flow one way: UI to domain to data. Domain logic stays free of framework, database and HTTP.
+- New repo or reorganisation: skill `projectstructuur`.
+
+## 8. Models
+
+| Tier | Model | Effort | Use |
+|---|---|---|---|
+| Orchestrator | Opus 5.5 (`claude-opus-5-5`) | high | Main session, planning, architecture, review, final verification |
+| Worker | Sonnet 5.5 (`claude-sonnet-5-5`) | medium | Bounded implementation, refactors, writing tests |
+| Cheap | Haiku 5.5 (`claude-haiku-5-5`) | low | Search, running builds and tests, log triage |
+
+- Haiku never judges correctness or security, picks architecture, edits production code or accepts work.
+- A subagent result is a claim. The orchestrator runs the acceptance check itself.
+
+## 9. Before Irreversible Steps
+
+- Delete, push, send or production deploy: first write
+  `BLAST RADIUS: what dies, collateral scope, reversible?` and wait for a yes.
+- Never commit or push on your own (skill `commit-discipline`).
+- The same correction given twice becomes a rule or a skill, not a third correction.
+
+## 10. Compacting
+
+Keep: the goal, the plan with done and open, touched files, test commands with their last result,
+open decisions. Drop: tool output, dead ends, repeated file contents.
+
 ---
 
 This file sets behavior; the skills set process (plan → debug → verify) and
