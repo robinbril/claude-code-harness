@@ -78,7 +78,7 @@ Staan in `guidelines/CLAUDE.md` en gelden in elk gesprek:
 
 ## Skills
 
-Een skill is een vaste werkwijze voor een soort klus. Claude kiest er zelf een als je vraag erbij past. Je kunt er ook een starten met `/naam`.
+Een skill is een vaste werkwijze voor een soort klus. Claude kiest er zelf een als je vraag erbij past. Je kunt er ook een starten met `/naam`; via de plugin heet dat `/dev-harness:naam`.
 
 ### Nadenken en beslissen
 
@@ -175,6 +175,8 @@ Een skill is een vaste werkwijze voor een soort klus. Claude kiest er zelf een a
 
 ## Wat je het vaakst typt
 
+Via de plugin zet je `dev-harness:` ervoor, dus `/dev-harness:rea` in plaats van `/rea`.
+
 | Typ | Wat er gebeurt |
 |---|---|
 | `/rea <doel>` | Uitzoeken hoe een website, app of programma werkt, met bewijs en een bouwplan |
@@ -227,7 +229,7 @@ Zet hem in een project met `node <pad-naar-deze-map>/tools/poort/poort.mjs init`
 |---|---|
 | `node .poort/poort.mjs doctor` | Laat zien wat er nog ontbreekt |
 | `node .poort/poort.mjs run push` | Alle controles; wat niet veranderde wordt overgeslagen |
-| `node .poort/poort.mjs verify` | Maakt het bewijs dat bij je versie hoort |
+| `node .poort/poort.mjs verify` | Controleert na je commit of elke controle al bewijs heeft voor precies die versie; `run push` maakt dat bewijs |
 | `node .poort/poort.mjs e2e --record` | Neemt de klikproeven opnieuw op na een bewuste schermwijziging |
 
 poort laat de klikproeven via je eigen Claude-abonnement lopen, zonder aparte sleutels. Uitleg per controle: [`tools/poort/README.md`](tools/poort/README.md).
