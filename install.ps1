@@ -45,4 +45,4 @@ Write-Host "Hooks geplaatst in $hooksDst"
 
 Write-Host ""
 Write-Host "Klaar. Herstart Claude Code. De skills triggeren vanzelf (of typ '/')."
-Write-Host "Optioneel: merge settings.example.json in ~/.claude/settings.json voor de hooks + auto-mode + remote control."
+Write-Host "Optioneel: merge settings.example.json in ~/.claude/settings.json om de twee hooks (commit-guard, verified-claim-guard) aan te zetten."
