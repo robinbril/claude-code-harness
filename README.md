@@ -19,7 +19,7 @@ AI-coding agents falen voorspelbaar, en altijd op dezelfde vier manieren:
 | **Stille aannames** | De agent kiest een interpretatie en bouwt erop door zonder te checken | Aannames worden benoemd; bij echte twijfel vraagt Claude eerst |
 | **Overengineering** | Abstracties, opties en lagen waar niemand om vroeg | De simpelste oplossing die de eis volledig haalt, niets speculatiefs |
 | **Scope-drift** | Ongevraagde wijzigingen naast de taak maken elke diff onreviewbaar | Chirurgische wijzigingen: elke regel is herleidbaar naar het verzoek |
-| **Onbewezen "klaar"** | Succes geclaimd zonder dat er iets gedraaid is | Geen "klaar" zonder `VERIFIED:` met echte output; een hook blokkeert de rest |
+| **Onbewezen "klaar"** | Succes geclaimd zonder dat er iets gedraaid is | Een klaar-claim na een wijziging vraagt `VERIFIED:` met een geslaagde check daarna, of een eerlijke `UNVERIFIED:`; een hook blokkeert al het andere |
 
 ## Wat je krijgt
 
@@ -68,7 +68,7 @@ Windows: `powershell -ExecutionPolicy Bypass -File .\install.ps1`. Beide scripts
 | `/rea ./MijnApp.app` of een Electron-app | Statisch gereconstrueerde applicatiestructuur en een diff tussen versies |
 | `/rea firmware.bin` of een APK | Native en Android-analyse: decompilatie, resources, call-tracing |
 
-- **Zero-install.** Draait REA 6.4.0 via `npx`; alleen Node.js nodig.
+- **Zero-install.** Draait REA 6.4.0 via `npx`; alleen Node.js en npm nodig.
 - **Evidence-first.** Elke bevinding met URL, SHA-256 en Evidence ID. Waargenomen, afgeleid en onbekend blijven strikt gescheiden.
 - **Veilig.** Verstuurt nooit formulieren of berichten om gedrag te testen.
 - **Sneller als MCP-server**, zie [MCP-servers](#mcp-servers).
@@ -221,7 +221,7 @@ Deterministische scripts die op vaste momenten in Claude Code meedraaien, onafha
 | `commit-guard` | `PreToolUse` op `git commit` | Blokkeert secrets, API-keys en temp-bestanden (`.env`, `*.tmp`, `*.bak`); waarschuwt bij e-mailadressen. Eigen patronen via `.harness-blocklist` |
 | `verified-claim-guard` | `Stop` | Blokkeert een klaar-claim na een muterende beurt zonder echte tool-observatie; `UNVERIFIED:` mag altijd |
 
-`defaultMode: auto` en `remoteControlAtStartup` ontbreken bewust in `examples/settings.json`: die slaan permissie-prompts over en verdienen een eigen, bewuste keuze.
+Twee instellingen ontbreken bewust in `examples/settings.json`: `defaultMode: auto` slaat permissie-prompts over, en `remoteControlAtStartup` koppelt elke sessie aan Remote Control. Beide verdienen een eigen, bewuste keuze.
 
 ## MCP-servers
 

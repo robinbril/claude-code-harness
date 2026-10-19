@@ -197,8 +197,8 @@
           "icon": "venster",
           "title": "CI",
           "lines": [
-            "Verifieert alleen",
-            "nog het bewijs"
+            "Draait alle checks",
+            "opnieuw, onafhankelijk"
           ]
         }
       ]
