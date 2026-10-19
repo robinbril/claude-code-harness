@@ -1,12 +1,12 @@
 # Dev Harness voor Claude Code
 
-![versie](https://img.shields.io/badge/versie-1.7.0-5B50E6)
-![skills](https://img.shields.io/badge/skills-47-111827)
+![versie](https://img.shields.io/badge/versie-1.8.0-5B50E6)
+![skills](https://img.shields.io/badge/skills-48-111827)
 ![hooks](https://img.shields.io/badge/hooks-3-111827)
 ![licentie](https://img.shields.io/badge/licentie-MIT-2ea44f)
 [![ci](https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml)
 
-Een compacte harness voor Claude Code: werkregels die altijd aan staan, 47 skills die vanzelf triggeren, drie hooks die bewaken, en poort als kwaliteitspoort voor je eigen repo's. Gebouwd op [Superpowers](https://github.com/obra/superpowers) van Jesse Vincent (MIT). Alleen skills die echt gebruikt worden zitten erin; samen kosten hun beschrijvingen ongeveer 4.900 tokens per sessie.
+Een compacte harness voor Claude Code: werkregels die altijd aan staan, 48 skills die vanzelf triggeren, drie hooks die bewaken, en poort als kwaliteitspoort voor je eigen repo's. Gebouwd op [Superpowers](https://github.com/obra/superpowers) van Jesse Vincent (MIT). Alleen skills die echt gebruikt worden zitten erin; samen kosten hun beschrijvingen ongeveer 5.000 tokens per sessie.
 
 ## In een oogopslag
 
@@ -14,7 +14,7 @@ Een compacte harness voor Claude Code: werkregels die altijd aan staan, 47 skill
 flowchart LR
   U["Jij"] --> CC["Claude Code"]
   G["Werkregels<br/>guidelines/CLAUDE.md"] -->|"bij sessiestart"| CC
-  CC -->|"triggert vanzelf of met /naam"| S["47 skills"]
+  CC -->|"triggert vanzelf of met /naam"| S["48 skills"]
   CC -->|"git commit"| CG["commit-guard"]
   CC -->|"klaar-claim"| VG["verified-claim-guard"]
   S -->|"in je eigen repo"| P["poort<br/>commit, push, PR"]
@@ -82,6 +82,7 @@ Elke skill triggert vanzelf op zijn onderwerp, of start hem met `/<naam>`.
 | Skill | Wanneer |
 |---|---|
 | `find-bugs` | Bugs, security-gaten en kwaliteitsproblemen in de branch-diff vinden |
+| `code-audit` | Volledige codereview: de open-code-review-CLI kiest bestanden en regels, Claude reviewt zelf. Vereist `ocr` (`npm install -g @alibaba-group/open-code-review`) |
 | `commit-discipline` | Geen commit-spam: werk verzamelen, op signaal 3 tot 7 thematische commits |
 | `repo-hygiene` | Read-only check: drift, dode branches, merge-conflicten, open PR's, falende Actions |
 | `render-proof` | Een pagina headless renderen naar PNG en het verwachte feit aflezen |
@@ -177,6 +178,7 @@ Zo rijgt `keten-loop` de loops aan elkaar. Elke loop werkt ook los.
 | `/batch-grill-me` | Doorvragen tot elke beslissing in een plan genomen is |
 | `/council` | Meerdere adviseurs, blinde peer-review en een synthese |
 | `/find-bugs` | Bugs en security-gaten in je branch-diff |
+| `/code-audit` | Volledige codereview met dekking tegen de hele git-inventaris |
 | `/repo-hygiene` | Gezondheid van de repo zonder iets te wijzigen |
 | `/pre-pr-gates` | De poorten lopen voor je `gh pr create` doet |
 
@@ -198,6 +200,20 @@ Zo rijgt `keten-loop` de loops aan elkaar. Elke loop werkt ook los.
 | `verified-claim-guard` | `Stop` | Blokkeert een klaar-claim na een muterende beurt zonder echte tool-observatie; `UNVERIFIED:` mag altijd |
 
 De hooks hebben `node` nodig. `defaultMode: auto` en `remoteControlAtStartup` staan er expres niet in `settings.example.json`: die slaan permissie-prompts over en zijn een bewuste, losse keuze.
+
+## Aanbevolen MCP-servers
+
+Geen onderdeel van de plugin: kies zelf welke je aanzet. Kopieer [`.mcp.example.json`](.mcp.example.json) naar `.mcp.json` in je project, of voeg ze per stuk toe:
+
+| Server | Waarvoor | Toevoegen |
+|---|---|---|
+| `chrome-devtools` | Pagina's inspecteren, console en netwerk lezen, prestaties meten | `claude mcp add chrome-devtools -- npx -y chrome-devtools-mcp@1.11.0 --isolated` |
+| `playwright` | Een browser besturen voor flows en screenshots | `claude mcp add playwright -- npx -y @playwright/mcp@0.0.83` |
+| `e2e` | De app live besturen en e2e-tests schrijven (hoort bij skill `e2e`) | `claude mcp add e2e -- npx -y e2e@0.21.2 mcp` |
+| `terminal` | Interactieve terminalsessies (REPL's, prompts, langlopende processen) | `claude mcp add terminal -- npx -y mcp-interactive-terminal@1.0.9` |
+| `supabase` | Database, storage en docs van je Supabase-project | `claude mcp add --transport http supabase "https://mcp.supabase.com/mcp?project_ref=JOUW_PROJECT_REF&features=database,storage,docs"` |
+
+Versies staan vast; werk ze bewust bij. Buiten de config: Claude in Chrome is een browserextensie voor je ingelogde browser, en connectors als Gmail en Outlook zet je aan in je claude.ai-account.
 
 ## poort
 
@@ -239,6 +255,7 @@ Context-gebruik, actieve tools, agents en todo-voortgang in je statusbalk: [clau
 | `transitions-dev` | [Jakubantalik/transitions-dev](https://github.com/Jakubantalik/transitions-dev) | MIT |
 | `emil-design-eng` en de animatieskills | Emil Kowalski (officiele skillset) | MIT |
 | `batch-grill-me` | gebaseerd op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) | MIT |
+| `code-audit` | gebaseerd op open-code-review-delegate uit [alibaba/open-code-review](https://github.com/alibaba/open-code-review), aangepast (zie `NOTICE`) | Apache-2.0 |
 | `tools/poort/` | Reforge Recruitment | niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
 
 Overgenomen skills hebben hun licentie in de skill-map. De meeste skills zijn generiek; `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gemaakt voor PolpoHire en The Staffing Society. Weggelaten uit Superpowers: de dev-zwaardere multi-step skills en de multi-harness setup, om het rustig en Claude-Code-gericht te houden.

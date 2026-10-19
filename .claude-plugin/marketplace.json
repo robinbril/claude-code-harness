@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "dev-harness",
-      "description": "47 skills, the poort quality gate, plus commit-guard and verified-claim-guard hooks for Claude Code.",
-      "version": "1.7.0",
+      "description": "48 skills, the poort quality gate, plus commit-guard and verified-claim-guard hooks for Claude Code.",
+      "version": "1.8.0",
       "source": "./"
     }
   ]

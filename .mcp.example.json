@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@1.11.0", "--isolated"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@0.0.83"]
+    },
+    "e2e": {
+      "command": "npx",
+      "args": ["-y", "e2e@0.21.2", "mcp"]
+    },
+    "terminal": {
+      "command": "npx",
+      "args": ["-y", "mcp-interactive-terminal@1.0.9"]
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=JOUW_PROJECT_REF&features=database,storage,docs"
+    }
+  }
+}
