@@ -1,0 +1,66 @@
+# Pre-commit hooks voor de repo-hygiene skill.
+# Installeren: pre-commit install --install-hooks -t pre-commit -t commit-msg -t pre-push
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+fail_fast: false
+default_stages: [pre-commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=200]
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.10.0-2
+    hooks:
+      - id: shfmt
+        args: [-i, "2", -ci, -w]
+  - repo: local
+    hooks:
+      - id: bash-syntax
+        name: bash syntax check
+        entry: bash -n
+        language: system
+        files: \.sh$
+      - id: skill-frontmatter
+        name: SKILL.md heeft name en description
+        entry: hooks/check-frontmatter.sh
+        language: script
+        files: ^SKILL\.md$
+      - id: no-secrets
+        name: geen tokens of wachtwoorden
+        entry: hooks/no-secrets.sh
+        language: script
+        types: [text]
+        exclude: ^hooks/no-secrets\.sh$
+      - id: e2e
+        name: e2e-tests hygiene.sh
+        entry: bash tests/e2e.sh
+        language: system
+        files: ^(scripts/|tests/)
+        pass_filenames: false
+      - id: e2e-pre-push
+        name: e2e-tests vóór push
+        entry: bash tests/e2e.sh
+        language: system
+        always_run: true
+        pass_filenames: false
+        stages: [pre-push]
+      - id: commit-msg-length
+        name: commitbericht kort en niet leeg
+        entry: hooks/commit-msg.sh
+        language: script
+        stages: [commit-msg]
