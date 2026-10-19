@@ -95,4 +95,4 @@ The product's live-process + result pattern (`ImportStepProcess.vue`, `ImportSte
 - Buttons flat (no gradient/sheen), 40px base, `scale(.98)` active, `--ring` focus.
 - Markers small (dot+halo) or brand step-dots, never big saturated discs. Green/red reserved for status tints, not decoration.
 - Vertical rhythm on the space scale; card padding 16/20; field gaps 6, group sep 16.
-- Machine-render with `shoot.js` and read a concrete value back (a size, a token colour, an alignment) against the spec above. Alignment: labels centred on their marker axis.
+- Machine-render with skill `render-proof` and read a concrete value back (a size, a token colour, an alignment) against the spec above. Alignment: labels centred on their marker axis.
