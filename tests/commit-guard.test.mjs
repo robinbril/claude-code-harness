@@ -70,3 +70,32 @@ test('ignores text that only mentions git commit', () => {
   const repo = makeRepo();
   assert.equal(runHook(HOOK, bash('echo "run git commit later"', repo), repo).status, 0);
 });
+
+for (const [label, command] of [
+  ['subshell', (t) => `(cd ${t} && git commit -m add)`],
+  ['brace group', (t) => `cd ${t} && { git commit -m add; }`],
+  ['if/then', (t) => `cd ${t} && if true; then git commit -m add; fi`],
+  ['absolute git path', (t) => `cd ${t} && /usr/bin/git commit -m add`],
+]) {
+  test(`${label}: still scans the commit`, () => {
+    const clean = makeRepo();
+    const target = makeRepo();
+    write(target, 'config.js', `const key = "${FAKE_SECRET}";\n`);
+    git(target, 'add', 'config.js');
+    assert.equal(runHook(HOOK, bash(command(target), clean), clean).status, 2);
+  });
+}
+
+for (const add of ['git add config.js', 'git add -A', 'git add .', 'git add --all']) {
+  test(`${add} && git commit: scans files staged in the same command`, () => {
+    const repo = makeRepo();
+    write(repo, 'config.js', `const key = "${FAKE_SECRET}";\n`);
+    assert.equal(runHook(HOOK, bash(`${add} && git commit -m add`, repo), repo).status, 2);
+  });
+}
+
+test('git add of a clean file && git commit passes', () => {
+  const repo = makeRepo();
+  write(repo, 'notes.md', 'plain notes\n');
+  assert.equal(runHook(HOOK, bash('git add notes.md && git commit -m notes', repo), repo).status, 0);
+});

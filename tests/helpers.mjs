@@ -3,12 +3,16 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // HARNESS_ROOT points the suite at another install with the same layout (hooks/, skills/supergoal/).
-export const ROOT = process.env.HARNESS_ROOT || path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+export const ROOT = process.env.HARNESS_ROOT || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const GIT_ENV = {
-  ...process.env,
+// Strip inherited git location variables, so a run from inside a git hook cannot touch the caller's repo.
+const INHERITED = ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_OBJECT_DIRECTORY', 'GIT_COMMON_DIR', 'GIT_PREFIX'];
+const BASE_ENV = Object.fromEntries(Object.entries(process.env).filter(([k]) => !INHERITED.includes(k)));
+export const GIT_ENV = {
+  ...BASE_ENV,
   GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.invalid',
   GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.invalid',
   GIT_CONFIG_NOSYSTEM: '1',
@@ -46,8 +50,8 @@ export function runHook(script, payload, cwd) {
   return { status: res.status, stdout: res.stdout, stderr: res.stderr };
 }
 
-export function runScript(cmd, args, cwd) {
-  const res = spawnSync(cmd, args, { cwd, env: GIT_ENV, encoding: 'utf8' });
+export function runScript(cmd, args, cwd, env = {}) {
+  const res = spawnSync(cmd, args, { cwd, env: { ...GIT_ENV, ...env }, encoding: 'utf8' });
   return { status: res.status, stdout: res.stdout, stderr: res.stderr };
 }
 

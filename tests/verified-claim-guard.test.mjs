@@ -68,3 +68,13 @@ test('UNVERIFIED is always allowed', () => {
 test('no mutation, no gate', () => {
   assert.equal(decide([['user', 'wat staat erin?'], read, ['say', 'Klaar: er staat een constante in.']]), 'pass');
 });
+
+test('a read and a write in one Bash call: the read came first, so no evidence', () => {
+  const mixed = ['tool', 'Bash', { command: 'cat a.js && echo changed > a.js' }, 'const a = 1;'];
+  assert.equal(decide([['user', 'fix it'], mixed, ['say', 'VERIFIED: cat a.js. Done.']]), 'block');
+});
+
+test('a build then a test in one Bash call counts as evidence', () => {
+  const chain = ['tool', 'Bash', { command: 'npm run build && npm test 2>&1 | tail -5' }, '3 passing'];
+  assert.equal(decide([['user', 'fix het'], edit, chain, ['say', 'VERIFIED: build en test -> 3 passing. Klaar.']]), 'pass');
+});

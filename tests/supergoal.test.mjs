@@ -101,3 +101,42 @@ test('verdict rules: ACCEPT needs pass on every criterion', () => {
   }
   assert.match(judge, /Blocker:/);
 });
+
+test('snapshot of a phase that already has one returns the original anchor', () => {
+  const repo = makeRepo();
+  write(repo, 'app.txt', 'phase 1 done\n');
+  const first = state(repo, 'snapshot', '2').stdout.trim();
+  write(repo, 'app.txt', 'half of phase 2\n');
+  const again = state(repo, 'snapshot', '2');
+  assert.equal(again.status, 0, again.stderr);
+  assert.equal(again.stdout.trim(), first);
+});
+
+test('rollback saves the current state first and prints how to undo it', () => {
+  const repo = makeRepo();
+  const snap = state(repo, 'snapshot', '2').stdout.trim();
+  write(repo, 'app.txt', 'phase 2 work\n');
+  write(repo, 'scratch.md', 'untracked phase 2 notes\n');
+  const res = state(repo, 'rollback', snap);
+  const undo = res.stdout.match(/undo: repo-state\.sh rollback ([0-9a-f]{40})/);
+  assert.ok(undo, res.stdout);
+  assert.equal(state(repo, 'rollback', undo[1]).status, 0);
+  assert.equal(read(repo, 'app.txt'), 'phase 2 work\n');
+  assert.equal(read(repo, 'scratch.md'), 'untracked phase 2 notes\n');
+});
+
+test('protocol states each verdict rule once', () => {
+  const protocol = fs.readFileSync(path.join(ROOT, 'skills/supergoal/templates/PROTOCOL.md'), 'utf8');
+  const flat = protocol.replace(/\s+/g, ' ');
+  for (const rule of ['vereist `pass` op elk criterium', 'blijft is een `AUDIT_GAP`']) {
+    assert.equal(flat.split(rule).length - 1, 1, rule);
+  }
+});
+
+test('resuming a run keeps phase, baseline and phase anchors', () => {
+  const skill = fs.readFileSync(path.join(ROOT, 'skills/supergoal/SKILL.md'), 'utf8');
+  const stage7 = skill.slice(skill.indexOf('## Stage 7'));
+  const init = stage7.match(/^1\. .*$/m)[0];
+  assert.match(init, /nieuwe run/i, init);
+  assert.match(stage7, /Bij hervatten[^\n]*(ongemoeid|niet)[^\n]*`Current phase`/i);
+});
