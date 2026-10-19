@@ -1,0 +1,83 @@
+{
+  "colors": {
+    "accent": "#5B50E6",
+    "accent_dark": "#7C73FF",
+    "gradient_end": "#2E2A8C"
+  },
+  "banner": {
+    "file": "banner.svg",
+    "alt": "Dev Harness voor Claude Code: werkregels, skills, bewakers en poort",
+    "title": "Dev Harness voor Claude Code",
+    "tagline": "Een collega die eerst nadenkt, netjes werkt en laat zien dat het klopt.",
+    "pillars": [
+      {
+        "icon": "boek",
+        "title": "Werkregels",
+        "text": "altijd aan"
+      },
+      {
+        "icon": "blokken",
+        "title": "Skills",
+        "text": "werkwijzen per klus"
+      },
+      {
+        "icon": "schild",
+        "title": "Bewakers",
+        "text": "houden fouten tegen"
+      },
+      {
+        "icon": "poort",
+        "title": "Poort",
+        "text": "keurt voor je deelt"
+      }
+    ]
+  },
+  "flows": [
+    {
+      "file": "zo-werkt-het.svg",
+      "alt": "Zo werkt het: van vraag tot bewezen resultaat",
+      "steps": [
+        {
+          "icon": "vraag",
+          "title": "Jij vraagt",
+          "lines": [
+            "Gewoon in je eigen",
+            "woorden"
+          ]
+        },
+        {
+          "icon": "boek",
+          "title": "Werkregels",
+          "lines": [
+            "Claude denkt eerst na",
+            "en houdt het simpel"
+          ]
+        },
+        {
+          "icon": "blokken",
+          "title": "Skill",
+          "lines": [
+            "De juiste werkwijze",
+            "pakt de klus op"
+          ]
+        },
+        {
+          "icon": "schild",
+          "title": "Bewakers",
+          "lines": [
+            "Geen geheimen in git,",
+            "geen klaar zonder bewijs"
+          ]
+        },
+        {
+          "icon": "bewijs",
+          "title": "Bewijs",
+          "lines": [
+            "Je ziet wat er echt",
+            "gecontroleerd is"
+          ]
+        }
+      ]
+    }
+  ]
+}
