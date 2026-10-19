@@ -1,12 +1,12 @@
 # Dev Harness voor Claude Code
 
-![versie](https://img.shields.io/badge/versie-1.6.0-5B50E6)
-![skills](https://img.shields.io/badge/skills-36-111827)
+![versie](https://img.shields.io/badge/versie-1.7.0-5B50E6)
+![skills](https://img.shields.io/badge/skills-47-111827)
 ![hooks](https://img.shields.io/badge/hooks-3-111827)
 ![licentie](https://img.shields.io/badge/licentie-MIT-2ea44f)
 [![ci](https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml)
 
-Een compacte harness voor Claude Code: werkregels die altijd aan staan, 36 skills die vanzelf triggeren, drie hooks die bewaken, en poort als kwaliteitspoort voor je eigen repo's. Gebouwd op [Superpowers](https://github.com/obra/superpowers) van Jesse Vincent (MIT). Alleen skills die echt gebruikt worden zitten erin; samen kosten hun beschrijvingen ongeveer 4.000 tokens per sessie.
+Een compacte harness voor Claude Code: werkregels die altijd aan staan, 47 skills die vanzelf triggeren, drie hooks die bewaken, en poort als kwaliteitspoort voor je eigen repo's. Gebouwd op [Superpowers](https://github.com/obra/superpowers) van Jesse Vincent (MIT). Alleen skills die echt gebruikt worden zitten erin; samen kosten hun beschrijvingen ongeveer 4.900 tokens per sessie.
 
 ## In een oogopslag
 
@@ -14,7 +14,7 @@ Een compacte harness voor Claude Code: werkregels die altijd aan staan, 36 skill
 flowchart LR
   U["Jij"] --> CC["Claude Code"]
   G["Werkregels<br/>guidelines/CLAUDE.md"] -->|"bij sessiestart"| CC
-  CC -->|"triggert vanzelf of met /naam"| S["36 skills"]
+  CC -->|"triggert vanzelf of met /naam"| S["47 skills"]
   CC -->|"git commit"| CG["commit-guard"]
   CC -->|"klaar-claim"| VG["verified-claim-guard"]
   S -->|"in je eigen repo"| P["poort<br/>commit, push, PR"]
@@ -23,7 +23,7 @@ flowchart LR
 | Onderdeel | Wat het doet |
 |---|---|
 | Werkregels | Denk voor je codeert, simpel, chirurgisch, verifieer voor "klaar", structuur, modelrouting, BLAST RADIUS |
-| Skills | Methodiek, kwaliteit, loops, frontend, e2e, documenten, PolpoHire en TSS |
+| Skills | Methodiek, kwaliteit, loops, frontend, animatie, e2e, documenten, PolpoHire en TSS |
 | Hooks | Blokkeren secrets in commits en een klaar-claim zonder bewijs; laden de werkregels via de plugin |
 | poort | Checks voor elke commit en push, en een PR-poort die bewijs aan precies jouw commit koppelt |
 
@@ -124,6 +124,22 @@ Zo rijgt `keten-loop` de loops aan elkaar. Elke loop werkt ook los.
 | `fixing-accessibility` | Toegankelijkheid auditen en fixen: ARIA, toetsenbord, focus, contrast, formulierfouten |
 | `transitions-dev` | Kant-en-klare CSS-transities: dropdowns, modals, badges, toasts, tabs |
 
+### Animatie en beweging (Emil Kowalski)
+
+| Skill | Wanneer |
+|---|---|
+| `animate` | Een animatie van nul opbouwen, in de volgorde die bepaalt of hij goed voelt: moet hij er zijn, doel, tool, curve, duur |
+| `animate-expo` | Hetzelfde voor React Native en Expo: thread, spring of timing, overdracht van gestures |
+| `animation-vocabulary` | Een vage omschrijving van beweging omzetten in de juiste term ("het verende ding bij een popover" is pop in) |
+| `apple-design` | Apple's aanpak van interfaces en vloeiende, fysieke beweging, vertaald naar het web: springs, gestures, sheets |
+| `ask-sonner` | Sonner, de React-toastbibliotheek: opzetten, promise- en laad-toasts, stijl en positie |
+| `find-animation-opportunities` | Plekken vinden die zouden moeten bewegen, en afwijzen wat niet moet; stelt exacte waarden voor |
+| `improve-animations` | Audit van alle animatiecode met geprioriteerde, losse uitvoerplannen voor andere agents |
+| `review-animations` | Animatiecode keuren tegen een hoge vakmanschapslat; goedkeuring moet verdiend worden |
+| `mobile-native` | Een web-app native laten voelen op een telefoon: hover, tap-flits, de 100vh-bug, inzoomende inputs |
+| `pick-ui-library` | De juiste bibliotheek kiezen voor een frontendtaak uit een gecureerde lijst (alleen op verzoek) |
+| `prototype` | Meerdere echt verschillende versies van een UI-stuk bouwen achter een kiezer, en de beste promoveren (alleen op verzoek) |
+
 ### E2E-tests
 
 | Skill | Wanneer |
@@ -221,6 +237,7 @@ Context-gebruik, actieve tools, agents en todo-voortgang in je statusbalk: [clau
 | `e2e` | [tester-army/e2e](https://github.com/tester-army/e2e) | Apache-2.0, met NOTICE |
 | `fixing-accessibility` | [ibelick/ui-skills](https://github.com/ibelick/ui-skills) | MIT |
 | `transitions-dev` | [Jakubantalik/transitions-dev](https://github.com/Jakubantalik/transitions-dev) | MIT |
+| `emil-design-eng` en de animatieskills | Emil Kowalski (officiele skillset) | MIT |
 | `batch-grill-me` | gebaseerd op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) | MIT |
 | `tools/poort/` | Reforge Recruitment | niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
 

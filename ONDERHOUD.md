@@ -30,14 +30,15 @@ Lees ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens sectie 
    | 2 | Kwaliteit en git | `find-bugs`, `commit-discipline`, `repo-hygiene`, `render-proof` |
    | 3 | Loops en autonoom bouwen | `goal`, `supergoal`, `keten-loop`, `bouw-loop`, `polijst-loop`, `fix-loop`, `speur-loop`, `waak-loop`, `createloopprompt` |
    | 4 | Frontend-design | `design-taste-frontend`, `redesign-existing-projects`, `emil-design-eng`, `make-interfaces-feel-better`, `ux-heuristics`, `frontend-gotchas`, `fixing-accessibility`, `transitions-dev` |
-   | 5 | E2E-tests | `e2e`, `e2e-rules` |
-   | 6 | PolpoHire en TSS | `polpohire-design`, `bi-dashboards`, `theme-selector`, `pre-pr-gates` |
-   | 7 | Kwaliteitspoort | `tools/poort`: per repo `node tools/poort/poort.mjs init` |
-   | 8 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `diagram-design` |
-   | 9 | Hooks | `guidelines`, `commit-guard`, `verified-claim-guard` |
-   | 10 | Werkregels in `guidelines/CLAUDE.md` | Per sectie kiezen |
-   | 11 | Externe repo's, optioneel | [mattpocock/skills](https://github.com/mattpocock/skills) (TDD, specs, tickets), [morluto/rea](https://github.com/morluto/rea) (reverse engineering), [robinbril/infinite-agent-memory](https://github.com/robinbril/infinite-agent-memory) (blijvend geheugen) |
-   | 12 | Je eigen bestaande harness uitdunnen | Per overlap, ongebruikte skill of migratierest een vraag, volgens deel 4 |
+   | 5 | Animatie en beweging | `animate`, `animate-expo`, `animation-vocabulary`, `apple-design`, `ask-sonner`, `find-animation-opportunities`, `improve-animations`, `review-animations`, `mobile-native`, `pick-ui-library`, `prototype` |
+   | 6 | E2E-tests | `e2e`, `e2e-rules` |
+   | 7 | PolpoHire en TSS | `polpohire-design`, `bi-dashboards`, `theme-selector`, `pre-pr-gates` |
+   | 8 | Kwaliteitspoort | `tools/poort`: per repo `node tools/poort/poort.mjs init` |
+   | 9 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `diagram-design` |
+   | 10 | Hooks | `guidelines`, `commit-guard`, `verified-claim-guard` |
+   | 11 | Werkregels in `guidelines/CLAUDE.md` | Per sectie kiezen |
+   | 12 | Externe repo's, optioneel | [mattpocock/skills](https://github.com/mattpocock/skills) (TDD, specs, tickets), [morluto/rea](https://github.com/morluto/rea) (reverse engineering), [robinbril/infinite-agent-memory](https://github.com/robinbril/infinite-agent-memory) (blijvend geheugen) |
+   | 13 | Je eigen bestaande harness uitdunnen | Per overlap, ongebruikte skill of migratierest een vraag, volgens deel 4 |
 
 3. **Uitvoeren.** Alleen wat je bevestigde, een onderwerp tegelijk. Back-up voor elke wijziging; diff tonen voor `CLAUDE.md` en `settings.json`. Bestaat een skill al onder dezelfde naam: vergelijken en voorleggen, niet overschrijven.
 
