@@ -3,7 +3,8 @@
 Een compacte harness voor Claude Code. Gebouwd op
 [Superpowers](https://github.com/obra/superpowers) van Jesse Vincent (MIT),
 uitgebreid met `supergoal`, `council`, `/goal` en een loop-collectie, frontend-design
-skills, agentische e2e-tests en een `CLAUDE.md` met code-guidelines en modelrouting. Alleen skills die echt gebruikt worden zitten
+skills, agentische e2e-tests, de kwaliteitspoort `poort` en een `CLAUDE.md` met code-guidelines
+en modelrouting. Alleen skills die echt gebruikt worden zitten
 erin.
 
 ## Wat erin zit
@@ -40,6 +41,8 @@ Bouwen en beoordelen van UI. Kern:
 | `make-interfaces-feel-better` | Details die een interface verzorgd laten voelen: schaduw, typografie, micro-interacties |
 | `ux-heuristics` | Usability-audit: Nielsen, Krug, cognitive walkthrough |
 | `frontend-gotchas` | Terugkerende frontend-valkuilen voor je ze inbouwt |
+| `fixing-accessibility` | Toegankelijkheid auditen en fixen: ARIA, toetsenbord, focus, contrast, formulierfouten |
+| `transitions-dev` | Kant-en-klare CSS-transities: dropdowns, modals, badges, toasts, tabs |
 | `data-visualization` | Grafiektype kiezen uit de data-relatie voor je een chart bouwt |
 | `diagram-design` | Architectuur-, flow- en andere diagrammen als HTML/SVG |
 
@@ -62,6 +65,28 @@ Bouwen en beoordelen van UI. Kern:
 |---|---|
 | `e2e` | Agentische end-to-end-tests voor web en mobiel met [e2e](https://github.com/tester-army/e2e) |
 | `e2e-rules` | Huisregels: wanneer een test nodig is, naamgeving, config-template, wanneer klaar |
+
+### PolpoHire en The Staffing Society
+
+| Skill | Wanneer |
+|---|---|
+| `polpohire-design` | Een PolpoHire-scherm bouwen of herstijlen in de huidige designtaal: tokens, componenten, beweging |
+| `bi-dashboards` | Rapporten en dashboards in Power BI-stijl in een eigen Vue-app met ECharts, zonder Power BI |
+| `theme-selector` | De PolpoHire/TSS-themakiezer nabouwen: presets, eigen kleuren, lettertype, dichtheid, matglas |
+| `pre-pr-gates` | Harde poorten voor elke PR: ghost versions, geslikte DB-fouten, ontbrekende org_id-tests, verouderde PR-tekst |
+
+### poort: kwaliteitspoort voor commits, pushes en PR's
+
+`tools/poort/` is poort v0.4.0: goedkope checks voor elke commit en push, bewijs dat aan de inhoud
+hangt in plaats van aan een bestand, en een PR-poort die `gh pr create` tegenhoudt tot het bewijs
+bij precies jouw commit hoort. Een bestand, geen dependencies. Installeren in een repo:
+
+```bash
+node <pad-naar-deze-harness>/tools/poort/poort.mjs init
+```
+
+Daarna `node .poort/poort.mjs doctor`. Uitleg per check en profiel: `tools/poort/README.md`.
+`e2e-rules` gebruikt de Claude-seat-koppeling van poort, zodat e2e op je eigen abonnement draait.
 
 ## Installeren (Claude Code)
 
@@ -146,7 +171,13 @@ uitvechten via blinde peer-review en een synthese. Overgenomen met licentie in d
 skill-map: `find-bugs` uit [getsentry/skills](https://github.com/getsentry/skills)
 (Apache-2.0), `make-interfaces-feel-better` van
 [jakubkrehel](https://github.com/jakubkrehel/make-interfaces-feel-better) (MIT), `e2e` uit
-[tester-army/e2e](https://github.com/tester-army/e2e) (Apache-2.0) en `batch-grill-me`, gebaseerd
-op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) (MIT). De skills zijn
-generiek, met een uitzondering: `e2e-rules` verwijst naar `poort`, een interne Reforge-repo,
-om e2e-modellen op je eigen Claude-abonnement te draaien.
+[tester-army/e2e](https://github.com/tester-army/e2e) (Apache-2.0), `fixing-accessibility` uit
+[ibelick/ui-skills](https://github.com/ibelick/ui-skills) (MIT), `transitions-dev` van
+[Jakubantalik](https://github.com/Jakubantalik/transitions-dev) (MIT) en `batch-grill-me`, gebaseerd
+op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) (MIT). De meeste skills zijn
+generiek. `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gemaakt
+voor PolpoHire en The Staffing Society.
+
+**Licentie van `tools/poort/`:** poort is van Reforge Recruitment en valt niet onder de MIT-licentie
+van deze repo (`package.json`: `UNLICENSED`). Alle rechten voorbehouden; inzien mag, hergebruik
+alleen met toestemming.

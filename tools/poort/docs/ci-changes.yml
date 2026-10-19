@@ -1,0 +1,121 @@
+# Voorbeeld: draai in CI alleen wat de wijziging raakt.
+#
+# Waarom: een frontend-PR die de hele backend-suite draait, of een
+# dependabot-bump van één npm-pakket die alles bouwt, kost de volle CI-tijd
+# zonder iets te beschermen. Een `changes`-job bepaalt per gebied of het
+# geraakt is; de jobs daarachter slaan anders over. Eén vereiste check
+# (`required`) telt overgeslagen als groen, zodat de branch protection niet
+# hoeft te weten welke jobs bestaan.
+#
+# Twee niveaus:
+#   - PR naar de werkbranch (development): alleen de geraakte gebieden, en in
+#     de backend alleen de geraakte tests (poort tests-affected);
+#   - PR naar main, push naar main, handmatig, of de CI zelf geraakt: alles.
+#
+# Pas aan per repo: de gebieden (regexen op paden), de werkbranch, en de
+# test-stap. De volgorde van jobs en de required-job kun je zo overnemen.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, development]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.diff.outputs.backend }}
+      frontend: ${{ steps.diff.outputs.frontend }}
+      full: ${{ steps.diff.outputs.full }}
+      base: ${{ steps.diff.outputs.base }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ] || [ "$BASE_REF" = "main" ]; then
+            full=true; base=""; files=$(git ls-files)
+          else
+            full=false; base=$(git merge-base HEAD "origin/$BASE_REF")
+            files=$(git diff --name-only "$base"...HEAD)
+          fi
+          has() { printf '%s\n' "$files" | grep -Eq "$1" && echo true || echo false; }
+          # De CI zelf geraakt: alles draaien, anders test je de wijziging niet.
+          [ "$(has '^(\.github/workflows/|\.poort/|Dockerfile|docker-compose)')" = true ] && full=true
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "backend=$( [ "$full" = true ] && echo true || has '^(app/|requirements|pyproject\.toml$)')" >> "$GITHUB_OUTPUT"
+          echo "frontend=$( [ "$full" = true ] && echo true || has '^frontend/')" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      FULL: ${{ needs.changes.outputs.full }}
+      BASE: ${{ needs.changes.outputs.base }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # ... je setup (python, services, database) ...
+      # Werkbranch: alleen de tests die de wijziging raken, ook via andere
+      # modules (--transitive) en via de testclient (--routes, Django).
+      - name: Geraakte tests
+        if: env.FULL != 'true'
+        run: >-
+          node .poort/checks/tests-affected.mjs --src app --tests app --label module
+          --transitive --routes 'urls$=self\.client\.|APIClient\('
+          --cmd 'python manage.py test --noinput'
+          --full-on '^app/settings/|^requirements'
+          $(git diff --name-only "$BASE"...HEAD)
+      - name: Volledige suite
+        if: env.FULL == 'true'
+        run: python manage.py test --noinput
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --prefix frontend --no-audit --no-fund
+      - run: npm run --prefix frontend typecheck
+      - run: npm run --prefix frontend test -- --run
+
+  # De enige vereiste check in de branch protection. Overgeslagen = niet
+  # geraakt door deze wijziging, en telt als groen; `changes` moet echt slagen.
+  required:
+    if: always()
+    needs: [changes, backend, frontend]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - run: |
+          ok() { case "$2" in success) ;; skipped) [ "$3" = optional ] || { echo "$1 overgeslagen"; exit 1; } ;; *) echo "$1: $2"; exit 1 ;; esac; }
+          ok changes "${{ needs.changes.result }}"
+          ok backend "${{ needs.backend.result }}" optional
+          ok frontend "${{ needs.frontend.result }}" optional

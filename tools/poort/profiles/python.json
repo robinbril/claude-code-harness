@@ -1,0 +1,54 @@
+{
+  "$comment": "Python-repo. `if` = hoort de check hier; `needs` = de tool die hij nodig heeft (ontbreekt die, dan is de check rood).",
+  "checks": [
+    {
+      "id": "pre-commit",
+      "tier": "commit",
+      "when": ".",
+      "run": "pre-commit run --files {files}",
+      "if": "test -f .pre-commit-config.yaml",
+      "ifHint": "geen .pre-commit-config.yaml",
+      "needs": "command -v pre-commit",
+      "needsHint": "pipx install pre-commit",
+      "all": false
+    },
+    {
+      "id": "py-fatal",
+      "tier": "commit",
+      "when": "\\.py$",
+      "$why": "Alleen fouten die code laten crashen (syntax, onbekende namen): los van de lint-config van de repo, dus zonder ruis.",
+      "run": "ruff check --no-cache --isolated --select E9,F63,F7,F82 {files}",
+      "needs": "command -v ruff",
+      "needsHint": "pipx install ruff"
+    },
+    {
+      "id": "ruff",
+      "tier": "commit",
+      "when": "\\.py$",
+      "fullOn": "(^|/)(ruff\\.toml|\\.ruff\\.toml|pyproject\\.toml)$",
+      "$why": "fullOn: een andere lint-config geldt voor alle bestanden, dus dan draait ruff op alles.",
+      "run": "ruff check --force-exclude {files}",
+      "if": "test -f ruff.toml || test -f .ruff.toml || grep -qs '^\\[tool\\.ruff' pyproject.toml",
+      "ifHint": "geen ruff-config",
+      "needs": "command -v ruff",
+      "needsHint": "pipx install ruff"
+    },
+    {
+      "id": "stale-branch",
+      "tier": "push",
+      "when": ".",
+      "cache": false,
+      "$why": "Blokkeert alleen een echt inhoudsconflict met de target-branch (git merge-tree); achterstand is advies. De branch komt uit POORT_BASE_REF, die poort zet.",
+      "run": "node {poort}/checks/stale-branch.mjs",
+      "timeout": 60
+    },
+    {
+      "id": "ripple",
+      "tier": "push",
+      "when": "\\.py$",
+      "$why": "Advies: dezelfde functie elders nog eens gedefinieerd (een kopie die niet meeverandert).",
+      "run": "node {poort}/checks/ripple.mjs {files}",
+      "timeout": 60
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+<header class="theme-popup-header">
+  <h2 id="theme-popup-title">Weergave en thema</h2>
+  <button type="button" class="theme-close" aria-label="Sluiten">&times;</button>
+</header>
+<nav id="theme-tabs" class="theme-tabs" role="tablist" aria-label="Thema-instellingen">
+  <span class="theme-tab-indicator" aria-hidden="true"></span>
+  <button type="button" class="theme-tab is-active" role="tab" data-tab="theme-tab-browse" aria-selected="true">Thema's</button>
+  <button type="button" class="theme-tab" role="tab" data-tab="theme-tab-customize" aria-selected="false">Kleuren</button>
+  <button type="button" class="theme-tab" role="tab" data-tab="theme-tab-display" aria-selected="false">Weergave</button>
+</nav>
+<div id="theme-tab-browse" class="theme-tab-panel is-active" role="tabpanel">
+  <div id="themeGrid" class="theme-grid" role="listbox" aria-label="Kies een thema"></div>
+</div>
+<div id="theme-tab-customize" class="theme-tab-panel is-hidden" role="tabpanel" hidden>
+  <div class="cw-chan-row"><label class="cw-chan-label" for="cw-bg">Achtergrond</label><input type="color" id="cw-bg" class="cw-chan" data-chan="bg"></div>
+  <div class="cw-chan-row"><label class="cw-chan-label" for="cw-fg">Tekst</label><input type="color" id="cw-fg" class="cw-chan" data-chan="fg"></div>
+  <div class="cw-chan-row"><label class="cw-chan-label" for="cw-panel">Paneel</label><input type="color" id="cw-panel" class="cw-chan" data-chan="panel"></div>
+  <div class="cw-chan-row"><label class="cw-chan-label" for="cw-border">Rand</label><input type="color" id="cw-border" class="cw-chan" data-chan="border"></div>
+  <div class="cw-chan-row"><label class="cw-chan-label" for="cw-accent">Accent</label><input type="color" id="cw-accent" class="cw-chan" data-chan="accent"></div>
+  <button type="button" class="cw-reset">Kleuren herstellen</button>
+</div>
+<div id="theme-tab-display" class="theme-tab-panel is-hidden" role="tabpanel" hidden>
+  <div class="display-row"><label class="display-label" for="theme-font-select">Lettertype</label>
+    <select id="theme-font-select"><option value="system">Systeem</option><option value="mono">Mono</option><option value="serif">Serif</option></select></div>
+  <div class="display-row"><label class="display-label" for="theme-density-select">Dichtheid</label>
+    <select id="theme-density-select"><option value="comfortable">Comfortabel</option><option value="compact">Compact</option></select></div>
+  <div class="display-row"><label class="display-label" for="theme-frosted-toggle">Matglas</label>
+    <label class="switch"><input type="checkbox" id="theme-frosted-toggle"><span class="switch-slider"></span></label></div>
+  <div class="display-row"><label class="display-label" for="theme-frost-range">Glassterkte</label>
+    <input type="range" id="theme-frost-range" min="0" max="100" value="60"></div>
+  <div class="display-row"><label class="display-label" for="theme-intensity-range">Intensiteit</label>
+    <input type="range" id="theme-intensity-range" min="0" max="100" value="100"></div>
+  <div class="display-row"><label class="display-label">Materiaal</label>
+    <div id="theme-material-seg" role="radiogroup" aria-label="Materiaal">
+      <button type="button" class="material-opt" data-material="flat">Standaard</button>
+      <button type="button" class="material-opt" data-material="frosted">Matglas</button>
+      <button type="button" class="material-opt is-active" data-material="liquid">Liquid Glass</button>
+    </div></div>
+</div>

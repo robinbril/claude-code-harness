@@ -1,0 +1,65 @@
+# Voorbeeld: goedkope preflight in CI, waar de zware jobs op wachten.
+#
+# Waarom: zonder preflight starten alle CI-jobs tegelijk, ook als een fout
+# lokaal al te vangen was; elke zo'n run kost de volle CI-tijd. Deze job
+# draait dezelfde poort-checks als de lokale hooks, zonder stack, in ~1-2 min.
+# Cloud-agents (Codex) zonder lokale stack krijgen hier dezelfde poort.
+#
+# Snel opzetten is de helft van de winst: tools als los binary in plaats van
+# via een pakketbeheerder (pipx bouwt eerst een venv), en de npm-cache van
+# setup-node zodat `npm ci` niet elke run alles downloadt.
+#
+# Gebruik: kopieer de job naar je ci.yml en zet `needs: preflight` op de zware
+# jobs (backend, security, e2e). Maak 'preflight' daarna een vereiste check.
+# Welke jobs überhaupt moeten draaien: zie ci-changes.yml.
+name: preflight
+
+on:
+  pull_request:
+
+concurrency:
+  group: preflight-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # merge-base met de PR-base en stale-branch hebben de geschiedenis nodig
+      # Pas aan per repo: 'frontend' = de map met package.json; staat die in de
+      # root, laat de prefix weg (ook in cache-dependency-path). Python-only repo:
+      # deze stap mag weg (de if voorkomt een fout zonder lockfile).
+      - uses: actions/setup-node@v7
+        if: hashFiles('frontend/package-lock.json') != ''
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # Vaste versies: een check die per run een andere ruff krijgt, is niet
+      # reproduceerbaar. ruff als los binary; pre-commit alleen als de repo het gebruikt.
+      - name: Tools voor de checks
+        run: |
+          curl -LsSf https://astral.sh/ruff/0.16.10/install.sh | sh
+          if [ -f .pre-commit-config.yaml ]; then pipx install pre-commit==4.6.2; fi
+      # Profielen node en fullstack installeren dit ook zelf (poort prepare);
+      # met een eigen config zonder prepare is deze stap nodig.
+      - name: Frontend-dependencies
+        if: hashFiles('frontend/package-lock.json') != ''
+        run: npm ci --prefix frontend --no-audit --no-fund
+      - name: poort (commit + push, zonder stack)
+        env:
+          # vergelijk met de PR-base, niet met een upstream
+          POORT_BASE_REF: origin/${{ github.base_ref }}
+          # e2e heeft browsers en een draaiende app nodig: een eigen job, niet de preflight
+          POORT_SKIP: e2e-replay
+        run: node .poort/poort.mjs run push --no-stack
+
+  # backend:
+  #   needs: preflight
+  #   ...

@@ -1,0 +1,184 @@
+/* ==== GLASS-TOKENS-BEGIN ==== */
+
+/* 1. Glas-tokens: transparant, licht, glossy. Nooit diep grijs, nooit zwart. */
+:root {
+  --glass-alpha: 50%;
+  --glass-alpha-frosted: 66%;
+  --glass-rim: rgba(255, 255, 255, 0.85);
+  --glass-edge: rgba(255, 255, 255, 0.45);
+  --glass-sheen: rgba(255, 255, 255, 0.6);
+  --glass-tint: rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 20px 60px rgba(23, 1, 68, 0.1), 0 2px 10px rgba(23, 1, 68, 0.06);
+  --glass-blur: 24px;
+  --glass-blur-frosted: 16px;
+  --glass-sat: 1.7;
+  --glass-bright: 1.05;
+  --glass-scrim: rgba(255, 255, 255, 0.1);
+  --glass-scrim-frosted: rgba(255, 255, 255, 0.14);
+}
+
+/* Dark mode: glas blijft licht-glossy, wit hoogsel op transparant vlak. */
+.dark,
+body.theme-dark {
+  --glass-alpha: 44%;
+  --glass-alpha-frosted: 60%;
+  --glass-rim: rgba(255, 255, 255, 0.7);
+  --glass-edge: rgba(255, 255, 255, 0.28);
+  --glass-sheen: rgba(255, 255, 255, 0.34);
+  --glass-tint: rgba(255, 255, 255, 0.16);
+  --glass-shadow: 0 20px 60px rgba(23, 1, 68, 0.32), 0 2px 10px rgba(23, 1, 68, 0.18);
+  --glass-blur: 26px;
+  --glass-sat: 1.8;
+  --glass-scrim: rgba(255, 255, 255, 0.08);
+  --glass-scrim-frosted: rgba(255, 255, 255, 0.1);
+}
+
+/* 2. Overlay: lichte witte waas, nooit een donkere rgba(0,0,0) sluier. */
+html.liquid-glass .modal,
+body.theme-frosted .modal {
+  background: var(--glass-scrim);
+  padding: 20px;
+}
+
+body.theme-frosted .modal {
+  background: var(--glass-scrim-frosted);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  html.liquid-glass .modal {
+    -webkit-backdrop-filter: blur(12px) saturate(1.2) brightness(var(--glass-bright));
+    backdrop-filter: blur(12px) saturate(1.2) brightness(var(--glass-bright));
+  }
+
+  body.theme-frosted .modal {
+    -webkit-backdrop-filter: blur(8px) saturate(1.15);
+    backdrop-filter: blur(8px) saturate(1.15);
+  }
+}
+
+/* Standaard zonder materiaal-class: dicht paneel, geen blur. */
+#theme-popup.tss-modal.modal-content {
+  position: relative;
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--panel);
+  background-clip: padding-box;
+  isolation: isolate;
+}
+
+/* Liquid Glass paneel: transparant vlak plus wit-glossy tint. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  html.liquid-glass #theme-popup.tss-modal.modal-content {
+    background-color: color-mix(in srgb, var(--panel) var(--glass-alpha), transparent);
+    background-image: linear-gradient(180deg, var(--glass-tint) 0%, transparent 56%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-bright));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-bright));
+  }
+
+  /* Matglas: zachtere variant, minder blur, iets meer dekking. */
+  body.theme-frosted #theme-popup.tss-modal.modal-content,
+  html.app-frosted #theme-popup.tss-modal.modal-content {
+    background-color: color-mix(in srgb, var(--panel) var(--glass-alpha-frosted), transparent);
+    background-image: linear-gradient(180deg, var(--glass-tint) 0%, transparent 40%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-frosted)) saturate(1.4);
+    backdrop-filter: blur(var(--glass-blur-frosted)) saturate(1.4);
+  }
+}
+
+/* Specular: felle witte bovenrim, geen donkere inset. */
+html.liquid-glass #theme-popup.tss-modal.modal-content {
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim);
+}
+
+body.theme-frosted #theme-popup.tss-modal.modal-content,
+html.app-frosted #theme-popup.tss-modal.modal-content {
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-edge);
+}
+
+/* Glossy sheen hoog bovenaan, puur decoratief. */
+html.liquid-glass #theme-popup.tss-modal.modal-content::before,
+body.theme-frosted #theme-popup.tss-modal.modal-content::before,
+html.app-frosted #theme-popup.tss-modal.modal-content::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 44%;
+  border-radius: 20px 20px 0 0;
+  background:
+    radial-gradient(120% 80% at 50% -30%, var(--glass-sheen) 0%, transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.theme-frosted #theme-popup.tss-modal.modal-content::before,
+html.app-frosted #theme-popup.tss-modal.modal-content::before {
+  height: 32%;
+  opacity: 0.55;
+}
+
+/* Inhoud boven de sheen. */
+#theme-popup.tss-modal.modal-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 3. Rand-fix: lichte rand, lichte schaduw, geen zwarte lijn of outline. */
+#theme-popup.modal-content.tss-modal {
+  box-shadow: var(--glass-shadow) !important;
+  border: 1px solid var(--glass-edge) !important;
+  outline: none !important;
+}
+
+html.liquid-glass #theme-popup.modal-content.tss-modal {
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-rim) !important;
+}
+
+body.theme-frosted #theme-popup.modal-content.tss-modal,
+html.app-frosted #theme-popup.modal-content.tss-modal {
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-edge) !important;
+}
+
+/* Guard: nooit matglas op de berichtkolom. */
+.chat-log,
+.messages,
+#messages,
+.msg {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Toegankelijkheid: dicht paneel bij minder transparantie. */
+@media (prefers-reduced-transparency: reduce) {
+  html.liquid-glass .modal,
+  body.theme-frosted .modal {
+    background: var(--glass-scrim);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  html.liquid-glass #theme-popup.tss-modal.modal-content,
+  body.theme-frosted #theme-popup.tss-modal.modal-content,
+  html.app-frosted #theme-popup.tss-modal.modal-content {
+    background-color: var(--panel);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  html.liquid-glass #theme-popup.tss-modal.modal-content::before,
+  body.theme-frosted #theme-popup.tss-modal.modal-content::before,
+  html.app-frosted #theme-popup.tss-modal.modal-content::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #theme-popup.tss-modal.modal-content,
+  #theme-popup.tss-modal.modal-content::before {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ==== GLASS-TOKENS-END ==== */

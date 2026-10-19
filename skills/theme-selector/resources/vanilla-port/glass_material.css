@@ -1,0 +1,786 @@
+/* ==== GLASS-MATERIAL-BEGIN ==== */
+/* Odysseus iOS Liquid Glass materiaallaag, Reforge huisstijl.
+   Transparant, licht en glossy. Geen donkere randen, geen diep grijs. */
+
+/* ---------- 1. Tokens, gate html.liquid-glass ---------- */
+
+html.liquid-glass {
+  /* dekking van het glas, veel transparanter dan de oude 76% */
+  --glass-alpha: 50%;
+  --glass-alpha-thin: 38%;
+  --glass-alpha-solid: 62%;
+
+  /* felle witte bovenrim, dit is de specular */
+  --glass-rim: rgba(255, 255, 255, 0.85);
+  /* fijne lichte binnenrand, nooit donker */
+  --glass-edge: rgba(255, 255, 255, 0.45);
+  /* glossy sheen voor de ::before laag */
+  --glass-sheen: rgba(255, 255, 255, 0.6);
+  /* wit transparante tint, geen grijs */
+  --glass-tint: rgba(255, 255, 255, 0.35);
+  /* zachte lichte slagschaduw, Reforge blauw getint */
+  --glass-shadow:
+    0 20px 60px rgba(23, 1, 68, 0.1),
+    0 2px 10px rgba(23, 1, 68, 0.06);
+  --glass-shadow-sm:
+    0 8px 24px rgba(23, 1, 68, 0.08),
+    0 1px 4px rgba(23, 1, 68, 0.05);
+  --glass-shadow-lift:
+    0 28px 70px rgba(23, 1, 68, 0.14),
+    0 3px 12px rgba(23, 1, 68, 0.07);
+
+  /* vibrancy */
+  --glass-blur: 24px;
+  --glass-blur-thin: 22px;
+  --glass-sat: 1.7;
+  --glass-bright: 1.05;
+  --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(var(--glass-bright));
+  --glass-filter-thin: blur(var(--glass-blur-thin)) saturate(1.6) brightness(1.05);
+
+  /* basis wordt opgehelderd met off white zodat licht glas glossy wit oogt */
+  --glass-base: color-mix(in srgb, var(--panel) 80%, #FFFDFA);
+  --glass-bg: color-mix(in srgb, var(--glass-base) var(--glass-alpha), transparent);
+  --glass-bg-thin: color-mix(in srgb, var(--glass-base) var(--glass-alpha-thin), transparent);
+  --glass-bg-solid: color-mix(in srgb, var(--glass-base) var(--glass-alpha-solid), transparent);
+
+  /* timing van de spring materialize */
+  --glass-spring: cubic-bezier(0.32, 1.28, 0.42, 1);
+  --glass-spring-ms: 340ms;
+}
+
+/* Dark mode blijft licht glossy, wit hoogsel in plaats van zwart */
+html.liquid-glass.theme-dark,
+html.liquid-glass.is-dark,
+html.liquid-glass[data-mode="dark"],
+html.liquid-glass[data-dark="true"] {
+  --glass-base: color-mix(in srgb, var(--panel) 78%, #FFFDFA);
+  --glass-alpha: 46%;
+  --glass-alpha-thin: 34%;
+  --glass-alpha-solid: 58%;
+  --glass-rim: rgba(255, 255, 255, 0.7);
+  --glass-edge: rgba(255, 255, 255, 0.32);
+  --glass-sheen: rgba(255, 255, 255, 0.42);
+  --glass-tint: rgba(255, 255, 255, 0.22);
+  --glass-bright: 1.08;
+  --glass-sat: 1.8;
+}
+
+/* ---------- 2. Standaard materiaal, geen class, dicht paneel ---------- */
+
+html:not(.liquid-glass):not(.app-frosted) body:not(.theme-frosted) .modal-content,
+html:not(.liquid-glass):not(.app-frosted) body:not(.theme-frosted) .dropdown,
+html:not(.liquid-glass):not(.app-frosted) body:not(.theme-frosted) .model-picker-menu,
+html:not(.liquid-glass):not(.app-frosted) body:not(.theme-frosted) .overflow-menu,
+html:not(.liquid-glass):not(.app-frosted) body:not(.theme-frosted) .export-dropdown-menu,
+html:not(.liquid-glass):not(.app-frosted) body:not(.theme-frosted) .chat-top-bar,
+html:not(.liquid-glass):not(.app-frosted) body:not(.theme-frosted) .sidebar {
+  background: var(--panel);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ---------- 3. Guard, de berichtkolom krijgt nooit matglas ---------- */
+
+.chat-log,
+.messages,
+#messages,
+.msg,
+html.liquid-glass .chat-log,
+html.liquid-glass .messages,
+html.liquid-glass #messages,
+html.liquid-glass .msg,
+html.app-frosted .chat-log,
+html.app-frosted .messages,
+html.app-frosted #messages,
+html.app-frosted .msg,
+body.theme-frosted .chat-log,
+body.theme-frosted .messages,
+body.theme-frosted #messages,
+body.theme-frosted .msg {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ---------- 4. Liquid Glass, alleen waar backdrop-filter bestaat ---------- */
+
+@supports ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+
+  /* 4.1 Overlay, licht en doorschijnend, geen zwart vlak */
+  html.liquid-glass .modal,
+  html.liquid-glass #theme-modal.modal {
+    background: linear-gradient(
+      180deg,
+      rgba(23, 1, 68, 0.14) 0%,
+      rgba(72, 0, 221, 0.1) 100%
+    );
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  }
+
+  /* 4.2 Sheet, het hoofdpaneel */
+  html.liquid-glass .modal-content,
+  html.liquid-glass #theme-popup.modal-content {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 20px;
+    border-radius: 24px;
+    border: 1px solid var(--glass-edge);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      inset 0 0 0 1px var(--glass-edge),
+      var(--glass-shadow);
+    animation: glass-materialize var(--glass-spring-ms) var(--glass-spring) both;
+  }
+
+  /* glossy sheen, hoog bovenaan, klikt niet */
+  html.liquid-glass .modal-content::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        180deg,
+        var(--glass-sheen) 0%,
+        rgba(255, 255, 255, 0.2) 26%,
+        rgba(255, 255, 255, 0) 58%
+      ),
+      radial-gradient(
+        130% 78% at 16% -14%,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(255, 255, 255, 0) 62%
+      );
+  }
+
+  /* zachte witte binnengloed onderaan, houdt het licht */
+  html.liquid-glass .modal-content::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 40%;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      0deg,
+      var(--glass-tint) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0.5;
+  }
+
+  html.liquid-glass .modal-content > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 4.3 Header van de theme dialoog, licht scheidingslijntje */
+  html.liquid-glass .theme-popup-header {
+    border-bottom: 1px solid var(--glass-edge);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+
+  html.liquid-glass .theme-close {
+    border: 1px solid var(--glass-edge);
+    border-radius: 12px;
+    background: color-mix(in srgb, #FFFDFA 30%, transparent);
+    backdrop-filter: blur(10px) saturate(1.5);
+    -webkit-backdrop-filter: blur(10px) saturate(1.5);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+    transition: background 160ms ease, transform 160ms ease;
+  }
+
+  html.liquid-glass .theme-close:hover {
+    background: color-mix(in srgb, #FFFDFA 48%, transparent);
+  }
+
+  html.liquid-glass .theme-close:active {
+    transform: scale(0.96);
+  }
+
+  /* 4.4 Topbar, dunner glas */
+  html.liquid-glass .chat-top-bar {
+    border-bottom: 1px solid var(--glass-edge);
+    background: var(--glass-bg-thin);
+    backdrop-filter: var(--glass-filter-thin);
+    -webkit-backdrop-filter: var(--glass-filter-thin);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      var(--glass-shadow-sm);
+  }
+
+  /* 4.5 Sidebar, translucent */
+  html.liquid-glass .sidebar {
+    position: relative;
+    border-right: 1px solid var(--glass-edge);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    box-shadow:
+      inset 1px 0 0 var(--glass-edge),
+      var(--glass-shadow-sm);
+  }
+
+  html.liquid-glass .sidebar::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 120px;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      var(--glass-sheen) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0.45;
+  }
+
+  /* 4.6 Dropdowns en menus */
+  html.liquid-glass .dropdown,
+  html.liquid-glass .model-picker-menu,
+  html.liquid-glass .overflow-menu,
+  html.liquid-glass .export-dropdown-menu {
+    position: relative;
+    overflow: hidden;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-edge);
+    background: var(--glass-bg-solid);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      var(--glass-shadow);
+    animation: glass-pop 200ms var(--glass-spring) both;
+  }
+
+  html.liquid-glass .dropdown::before,
+  html.liquid-glass .model-picker-menu::before,
+  html.liquid-glass .overflow-menu::before,
+  html.liquid-glass .export-dropdown-menu::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 56%;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      var(--glass-sheen) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0.55;
+  }
+
+  html.liquid-glass .dropdown > *,
+  html.liquid-glass .model-picker-menu > *,
+  html.liquid-glass .overflow-menu > *,
+  html.liquid-glass .export-dropdown-menu > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 4.7 Tab capsule met glossy schuivende pill */
+  html.liquid-glass #theme-tabs.theme-tabs {
+    position: relative;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background: color-mix(in srgb, var(--glass-base) 30%, transparent);
+    backdrop-filter: blur(18px) saturate(1.6) brightness(1.05);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6) brightness(1.05);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+  }
+
+  html.liquid-glass .theme-tab-indicator {
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.75) 0%,
+        rgba(255, 255, 255, 0.28) 100%
+      ),
+      color-mix(in srgb, #FFFDFA 42%, transparent);
+    backdrop-filter: blur(10px) saturate(1.6);
+    -webkit-backdrop-filter: blur(10px) saturate(1.6);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      var(--glass-shadow-sm);
+    transition:
+      left 260ms var(--glass-spring),
+      width 260ms var(--glass-spring);
+  }
+
+  html.liquid-glass .theme-tab {
+    border: 0;
+    background: transparent;
+    border-radius: 999px;
+    color: var(--text-2);
+    transition: color 160ms ease;
+  }
+
+  html.liquid-glass .theme-tab.is-active {
+    color: var(--text);
+  }
+
+  /* 4.8 Colourway kaarten, translucent glossy met lichte inner glow */
+  html.liquid-glass .cw-card {
+    position: relative;
+    overflow: hidden;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-edge);
+    background: var(--glass-bg-thin);
+    backdrop-filter: blur(20px) saturate(1.6) brightness(1.05);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6) brightness(1.05);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      inset 0 0 20px var(--glass-tint),
+      var(--glass-shadow-sm);
+    transition:
+      transform 200ms var(--glass-spring),
+      box-shadow 200ms ease,
+      background 200ms ease;
+  }
+
+  html.liquid-glass .cw-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 52%;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      var(--glass-sheen) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0.6;
+  }
+
+  html.liquid-glass .cw-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  html.liquid-glass .cw-card:hover {
+    transform: translateY(-2px);
+    background: var(--glass-bg);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      inset 0 0 24px var(--glass-tint),
+      var(--glass-shadow-lift);
+  }
+
+  html.liquid-glass .cw-card:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  html.liquid-glass .cw-card.is-active {
+    border-color: color-mix(in srgb, var(--brand) 55%, rgba(255, 255, 255, 0.6));
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      inset 0 0 0 1px color-mix(in srgb, var(--brand) 35%, transparent),
+      0 0 0 3px color-mix(in srgb, var(--brand) 16%, transparent),
+      var(--glass-shadow);
+  }
+
+  html.liquid-glass .cw-sw {
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  }
+
+  /* 4.9 Materiaal segment, glossy capsule */
+  html.liquid-glass #theme-material-seg {
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background: color-mix(in srgb, var(--glass-base) 28%, transparent);
+    backdrop-filter: blur(18px) saturate(1.6) brightness(1.05);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6) brightness(1.05);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+  }
+
+  html.liquid-glass .material-opt {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-2);
+    transition:
+      background 180ms ease,
+      color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms var(--glass-spring);
+  }
+
+  html.liquid-glass .material-opt:hover {
+    color: var(--text);
+    background: color-mix(in srgb, #FFFDFA 24%, transparent);
+  }
+
+  html.liquid-glass .material-opt:active {
+    transform: scale(0.97);
+  }
+
+  html.liquid-glass .material-opt.is-active {
+    color: var(--text);
+    border-color: var(--glass-edge);
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.78) 0%,
+        rgba(255, 255, 255, 0.3) 100%
+      ),
+      color-mix(in srgb, #FFFDFA 40%, transparent);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      var(--glass-shadow-sm);
+  }
+
+  /* 4.10 iOS switch */
+  html.liquid-glass .switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 32px;
+    flex: none;
+  }
+
+  html.liquid-glass .switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  html.liquid-glass .switch .slider,
+  html.liquid-glass .switch > span {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background: color-mix(in srgb, var(--glass-base) 34%, transparent);
+    backdrop-filter: blur(14px) saturate(1.6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      inset 0 0 12px var(--glass-tint);
+    transition: background 220ms ease, border-color 220ms ease;
+  }
+
+  html.liquid-glass .switch .slider::before,
+  html.liquid-glass .switch > span::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background:
+      radial-gradient(
+        120% 120% at 40% 10%,
+        #FFFFFF 0%,
+        #FFFDFA 55%,
+        #F1F0ED 100%
+      );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 2px 6px rgba(23, 1, 68, 0.16);
+    transition: transform 260ms var(--glass-spring);
+  }
+
+  html.liquid-glass .switch input:checked + .slider,
+  html.liquid-glass .switch input:checked + span {
+    border-color: color-mix(in srgb, var(--brand) 45%, rgba(255, 255, 255, 0.6));
+    background: linear-gradient(
+      120deg,
+      color-mix(in srgb, #170144 62%, transparent) 0%,
+      color-mix(in srgb, #4800DD 62%, transparent) 100%
+    );
+  }
+
+  html.liquid-glass .switch input:checked + .slider::before,
+  html.liquid-glass .switch input:checked + span::before {
+    transform: translateX(20px);
+  }
+
+  html.liquid-glass .switch input:focus-visible + .slider,
+  html.liquid-glass .switch input:focus-visible + span {
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      0 0 0 3px color-mix(in srgb, var(--brand) 20%, transparent);
+  }
+
+  /* 4.11 Range sliders, grote witte glossy knop */
+  html.liquid-glass #theme-frost-range,
+  html.liquid-glass #theme-intensity-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  html.liquid-glass #theme-frost-range::-webkit-slider-runnable-track,
+  html.liquid-glass #theme-intensity-range::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background: color-mix(in srgb, var(--glass-base) 40%, transparent);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+  }
+
+  html.liquid-glass #theme-frost-range::-moz-range-track,
+  html.liquid-glass #theme-intensity-range::-moz-range-track {
+    height: 8px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background: color-mix(in srgb, var(--glass-base) 40%, transparent);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+  }
+
+  html.liquid-glass #theme-frost-range::-webkit-slider-thumb,
+  html.liquid-glass #theme-intensity-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    margin-top: -8px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    background:
+      radial-gradient(
+        120% 120% at 38% 8%,
+        #FFFFFF 0%,
+        #FFFDFA 58%,
+        #F1F0ED 100%
+      );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 2px 8px rgba(23, 1, 68, 0.18);
+    transition: transform 160ms var(--glass-spring);
+  }
+
+  html.liquid-glass #theme-frost-range::-moz-range-thumb,
+  html.liquid-glass #theme-intensity-range::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    background:
+      radial-gradient(
+        120% 120% at 38% 8%,
+        #FFFFFF 0%,
+        #FFFDFA 58%,
+        #F1F0ED 100%
+      );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 2px 8px rgba(23, 1, 68, 0.18);
+  }
+
+  html.liquid-glass #theme-frost-range:active::-webkit-slider-thumb,
+  html.liquid-glass #theme-intensity-range:active::-webkit-slider-thumb {
+    transform: scale(1.1);
+  }
+
+  /* 4.12 Selects en kleurvelden in de dialoog, zelfde glasfamilie */
+  html.liquid-glass #theme-font-select,
+  html.liquid-glass #theme-density-select {
+    border: 1px solid var(--glass-edge);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--glass-base) 42%, transparent);
+    backdrop-filter: blur(14px) saturate(1.6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+    color: var(--text);
+  }
+
+  html.liquid-glass .cw-chan {
+    border: 1px solid var(--glass-edge);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--glass-base) 36%, transparent);
+    box-shadow: inset 0 1px 0 var(--glass-rim);
+  }
+
+  html.liquid-glass .cw-reset {
+    border: 1px solid var(--glass-edge);
+    border-radius: 12px;
+    background: color-mix(in srgb, #FFFDFA 34%, transparent);
+    backdrop-filter: blur(12px) saturate(1.5);
+    -webkit-backdrop-filter: blur(12px) saturate(1.5);
+    box-shadow:
+      inset 0 1px 0 var(--glass-rim),
+      var(--glass-shadow-sm);
+    color: var(--text);
+    transition: background 160ms ease, transform 160ms ease;
+  }
+
+  html.liquid-glass .cw-reset:hover {
+    background: color-mix(in srgb, #FFFDFA 52%, transparent);
+  }
+
+  html.liquid-glass .cw-reset:active {
+    transform: scale(0.98);
+  }
+
+  /* ---------- 5. Matglas, zachtere variant ---------- */
+
+  html.app-frosted:not(.liquid-glass) .modal-content,
+  body.theme-frosted .modal-content {
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--panel) 82%, transparent);
+    backdrop-filter: blur(14px) saturate(1.35);
+    -webkit-backdrop-filter: blur(14px) saturate(1.35);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 12px 34px rgba(23, 1, 68, 0.09);
+  }
+
+  html.app-frosted:not(.liquid-glass) .modal-content::before,
+  body.theme-frosted .modal-content::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 38%;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  html.app-frosted:not(.liquid-glass) .modal-content > *,
+  body.theme-frosted .modal-content > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  html.app-frosted:not(.liquid-glass) .chat-top-bar,
+  body.theme-frosted .chat-top-bar,
+  html.app-frosted:not(.liquid-glass) .sidebar,
+  body.theme-frosted .sidebar,
+  html.app-frosted:not(.liquid-glass) .dropdown,
+  body.theme-frosted .dropdown,
+  html.app-frosted:not(.liquid-glass) .model-picker-menu,
+  body.theme-frosted .model-picker-menu,
+  html.app-frosted:not(.liquid-glass) .overflow-menu,
+  body.theme-frosted .overflow-menu,
+  html.app-frosted:not(.liquid-glass) .export-dropdown-menu,
+  body.theme-frosted .export-dropdown-menu {
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--panel) 86%, transparent);
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  }
+}
+
+/* ---------- 6. Animaties ---------- */
+
+@keyframes glass-materialize {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glass-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- 7. Toegankelijkheid ---------- */
+
+/* Minder transparantie, dicht paneel zonder blur */
+@media (prefers-reduced-transparency: reduce) {
+  html.liquid-glass .modal,
+  html.liquid-glass #theme-modal.modal {
+    background: rgba(23, 1, 68, 0.32);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  html.liquid-glass .modal-content,
+  html.liquid-glass .chat-top-bar,
+  html.liquid-glass .sidebar,
+  html.liquid-glass .dropdown,
+  html.liquid-glass .model-picker-menu,
+  html.liquid-glass .overflow-menu,
+  html.liquid-glass .export-dropdown-menu,
+  html.liquid-glass #theme-tabs.theme-tabs,
+  html.liquid-glass .cw-card,
+  html.liquid-glass #theme-material-seg,
+  html.app-frosted .modal-content,
+  body.theme-frosted .modal-content {
+    background: var(--panel);
+    border-color: var(--border);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: var(--e1);
+  }
+
+  html.liquid-glass .modal-content::before,
+  html.liquid-glass .modal-content::after,
+  html.liquid-glass .sidebar::before,
+  html.liquid-glass .cw-card::before,
+  html.liquid-glass .dropdown::before,
+  html.liquid-glass .model-picker-menu::before,
+  html.liquid-glass .overflow-menu::before,
+  html.liquid-glass .export-dropdown-menu::before {
+    display: none;
+  }
+}
+
+/* Minder beweging, geen spring en geen lift */
+@media (prefers-reduced-motion: reduce) {
+  html.liquid-glass .modal-content,
+  html.liquid-glass .dropdown,
+  html.liquid-glass .model-picker-menu,
+  html.liquid-glass .overflow-menu,
+  html.liquid-glass .export-dropdown-menu {
+    animation: none;
+  }
+
+  html.liquid-glass .theme-tab-indicator,
+  html.liquid-glass .cw-card,
+  html.liquid-glass .material-opt,
+  html.liquid-glass .switch .slider,
+  html.liquid-glass .switch > span,
+  html.liquid-glass .switch .slider::before,
+  html.liquid-glass .switch > span::before,
+  html.liquid-glass #theme-frost-range::-webkit-slider-thumb,
+  html.liquid-glass #theme-intensity-range::-webkit-slider-thumb {
+    transition: none;
+  }
+
+  html.liquid-glass .cw-card:hover {
+    transform: none;
+  }
+}
+/* ==== GLASS-MATERIAL-END ==== */
