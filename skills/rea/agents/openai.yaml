@@ -1,0 +1,4 @@
+interface:
+  display_name: "REA"
+  short_description: "Lokale reverse engineering met bewijs en broncode"
+  default_prompt: "Gebruik $rea om dit doel lokaal volledig te onderzoeken en de bevindingen met bewijs vast te leggen."

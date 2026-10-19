@@ -20,6 +20,7 @@ jobs:
         run: node .github/scripts/check-skills.mjs
       - name: Syntax van hooks en scripts
         run: |
+          sh -n skills/rea/scripts/run-rea.sh
           for f in hooks/*.js skills/render-proof/scripts/shoot.js skills/projectstructuur/tools/*.js tools/poort/poort.mjs .github/scripts/*.mjs; do
             node --check "$f"
           done

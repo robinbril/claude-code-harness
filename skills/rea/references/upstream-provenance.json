@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/morluto/rea",
+  "commit": "951c2aae3be1c357df9f23558d8c09680e64c2cb",
+  "package_version": "6.4.0",
+  "captured": "2026-10-11",
+  "upstream_skill": "reverse-engineer-anything",
+  "installation": "Shared local source with client skill symlinks; CLI fallback; no MCP registration modified."
+}

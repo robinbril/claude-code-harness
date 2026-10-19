@@ -1,12 +1,12 @@
 # Dev Harness voor Claude Code
 
-![versie](https://img.shields.io/badge/versie-1.8.0-5B50E6)
-![skills](https://img.shields.io/badge/skills-48-111827)
+![versie](https://img.shields.io/badge/versie-1.9.0-5B50E6)
+![skills](https://img.shields.io/badge/skills-49-111827)
 ![hooks](https://img.shields.io/badge/hooks-3-111827)
 ![licentie](https://img.shields.io/badge/licentie-MIT-2ea44f)
 [![ci](https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml)
 
-Een compacte harness voor Claude Code: werkregels die altijd aan staan, 48 skills die vanzelf triggeren, drie hooks die bewaken, en poort als kwaliteitspoort voor je eigen repo's. Gebouwd op [Superpowers](https://github.com/obra/superpowers) van Jesse Vincent (MIT). Alleen skills die echt gebruikt worden zitten erin; samen kosten hun beschrijvingen ongeveer 5.000 tokens per sessie.
+Een compacte harness voor Claude Code: werkregels die altijd aan staan, 49 skills die vanzelf triggeren, drie hooks die bewaken, en poort als kwaliteitspoort voor je eigen repo's. Gebouwd op [Superpowers](https://github.com/obra/superpowers) van Jesse Vincent (MIT). Alleen skills die echt gebruikt worden zitten erin; samen kosten hun beschrijvingen ongeveer 5.000 tokens per sessie.
 
 ## In een oogopslag
 
@@ -14,7 +14,7 @@ Een compacte harness voor Claude Code: werkregels die altijd aan staan, 48 skill
 flowchart LR
   U["Jij"] --> CC["Claude Code"]
   G["Werkregels<br/>guidelines/CLAUDE.md"] -->|"bij sessiestart"| CC
-  CC -->|"triggert vanzelf of met /naam"| S["48 skills"]
+  CC -->|"triggert vanzelf of met /naam"| S["49 skills"]
   CC -->|"git commit"| CG["commit-guard"]
   CC -->|"klaar-claim"| VG["verified-claim-guard"]
   S -->|"in je eigen repo"| P["poort<br/>commit, push, PR"]
@@ -26,6 +26,28 @@ flowchart LR
 | Skills | Methodiek, kwaliteit, loops, frontend, animatie, e2e, documenten, PolpoHire en TSS |
 | Hooks | Blokkeren secrets in commits en een klaar-claim zonder bewijs; laden de werkregels via de plugin |
 | poort | Checks voor elke commit en push, en een PR-poort die bewijs aan precies jouw commit koppelt |
+
+## Uitgelicht: `/rea`, reverse engineer anything
+
+`/rea` laat Claude een website, een geleverde app, een JavaScript-bundel of een binary uit elkaar halen met [REA](https://github.com/morluto/rea) van morluto (MIT). Je krijgt bevindingen met bewijs en een blauwdruk om het na te bouwen, geen giswerk.
+
+```mermaid
+flowchart LR
+  T["Doel<br/>site, app, bundel, binary"] --> R["/rea"]
+  R --> I["Inventaris<br/>routes, bron, assets"]
+  I --> E["Bewijs<br/>hashes, Evidence IDs"]
+  E --> B["Blauwdruk<br/>tokens, gedrag, formules, gaten"]
+```
+
+| Je vraagt | Je krijgt |
+|---|---|
+| `/rea https://voorbeeld.nl` | Alle publieke routes, design-tokens, fonts, assets, responsive regels, beweging en formulierlogica, met wat onbekend blijft |
+| `/rea ./MijnApp.app` of een Electron-app | Statisch gereconstrueerde JavaScript-structuur en een vergelijking tussen versies |
+| `/rea firmware.bin` of een APK | Native en Android-analyse: decompileren, resources, aanroepen |
+
+- **Werkt meteen:** zonder MCP draait de skill REA via `npx rea-agents@6.4.0`. Alleen Node en npm nodig, geen globale installatie.
+- **Netjes:** nooit formulieren versturen of berichten sturen om iets te testen; waargenomen, afgeleid en onbekend blijven gescheiden.
+- **Sneller met MCP:** zie [Aanbevolen MCP-servers](#aanbevolen-mcp-servers).
 
 ## Installeren
 
@@ -76,6 +98,7 @@ Elke skill triggert vanzelf op zijn onderwerp, of start hem met `/<naam>`.
 | `council` | Een zware, moeilijk omkeerbare keuze laten uitvechten door meerdere adviseurs |
 | `batch-grill-me` | Een plan of keuze laten doorvragen, alle open vragen per ronde tegelijk |
 | `projectstructuur` | Een repo-indeling ontwerpen, veilig herstructureren en bewaken |
+| `rea` | Een site, app, bundel of binary reverse engineeren met bewijs ([REA](https://github.com/morluto/rea)) |
 
 ### Kwaliteit en git
 
@@ -172,6 +195,7 @@ Zo rijgt `keten-loop` de loops aan elkaar. Elke loop werkt ook los.
 
 | Commando | Wat |
 |---|---|
+| `/rea <doel>` | Een site, app of binary reverse engineeren: bevindingen met bewijs en een nabouw-blauwdruk |
 | `/goal <uitkomst>` | Werkt zelfstandig naar een uitkomst; `ga door` hervat een lopende run |
 | `/supergoal` | Zwaarste variant: plan, fasen, onafhankelijke evaluator per fase |
 | `/keten-loop` | Token-zuinige end-to-end keten van verkennen tot eindcheck |
@@ -211,6 +235,7 @@ Geen onderdeel van de plugin: kies zelf welke je aanzet. Kopieer [`.mcp.example.
 | `playwright` | Een browser besturen voor flows en screenshots | `claude mcp add playwright -- npx -y @playwright/mcp@0.0.83` |
 | `e2e` | De app live besturen en e2e-tests schrijven (hoort bij skill `e2e`) | `claude mcp add e2e -- npx -y e2e@0.21.2 mcp` |
 | `terminal` | Interactieve terminalsessies (REPL's, prompts, langlopende processen) | `claude mcp add terminal -- npx -y mcp-interactive-terminal@1.0.9` |
+| `rea` | Reverse engineering als tools in je sessie (hoort bij skill `rea`) | `claude mcp add rea -- npx -y rea-agents@6.4.0 --mcp` |
 | `supabase` | Database, storage en docs van je Supabase-project | `claude mcp add --transport http supabase "https://mcp.supabase.com/mcp?project_ref=JOUW_PROJECT_REF&features=database,storage,docs"` |
 
 Versies staan vast; werk ze bewust bij. Buiten de config: Claude in Chrome is een browserextensie voor je ingelogde browser, en connectors als Gmail en Outlook zet je aan in je claude.ai-account.
@@ -256,6 +281,7 @@ Context-gebruik, actieve tools, agents en todo-voortgang in je statusbalk: [clau
 | `emil-design-eng` en de animatieskills | Emil Kowalski (officiele skillset) | MIT |
 | `batch-grill-me` | gebaseerd op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) | MIT |
 | `code-audit` | gebaseerd op open-code-review-delegate uit [alibaba/open-code-review](https://github.com/alibaba/open-code-review), aangepast (zie `NOTICE`) | Apache-2.0 |
+| `rea` | eigen skill rond [morluto/rea](https://github.com/morluto/rea) 6.4.0, met de upstream-instructies in `references/upstream/` | MIT |
 | `tools/poort/` | Reforge Recruitment | niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
 
 Overgenomen skills hebben hun licentie in de skill-map. De meeste skills zijn generiek; `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gemaakt voor PolpoHire en The Staffing Society. Weggelaten uit Superpowers: de dev-zwaardere multi-step skills en de multi-harness setup, om het rustig en Claude-Code-gericht te houden.
