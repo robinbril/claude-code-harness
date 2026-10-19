@@ -1,7 +1,9 @@
 // commit-guard must scan what the commit command will actually record, in the repo it targets.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { makeRepo, write, git, runHook, FAKE_SECRET } from './helpers.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import { makeRepo, write, git, runHook, tempDir, FAKE_SECRET } from './helpers.mjs';
 
 const HOOK = 'hooks/commit-guard.js';
 const bash = (command, cwd) => ({ tool_name: 'Bash', tool_input: { command }, cwd });
@@ -98,4 +100,26 @@ test('git add of a clean file && git commit passes', () => {
   const repo = makeRepo();
   write(repo, 'notes.md', 'plain notes\n');
   assert.equal(runHook(HOOK, bash('git add notes.md && git commit -m notes', repo), repo).status, 0);
+});
+
+for (const ref of ['$HOME', '${HOME}', '~']) {
+  test(`cd "${ref}/..." && git commit: ${ref} is resolved, the repo is scanned`, () => {
+    const home = tempDir('guard-home-');
+    const repo = makeRepo();
+    fs.renameSync(repo, path.join(home, 'proj'));
+    const target = path.join(home, 'proj');
+    write(target, 'config.js', `const key = "${FAKE_SECRET}";\n`);
+    git(target, 'add', 'config.js');
+    const quoted = ref === '~' ? `~/proj` : `"${ref}/proj"`;
+    const res = runHook(HOOK, bash(`cd ${quoted} && git commit -m add`, home), home, { HOME: home });
+    assert.equal(res.status, 2, res.stderr);
+    assert.doesNotMatch(res.stderr, /cannot inspect/);
+  });
+}
+
+test('an unknown variable in the path is still refused', () => {
+  const repo = makeRepo();
+  const res = runHook(HOOK, bash('cd "$PROJECT_DIR" && git commit -m add', repo), repo);
+  assert.equal(res.status, 2);
+  assert.match(res.stderr, /cannot inspect/);
 });

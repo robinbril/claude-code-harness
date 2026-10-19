@@ -43,9 +43,9 @@ export function write(dir, rel, content) {
 }
 
 // Runs a hook script with a JSON payload on stdin; returns { status, stdout, stderr }.
-export function runHook(script, payload, cwd) {
+export function runHook(script, payload, cwd, env = {}) {
   const res = spawnSync(process.execPath, [path.join(ROOT, script)], {
-    cwd, env: GIT_ENV, input: JSON.stringify(payload), encoding: 'utf8',
+    cwd, env: { ...GIT_ENV, ...env }, input: JSON.stringify(payload), encoding: 'utf8',
   });
   return { status: res.status, stdout: res.stdout, stderr: res.stderr };
 }
