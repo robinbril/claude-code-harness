@@ -29,13 +29,13 @@ observatie of een oordeel is, behandel het als oordeel en herdraai het.
 |---|---|
 | `tool-output` | Draai het command opnieuw. Lees de exit code en match het patroon. Je vertrouwt de gerapporteerde exit code niet; je produceert een eigen. |
 | `deliverable` | `bash .supergoal/repo-state.sh deliverable <baseline> "<path>"` tegen de working tree. `missing` = fail. |
-| `empirical` | Stuur het artefact **zelf** aan en observeer. Web: preview MCP of chrome-devtools, neem een screenshot en assert de DOM. API: curl/httpie het endpoint, assert de respons. CLI: draai de binary, assert de output. Library: draai een usage-script. Flow: /e2e. Pass = jouw observatie matcht het criterium. Een criterium dat je niet kunt observeren met het beschikbare gereedschap markeer je `inconclusive` met de reden. |
+| `empirical` | Stuur het artefact **zelf** aan en observeer. Web: preview MCP of chrome-devtools, neem een screenshot en assert de DOM. API: curl/httpie het endpoint, assert de respons. CLI: draai de binary, assert de output. Library: draai een usage-script. Flow: /e2e. Pass = jouw observatie matcht het criterium. Een criterium dat je niet kunt observeren met het beschikbare gereedschap markeer je `inconclusive` met de reden; dat blokkeert de fase (zie Output). |
 | `llm-judge` | Beoordeel de deliverable tegen het criterium, met een bewijs-citaat (bestand of regel). "Ziet er goed uit" is geen pass. |
 | `self-consistency` | Her-grep de criteria van eerdere fasen. Spreekt dit werk er een tegen, fail met de botsende regel. |
 
 Voor `pass` citeer je bewijs dat jij produceerde. Voor `fail` benoem je de concrete gap.
-Voor `inconclusive` benoem je welk bewijs het criterium toetsbaar had gemaakt; dit hoort
-zeldzaam te zijn.
+Voor `inconclusive` benoem je welk bewijs het criterium toetsbaar had gemaakt. Een
+criterium dat je niet kon toetsen is niet bewezen, dus geen pass.
 
 ## Empirisch bewijs is niet optioneel
 
@@ -57,8 +57,10 @@ SUPERGOAL_EVAL_VERDICT phase=<N>
 Verdict: ACCEPT | REJECT
 ```
 
-ACCEPT alleen als elk criterium `pass` of `inconclusive` is. Elke `fail` forceert REJECT;
-de 3-strike recovery in PROTOCOL.md vangt het op. Je schrijft geen code en stelt geen
+ACCEPT alleen als **elk** criterium `pass` is. Elke `fail` of `inconclusive` forceert REJECT;
+de 3-strike recovery in PROTOCOL.md vangt het op. Zet bij elke `inconclusive` een regel
+`Blocker: <wat ontbrak om dit te toetsen: tool, toegang, draaiende service, data>`, zodat de
+generator of de gebruiker die blokkade concreet kan wegnemen. Je schrijft geen code en stelt geen
 fixes voor: dat is het werk van de generator. Jij rapporteert pass of fail met bewijs.
 
 ## Output: final audit

@@ -23,12 +23,22 @@
 #   invalid / unavailable baseline ("no-git" sentinel, bogus sha, or non-repo)
 #       -> degrade gracefully to a filesystem existence test.
 #
-# This script never mutates the repository or the index. All output is for the audit
-# transcript. Paths containing spaces are handled (callers must quote the path argument).
+# Read commands never mutate the repository or the index. `snapshot` only writes a commit
+# object plus a ref under refs/supergoal/; `rollback` only rewrites working-tree files.
+# Paths containing spaces are handled (callers must quote the path argument).
 #
 # Usage:
 #   repo-state.sh deliverable   <baseline> <path>
-#       -> "present — <evidence>" (exit 0) | "missing" (exit 1)
+#       -> "present - <evidence>" (exit 0) | "missing" (exit 1); a path that no longer
+#          exists is missing, even when its deletion shows up as a change
+#   repo-state.sh snapshot      <phase>
+#       -> sha of a restore point holding the COMPLETE working tree (committed, staged,
+#          unstaged and untracked work, .supergoal/ excluded); HEAD, index, working tree
+#          and stash stay untouched. Prints "no-git" outside a repository.
+#   repo-state.sh rollback      <snapshot> [<path>...]
+#       -> restores the working tree (or only <path>s) to the snapshot: changed and deleted
+#          files come back, files created after the snapshot are removed. .supergoal/ is
+#          never touched.
 #   repo-state.sh changed-files <baseline>
 #       -> newline-delimited paths changed since baseline (tracked + untracked + deleted)
 #   repo-state.sh added-lines   <baseline>
@@ -47,15 +57,32 @@ baseline_ok() {
   git rev-parse --verify --quiet "${b}^{commit}" >/dev/null 2>&1
 }
 
+# exists_now <path>: the path (or, for a glob, at least one match) is on disk right now.
+exists_now() {
+  local p="$1" f
+  [ -e "$p" ] && return 0
+  in_git_repo || return 1
+  while IFS= read -r f; do
+    [ -n "$f" ] && [ -e "$f" ] && return 0
+  done < <(git ls-files --cached --others --exclude-standard -- "$p" 2>/dev/null)
+  return 1
+}
+
 cmd_deliverable() {
   local baseline="$1" path="$2"
+
+  # A deleted deliverable is missing, even though its deletion is a "change".
+  if ! exists_now "$path"; then
+    printf 'missing\n'
+    return 1
+  fi
 
   if in_git_repo && baseline_ok "$baseline"; then
     # 1) tracked change vs baseline: committed, staged, unstaged, or deleted.
     local stat
     stat="$(git diff --stat "$baseline" -- "$path" 2>/dev/null || true)"
     if [ -n "$stat" ]; then
-      printf 'present — changed vs baseline (%s)\n' \
+      printf 'present - changed vs baseline (%s)\n' \
         "$(printf '%s' "$stat" | tail -1 | sed 's/^[[:space:]]*//')"
       return 0
     fi
@@ -63,29 +90,68 @@ cmd_deliverable() {
     local untracked
     untracked="$(git ls-files --others --exclude-standard -- "$path" 2>/dev/null | head -1 || true)"
     if [ -n "$untracked" ]; then
-      printf 'present — untracked new file (%s)\n' "$untracked"
+      printf 'present - untracked new file (%s)\n' "$untracked"
       return 0
     fi
-    # 3) backward-compat net: the path exists / is tracked but is unchanged this run.
-    if [ -e "$path" ] || [ -n "$(git ls-files -- "$path" 2>/dev/null | head -1 || true)" ]; then
-      printf 'present — exists, unchanged since baseline\n'
-      return 0
-    fi
-    printf 'missing\n'
-    return 1
+    # 3) the path exists but is unchanged this run.
+    printf 'present - exists, unchanged since baseline\n'
+    return 0
   fi
 
-  # Fallback: baseline missing/invalid or not a git repo, existence only.
-  if [ -e "$path" ]; then
-    printf 'present — exists on disk (baseline unavailable)\n'
-    return 0
+  # Fallback: baseline missing/invalid or not a git repo; existence was checked above.
+  printf 'present - exists on disk (baseline unavailable)\n'
+  return 0
+}
+
+cmd_snapshot() {
+  local phase="$1" top tmp tree snap parent
+  if ! in_git_repo; then printf 'no-git\n'; return 0; fi
+  top="$(git rev-parse --show-toplevel)" || return 1
+  cd "$top" || return 1
+  # A throwaway index seeded from the real one: `git add -A` on it records every change,
+  # including untracked files, without touching the real index or working tree.
+  tmp="$(mktemp "${TMPDIR:-/tmp}/supergoal-index.XXXXXX")" || return 1
+  cp "$(git rev-parse --git-path index)" "$tmp" 2>/dev/null || rm -f "$tmp"
+  if ! GIT_INDEX_FILE="$tmp" git add -A -- . ':(exclude).supergoal' >/dev/null 2>&1; then
+    rm -f "$tmp"; echo "repo-state.sh: snapshot failed to read the working tree" >&2; return 1
   fi
-  if in_git_repo && [ -n "$(git ls-files -- "$path" 2>/dev/null | head -1 || true)" ]; then
-    printf 'present — tracked (baseline unavailable)\n'
-    return 0
+  tree="$(GIT_INDEX_FILE="$tmp" git write-tree)" || { rm -f "$tmp"; return 1; }
+  rm -f "$tmp"
+  export GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-supergoal}" GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-supergoal@localhost}"
+  export GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-supergoal}" GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-supergoal@localhost}"
+  if parent="$(git rev-parse --verify --quiet HEAD)"; then
+    snap="$(printf 'supergoal phase %s pre\n' "$phase" | git commit-tree "$tree" -p "$parent")" || return 1
+  else
+    snap="$(printf 'supergoal phase %s pre\n' "$phase" | git commit-tree "$tree")" || return 1
   fi
-  printf 'missing\n'
-  return 1
+  # Keep the snapshot reachable, so garbage collection cannot remove the restore point.
+  git update-ref "refs/supergoal/phase-${phase}-pre" "$snap" || return 1
+  printf '%s\n' "$snap"
+}
+
+cmd_rollback() {
+  local snap="$1"; shift
+  if ! in_git_repo || ! baseline_ok "$snap"; then
+    echo "repo-state.sh: rollback needs a snapshot sha from 'repo-state.sh snapshot' (got '$snap')" >&2
+    return 1
+  fi
+  local top f restored=0 removed=0
+  top="$(git rev-parse --show-toplevel)" || return 1
+  cd "$top" || return 1
+  [ "$#" -gt 0 ] || set -- .
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    case "$f" in .supergoal|.supergoal/*) continue ;; esac
+    if git cat-file -e "${snap}:${f}" 2>/dev/null; then
+      git restore --source="$snap" --worktree -- "$f" && restored=$((restored + 1))
+    elif [ -e "$f" ]; then
+      rm -f -- "$f" && removed=$((removed + 1))
+    fi
+  done < <({
+    git diff --name-only "$snap" -- "$@" 2>/dev/null
+    git ls-files --others --exclude-standard -- "$@" 2>/dev/null
+  } | LC_ALL=C sort -u)
+  printf 'rolled back to %s: %d restored, %d removed\n' "$snap" "$restored" "$removed"
 }
 
 cmd_changed_files() {
@@ -128,22 +194,32 @@ case "$sub" in
     [ "$#" -ge 1 ] || { echo "usage: repo-state.sh added-lines <baseline>" >&2; exit 2; }
     cmd_added_lines "$1"
     ;;
+  snapshot)
+    [ "$#" -ge 1 ] || { echo "usage: repo-state.sh snapshot <phase>" >&2; exit 2; }
+    cmd_snapshot "$1"
+    ;;
+  rollback)
+    [ "$#" -ge 1 ] || { echo "usage: repo-state.sh rollback <snapshot> [<path>...]" >&2; exit 2; }
+    cmd_rollback "$@"
+    ;;
   ""|-h|--help|help)
     cat >&2 <<'EOF'
-repo-state.sh — evaluate the complete working-tree state vs a baseline commit.
+repo-state.sh - evaluate the complete working-tree state vs a baseline commit.
 
   repo-state.sh deliverable   <baseline> <path>   present|missing (+ evidence), exit 0|1
   repo-state.sh changed-files <baseline>          paths changed since baseline
   repo-state.sh added-lines   <baseline>          added/new lines since baseline
+  repo-state.sh snapshot      <phase>             restore point incl. uncommitted work
+  repo-state.sh rollback      <snapshot> [path..] restore working tree to a snapshot
 
 <baseline> is a commit sha (or "no-git" / any invalid ref to force the filesystem
-fallback). Compares the working tree — not just HEAD — so uncommitted, staged, and
+fallback). Compares the working tree - not just HEAD - so uncommitted, staged, and
 untracked work is included. See references/repo-state-comparison.md.
 EOF
     exit 2
     ;;
   *)
-    echo "repo-state.sh: unknown subcommand '$sub' (try deliverable|changed-files|added-lines)" >&2
+    echo "repo-state.sh: unknown subcommand '$sub' (try deliverable|changed-files|added-lines|snapshot|rollback)" >&2
     exit 2
     ;;
 esac

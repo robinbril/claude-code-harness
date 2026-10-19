@@ -39,7 +39,7 @@ aan deze fase toeschrijft, herstel naar:
 - **Fase**: <N-k> (of "baseline" voor de pre-run ref)
 - **Baseline ref**: lees uit `STATE.md` -> `Phase baselines:` -> `phase <N-k> pre`
 - **Getroffen deliverables**: <welke bestanden of features de rollback raakt>
-- **Rollback-commando**: <bijv. `git restore --source=<ref> -- <paths>` of `git reset --hard <ref>` als de hele fase wordt teruggedraaid>
+- **Rollback-commando**: `bash .supergoal/repo-state.sh rollback <snapshot> [<paths>]` (zonder paden: de hele fase terug). Nooit `git reset --hard`: dat wist ongecommit werk van eerdere fasen.
 
 De audit-fix loop leest deze sectie voordat het een fix spec schrijft, zodat het kan
 kiezen tussen vooruit patchen en terugdraaien.
