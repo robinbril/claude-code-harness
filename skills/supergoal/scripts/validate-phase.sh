@@ -41,11 +41,42 @@ check_section() {
 # Required markers
 check_marker "SUPERGOAL_PHASE_START" "phase-start marker"
 
-# Required sections
-check_section "Work"
-check_section "Acceptance criteria"
-check_section "Mandatory commands"
-check_section "Evidence required"
+# section_body <heading>: the non-blank lines under "## <heading>" or "**<heading>", up to the next heading.
+section_body() {
+  local h
+  h="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+  awk -v h="$h" '
+    { l = tolower($0) }
+    /^## / || /^\*\*/ { if (inside) exit; if (index(l, "## " h) == 1 || index(l, "**" h) == 1) { inside = 1; next } }
+    inside && NF { print }
+  ' "$f"
+}
+
+# Required sections, each with real content (headings alone are not a phase).
+for section in "Work" "Acceptance criteria" "Mandatory commands" "Evidence required"; do
+  check_section "$section"
+  if [[ -z "$(section_body "$section")" ]]; then
+    echo "❌ $f: section is empty: $section" >&2
+    errors=$((errors + 1))
+  fi
+done
+
+# Every acceptance criterion carries its validation class: - [class] ... (or - [ ] [class] ...).
+CLASSES='tool-output|deliverable|empirical|llm-judge|self-consistency'
+criteria=$(section_body "Acceptance criteria" | grep -E '^[[:space:]]*-' || true)
+n_criteria=$(printf '%s' "$criteria" | grep -c . || true)
+n_classified=$(printf '%s\n' "$criteria" | grep -cE "^[[:space:]]*-[[:space:]]*(\[[ xX]\][[:space:]]*)?\[($CLASSES)\]" || true)
+if [[ "$n_criteria" -eq 0 ]]; then
+  echo "❌ $f: no acceptance criteria (bullet lines) found" >&2
+  errors=$((errors + 1))
+elif [[ "$n_classified" -lt "$n_criteria" ]]; then
+  echo "❌ $f: $((n_criteria - n_classified)) of $n_criteria criteria lack a class [$CLASSES]" >&2
+  errors=$((errors + 1))
+fi
+if [[ -z "$(section_body "Mandatory commands" | grep -E '^[[:space:]]*-' || true)" ]]; then
+  echo "❌ $f: no mandatory commands listed" >&2
+  errors=$((errors + 1))
+fi
 
 # Team marker: solo must be justified as atomic, else the phase must list tracks + specialists
 team_line=$(grep -iE '^[[:space:]]*Team:' "$f" | head -1 || true)

@@ -34,11 +34,12 @@
 #   repo-state.sh snapshot      <phase>
 #       -> sha of a restore point holding the COMPLETE working tree (committed, staged,
 #          unstaged and untracked work, .supergoal/ excluded); HEAD, index, working tree
-#          and stash stay untouched. Prints "no-git" outside a repository.
+#          and stash stay untouched. Create-only: a phase that already has a snapshot gets
+#          the original back. Prints "no-git" outside a repository.
 #   repo-state.sh rollback      <snapshot> [<path>...]
 #       -> restores the working tree (or only <path>s) to the snapshot: changed and deleted
 #          files come back, files created after the snapshot are removed. .supergoal/ is
-#          never touched.
+#          never touched. Saves the current state first and prints an `undo:` line.
 #   repo-state.sh changed-files <baseline>
 #       -> newline-delimited paths changed since baseline (tracked + untracked + deleted)
 #   repo-state.sh added-lines   <baseline>
@@ -103,11 +104,9 @@ cmd_deliverable() {
   return 0
 }
 
-cmd_snapshot() {
-  local phase="$1" top tmp tree snap parent
-  if ! in_git_repo; then printf 'no-git\n'; return 0; fi
-  top="$(git rev-parse --show-toplevel)" || return 1
-  cd "$top" || return 1
+# make_snapshot <message>: commit object holding the complete working tree (.supergoal/ excluded).
+make_snapshot() {
+  local msg="$1" tmp tree parent
   # A throwaway index seeded from the real one: `git add -A` on it records every change,
   # including untracked files, without touching the real index or working tree.
   tmp="$(mktemp "${TMPDIR:-/tmp}/supergoal-index.XXXXXX")" || return 1
@@ -120,12 +119,27 @@ cmd_snapshot() {
   export GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-supergoal}" GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-supergoal@localhost}"
   export GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-supergoal}" GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-supergoal@localhost}"
   if parent="$(git rev-parse --verify --quiet HEAD)"; then
-    snap="$(printf 'supergoal phase %s pre\n' "$phase" | git commit-tree "$tree" -p "$parent")" || return 1
+    printf '%s\n' "$msg" | git commit-tree "$tree" -p "$parent"
   else
-    snap="$(printf 'supergoal phase %s pre\n' "$phase" | git commit-tree "$tree")" || return 1
+    printf '%s\n' "$msg" | git commit-tree "$tree"
   fi
-  # Keep the snapshot reachable, so garbage collection cannot remove the restore point.
-  git update-ref "refs/supergoal/phase-${phase}-pre" "$snap" || return 1
+}
+
+cmd_snapshot() {
+  local phase="$1" ref snap existing
+  if ! in_git_repo; then printf 'no-git\n'; return 0; fi
+  cd "$(git rev-parse --show-toplevel)" || return 1
+  ref="refs/supergoal/phase-${phase}-pre"
+  # Create-only: a resumed session or a retry of phase N keeps the original anchor,
+  # so a rollback still returns to the state before the phase started.
+  if existing="$(git rev-parse --verify --quiet "${ref}^{commit}")"; then
+    echo "repo-state.sh: phase ${phase} already has a snapshot; reusing it" >&2
+    printf '%s\n' "$existing"
+    return 0
+  fi
+  snap="$(make_snapshot "supergoal phase ${phase} pre")" || return 1
+  # The ref keeps the snapshot reachable, so garbage collection cannot remove it.
+  git update-ref "$ref" "$snap" "" || return 1
   printf '%s\n' "$snap"
 }
 
@@ -135,10 +149,14 @@ cmd_rollback() {
     echo "repo-state.sh: rollback needs a snapshot sha from 'repo-state.sh snapshot' (got '$snap')" >&2
     return 1
   fi
-  local top f restored=0 removed=0
+  local top f restored=0 removed=0 safety
   top="$(git rev-parse --show-toplevel)" || return 1
   cd "$top" || return 1
   [ "$#" -gt 0 ] || set -- .
+  # Safety net: save the current state first, so a rollback to the wrong snapshot
+  # (or with the wrong paths) can itself be undone.
+  safety="$(make_snapshot "supergoal pre-rollback to ${snap}")" || return 1
+  git update-ref "refs/supergoal/pre-rollback-$(date +%Y%m%d%H%M%S)-$$" "$safety" || return 1
   while IFS= read -r f; do
     [ -n "$f" ] || continue
     case "$f" in .supergoal|.supergoal/*) continue ;; esac
@@ -152,6 +170,7 @@ cmd_rollback() {
     git ls-files --others --exclude-standard -- "$@" 2>/dev/null
   } | LC_ALL=C sort -u)
   printf 'rolled back to %s: %d restored, %d removed\n' "$snap" "$restored" "$removed"
+  printf 'undo: repo-state.sh rollback %s\n' "$safety"
 }
 
 cmd_changed_files() {

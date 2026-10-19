@@ -20,7 +20,8 @@ Herhaal tot `SUPERGOAL_RUN_COMPLETE` is geprint:
    aan `STATE.md` onder `Phase baselines:` de regel `phase N pre: <sha>` toe. De snapshot bevat
    de complete werkmap (commits, staged, unstaged en untracked werk van eerdere fasen) en laat
    HEAD, index en werkmap ongemoeid. Dit is het rollback-anker waar `phase-N-rationale.md`
-   naar verwijst. Gebruik nooit `HEAD` als anker: ongecommit werk van eerdere fasen zit daar
+   naar verwijst. Bestaat er al een `phase N pre`-regel (hervatting of retry), voeg geen tweede
+   toe: `snapshot` geeft het oorspronkelijke anker terug. Gebruik nooit `HEAD` als anker: ongecommit werk van eerdere fasen zit daar
    niet in en gaat bij een rollback verloren.
 4. Print `SUPERGOAL_PHASE_START` met de spec-metadata (fasenummer, naam, taak, mandatory
    commands, criteria-telling, vereist bewijs, afhankelijkheden, validatieklassen).
@@ -54,7 +55,6 @@ Herhaal tot `SUPERGOAL_RUN_COMPLETE` is geprint:
    deliverables, het artefact zelf observeren voor `empirical`, blind oordeel voor
    `llm-judge`, her-grep voor `self-consistency`) en print `SUPERGOAL_EVAL_VERDICT phase=N`
    met per-criterium pass/fail/inconclusive + bewijs, en `Verdict: ACCEPT | REJECT`. ACCEPT
-   vereist `pass` op elk criterium; `inconclusive` is een REJECT met een `Blocker:`-regel. ACCEPT
    vereist `pass` op elk criterium; `inconclusive` is een REJECT met een `Blocker:`-regel.
 7. **Cleanliness-check** (onderdeel van de evaluatie). De evaluator draait
    `bash .supergoal/repo-state.sh added-lines <Baseline ref>` en grept de toegevoegde
@@ -114,7 +114,6 @@ evaluator, niet de generator. Max 3 rondes; faalt ronde 3, dan `AUDIT_HANDOFF`.
    (exit 1) = `AUDIT_GAP`. Dit is repository ground-truth, niet transcript-zelfrapport.
 7. Print `AUDIT_VERIFY`: per fase de status, per command de exit, per criterium
    pass/fail/inconclusive + bewijs, en een `Deliverables:` blok. Een criterium dat
-   `inconclusive` blijft is een `AUDIT_GAP` met een `Blocker:`-regel: niet bewezen is niet af. Een criterium dat
    `inconclusive` blijft is een `AUDIT_GAP` met een `Blocker:`-regel: niet bewezen is niet af.
 
 ### Bij gaten

@@ -134,7 +134,7 @@ Schrijf het resultaat naar `$SUPERGOAL_ROOT/tools.md`. Detecteer specifiek:
 
 ### Hervat-detectie
 
-Toont `STATE.md` `Status: IN_PROGRESS` met een openstaande fase, plan dan niet opnieuw. Print "Supergoal hervatten vanaf fase N" en spring naar Stage 6, of naar Stage 7 als de gebruiker hervatting bevestigt.
+Toont `STATE.md` `Status: IN_PROGRESS` met een openstaande fase, plan dan niet opnieuw. Print "Supergoal hervatten vanaf fase N" en spring naar Stage 6, of naar Stage 7 als de gebruiker hervatting bevestigt. Hervatten initialiseert niets: Stage 7 laat `Current phase`, `Baseline ref` en `Phase baselines` dan ongemoeid.
 
 ---
 
@@ -405,7 +405,8 @@ Leg de keuze vast in `STATE.md` als `Dispatch: <goal | loop> + <subagents | work
 
 Slash commands vuren alleen vanuit gebruikersinput, dus dit is een eerlijke een-plak overdracht. Print de vorm die Stage 6.6 koos. In de meeste gevallen is dat de `/goal` plak hieronder; bij een terugkerende taak print je in plaats daarvan een `/loop` (zie onder). Na "Start now":
 
-1. Update `STATE.md`: `Status: READY_TO_DISPATCH`, `Current phase: 1`, en leg `Baseline ref:` vast op `git rev-parse HEAD 2>/dev/null || echo "no-git"`. Initialiseer `Phase baselines:` (leeg); de generator voegt per fasegrens een entry toe (`phase <N> pre: <ref>`), de rollback-ankers waar `phase-N-rationale.md` naar verwijst.
+1. **Alleen bij een nieuwe run:** update `STATE.md`: `Status: READY_TO_DISPATCH`, `Current phase: 1`, en leg `Baseline ref:` vast op `git rev-parse HEAD 2>/dev/null || echo "no-git"`. Initialiseer `Phase baselines:` (leeg); de generator voegt per fasegrens een entry toe (`phase <N> pre: <ref>`), de rollback-ankers waar `phase-N-rationale.md` naar verwijst.
+   Bij hervatten initialiseer je niets: `Current phase`, `Baseline ref` en `Phase baselines` blijven ongemoeid; zet alleen `Status: READY_TO_DISPATCH` en ga verder vanaf de huidige fase.
 2. Kopieer `$SUPERGOAL_DIR/templates/PROTOCOL.md` naar `.supergoal/PROTOCOL.md`, `$SUPERGOAL_DIR/prompts/phase-judge.md` naar `.supergoal/evaluator.md` (de evaluator-instructie die de subagent of fallback-pass leest), `$SUPERGOAL_DIR/prompts/phase-team.md` naar `.supergoal/phase-team.md` (de team-instructie voor de generator), `$SUPERGOAL_DIR/references/workflow-patterns.md` naar `.supergoal/workflow-patterns.md` (de patroon-keuze voor de generator), `$SUPERGOAL_DIR/prompts/council-gate.md` naar `.supergoal/council-gate.md` (de richtings-gate die na een evaluator-ACCEPT draait), en `$SUPERGOAL_DIR/scripts/repo-state.sh` naar `.supergoal/repo-state.sh`.
 3. Verifieer elke `phase-N.md` en draai `validate-phase.sh` erop.
 4. Print het kant-en-klare `/goal` commando:
