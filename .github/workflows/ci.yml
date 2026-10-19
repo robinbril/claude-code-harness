@@ -30,6 +30,8 @@ jobs:
         run: |
           python3 skills/readme/scripts/make_svgs.py assets/visuals.json assets
           git diff --exit-code -- assets
+      - name: Gedragstests van hooks en supergoal
+        run: node --test tests/*.test.mjs
       - name: poort-tests
         working-directory: tools/poort
         run: node --test --test-concurrency=1 test/*.test.mjs

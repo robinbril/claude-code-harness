@@ -109,7 +109,7 @@ Cleanliness (evaluator ran repo-state.sh added-lines vs Baseline ref):
 Verdict: ACCEPT | REJECT
 ```
 
-ACCEPT only if every criterion is `pass` or `inconclusive` and cleanliness counts are zero (unless the spec sets `Cleanliness override:`). Any `fail` or non-zero cleanliness count forces REJECT.
+ACCEPT only if every criterion is `pass` and cleanliness counts are zero (unless the spec sets `Cleanliness override:`). Any `fail`, any `inconclusive` or a non-zero cleanliness count forces REJECT; each `inconclusive` carries a `Blocker: <what was missing to test it>` line.
 
 ### `SUPERGOAL_COUNCIL_VERDICT` (council direction gate, once per phase, only after an ACCEPT)
 
@@ -175,10 +175,13 @@ Artifact re-observation (empirical criteria, end-to-end):
 - <criterion>: <pass | fail> - <observation>
 Acceptance criteria re-check:
 - Phase 1 / "<criterion>": <pass | fail | inconclusive> - <evidence>
+  Blocker: <what was missing to test it>   <- required on every inconclusive
 Deliverables (complete-working-tree check vs Baseline ref via repo-state.sh):
 - Phase 1 / "<deliverable bullet>": <present | missing> - <evidence>
 Summary: <pass> pass, <fail> fail, <inconclusive> inconclusive, <missing> deliverable-gaps
 ```
+
+Every `fail`, `inconclusive` and `missing` is an audit gap: unproven is not done.
 
 ### `AUDIT_GAPS` (only if gaps found this round)
 
@@ -197,9 +200,8 @@ AUDIT_COMPLETE
 Rounds: <N>
 Phases re-verified: <count>
 Commands re-run clean: <count>
-Acceptance criteria: <pass> pass / 0 fail / <inconclusive> inconclusive
+Acceptance criteria: <pass> pass / 0 fail / 0 inconclusive
 Deliverables: <present> present / 0 missing
-Audit coverage: <re_verified> re-verified / <inconclusive> inconclusive (<pct>%)
 ```
 
 ### `AUDIT_HANDOFF` (3 audit rounds all failed, stop)
@@ -218,13 +220,9 @@ STATE.md updated to BLOCKED.
 
 ```
 SUPERGOAL_RUN_COMPLETE
-[Audit coverage: <re_verified> re-verified, <inconclusive> inconclusive (<pct>%). Check the open points manually before merging.]   <- only when inconclusive fraction > 30%
-Audit coverage: <re_verified> re-verified, <inconclusive> inconclusive (<pct>%).
-All <N> phases complete. Audit passed in <rounds> round(s).
+All <N> phases complete. Audit passed in <rounds> round(s): every criterion pass, every deliverable present.
 Summary: <5 lines max - what shipped, what changed, what to verify manually>
 ```
-
-The banner is printed only when inconclusive is more than 30% of total checks. Below 30%, only the plain `Audit coverage:` line appears.
 
 ## Failure blocks (used by recovery protocol, on evaluator REJECT)
 

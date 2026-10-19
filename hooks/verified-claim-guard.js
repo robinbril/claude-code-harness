@@ -10,13 +10,20 @@
 //   2. VERIFIED without observation -> "your VERIFIED is not backed by a tool call"
 //   3. (UNVERIFIED, or VERIFIED with an observation) -> pass
 //
+// The observation must come AFTER the last mutation: a check of the old state proves
+// nothing about the new one. Claims are recognised in English and Dutch.
 // A failed tool call (is_error or non-zero exit) is not an observation.
 // stop_hook_active prevents a loop. Fail open on any parse error.
 'use strict';
 
 const fs = require('fs');
 
-const CLAIM = /\b(done|finished|fixed|resolved|shipped|deployed|built|merged|complete|works( now)?|is live|went live|up and running)\b/i;
+const CLAIM = new RegExp([
+  // English
+  'done|finished|fixed|resolved|shipped|deployed|built|merged|complete|works( now)?|is live|went live|up and running',
+  // Dutch
+  'klaar|opgelost|gefixt|gefixed|gerepareerd|afgerond|voltooid|gelukt|gebouwd|gemerged|gemerget|gedeployed|gedeployd|uitgerold|werkt( nu)?|staat live|is live|draait( nu)?',
+].map((words) => `\\b(${words})\\b`).join('|'), 'i');
 const VERIFIED_LABEL = /\bVERIFIED\s*:/;
 const UNVERIFIED_LABEL = /\bUNVERIFIED\s*:/;
 const MUTATING_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit']);
@@ -32,6 +39,21 @@ const RENDER_RE = /(take_screenshot|__screenshot$|__(computer|read_page|get_page
 // MCP read tools (mcp__server__get_/list_/search_/read_ ...) also count as an observation.
 const MCP_READ_RE = /^mcp__[^_]+.*__(get|list|search|read|show|find|fetch|status|view|inspect)/i;
 
+const OBSERVING_BASH = /\b(test|pytest|vitest|jest|curl|grep|cat|ls|node\s+-e|python\d?\s+-c|npm\s+test|npm\s+run\s+(test|typecheck|lint|build)|tsc|eslint|bash\s+-n|node\s+-c|diff|git\s+(status|log|diff|show))\b/i;
+const HARMLESS_REDIRECT = /(\d*>&\d+|&>\s*\/dev\/null|\d*>>?\s*\/dev\/null)/g;
+// A Bash call is judged step by step (split on && || ; | and newlines): a step that
+// mutates invalidates earlier evidence, only an observing step after it counts.
+// `2>&1` and redirects to /dev/null write nothing and are not mutations.
+function bashSteps(cmd) {
+  return cmd.split(/&&|\|\||[;|\n]/)
+    .map((part) => part.replace(HARMLESS_REDIRECT, ' '))
+    .filter((part) => part.trim())
+    .map((part) => {
+      const mutates = MUTATING_BASH.test(part);
+      return { mutates, observes: !mutates || OBSERVING_BASH.test(part) };
+    });
+}
+
 function isObservation(b) {
   if (!b || b.type !== 'tool_use' || !b.name) return false;
   const n = b.name;
@@ -43,7 +65,7 @@ function isObservation(b) {
     // A Bash that does not (only) mutate produces output = observation. A purely
     // mutating command (rm/mv/cp without a read) does not count.
     const cmd = (b.input && b.input.command) || '';
-    return !MUTATING_BASH.test(cmd) || /\b(test|pytest|vitest|jest|curl|grep|cat|ls|node\s+-e|python\d?\s+-c|npm\s+test|npm\s+run\s+(test|typecheck|lint|build)|tsc|eslint|bash\s+-n|node\s+-c|diff|git\s+(status|log|diff|show))\b/i.test(cmd);
+    return bashSteps(cmd).some((step) => step.observes);
   }
   return false;
 }
@@ -116,9 +138,16 @@ function main(raw) {
     if (!e.message || e.message.role !== 'assistant' || !Array.isArray(e.message.content)) continue;
     for (const b of e.message.content) {
       if (b && b.type === 'tool_use') {
-        if (MUTATING_TOOLS.has(b.name)) mutated = true;
-        else if (b.name === 'Bash' && b.input && MUTATING_BASH.test(b.input.command || '')) mutated = true;
-        if (isObservation(b) && successfulCalls.has(b.id)) observed = true;
+        const ok = successfulCalls.has(b.id);
+        if (b.name === 'Bash') {
+          for (const step of bashSteps((b.input && b.input.command) || '')) {
+            if (step.mutates) { mutated = true; observed = false; }
+            if (step.observes && ok) observed = true;
+          }
+        } else {
+          if (MUTATING_TOOLS.has(b.name)) { mutated = true; observed = false; }
+          if (isObservation(b) && ok) observed = true;
+        }
       }
       if (b && b.type === 'text' && b.text) { lastText = b.text; turnText += b.text + '\n'; }
     }
@@ -141,8 +170,8 @@ function main(raw) {
   // call in the turn, the VERIFIED line is purely typed and not backed by evidence.
   if (!observed) {
     return block(
-      'Your VERIFIED line is not backed by evidence: this turn contains a mutation but no ' +
-      'tool OBSERVATION at all (test, curl, render, query, read) that proves the claim. A typed ' +
+      'Your VERIFIED line is not backed by evidence: no successful tool OBSERVATION (test, curl, ' +
+      'render, query, read) ran after the last mutation in this turn. A check of the old state or a typed ' +
       'VERIFIED without a tool call does not count. Run the proving command, or honestly mark ' +
       '`UNVERIFIED: <why not>`.'
     );

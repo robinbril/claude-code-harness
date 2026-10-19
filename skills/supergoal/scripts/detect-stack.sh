@@ -96,7 +96,7 @@ echo
 
 # --- Git ---
 echo "## Git"
-if [[ -d .git ]]; then
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then  # also true in a worktree (.git is a file there)
   branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "?")
   remote=$(git config --get remote.origin.url 2>/dev/null || echo "(no remote)")
   ahead=$(git rev-list --count HEAD ^origin/HEAD 2>/dev/null || echo "?")

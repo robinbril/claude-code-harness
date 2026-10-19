@@ -16,9 +16,13 @@ Herhaal tot `SUPERGOAL_RUN_COMPLETE` is geprint:
 
 1. Lees `.supergoal/STATE.md`. Vind `Current phase: N`.
 2. Lees `.supergoal/phases/phase-N.md`. Dit is de volledige werk-spec.
-3. **Snapshot de pre-fase baseline.** Voeg aan `STATE.md` onder `Phase baselines:` een
-   regel toe: `phase N pre: <git rev-parse HEAD 2>/dev/null || git stash create || echo no-git>`.
-   Dit is het rollback-anker waar `phase-N-rationale.md` naar verwijst.
+3. **Snapshot de pre-fase baseline.** Draai `bash .supergoal/repo-state.sh snapshot N` en voeg
+   aan `STATE.md` onder `Phase baselines:` de regel `phase N pre: <sha>` toe. De snapshot bevat
+   de complete werkmap (commits, staged, unstaged en untracked werk van eerdere fasen) en laat
+   HEAD, index en werkmap ongemoeid. Dit is het rollback-anker waar `phase-N-rationale.md`
+   naar verwijst. Bestaat er al een `phase N pre`-regel (hervatting of retry), voeg geen tweede
+   toe: `snapshot` geeft het oorspronkelijke anker terug. Gebruik nooit `HEAD` als anker: ongecommit werk van eerdere fasen zit daar
+   niet in en gaat bij een rollback verloren.
 4. Print `SUPERGOAL_PHASE_START` met de spec-metadata (fasenummer, naam, taak, mandatory
    commands, criteria-telling, vereist bewijs, afhankelijkheden, validatieklassen).
 5. **Generator (team by default, solo alleen bij een atomaire fase).** Kies eerst het werkpatroon
@@ -50,7 +54,8 @@ Herhaal tot `SUPERGOAL_RUN_COMPLETE` is geprint:
    De evaluator herdraait elke check zelf (commands opnieuw, `repo-state.sh` voor
    deliverables, het artefact zelf observeren voor `empirical`, blind oordeel voor
    `llm-judge`, her-grep voor `self-consistency`) en print `SUPERGOAL_EVAL_VERDICT phase=N`
-   met per-criterium pass/fail/inconclusive + bewijs, en `Verdict: ACCEPT | REJECT`.
+   met per-criterium pass/fail/inconclusive + bewijs, en `Verdict: ACCEPT | REJECT`. ACCEPT
+   vereist `pass` op elk criterium; `inconclusive` is een REJECT met een `Blocker:`-regel.
 7. **Cleanliness-check** (onderdeel van de evaluatie). De evaluator draait
    `bash .supergoal/repo-state.sh added-lines <Baseline ref>` en grept de toegevoegde
    regels op stack-specifieke debug-patronen: `console.log`/`console.error` (JS/TS),
@@ -108,14 +113,16 @@ evaluator, niet de generator. Max 3 rondes; faalt ronde 3, dan `AUDIT_HANDOFF`.
    draai `bash .supergoal/repo-state.sh deliverable <baseline-ref> "<path>"`. `missing`
    (exit 1) = `AUDIT_GAP`. Dit is repository ground-truth, niet transcript-zelfrapport.
 7. Print `AUDIT_VERIFY`: per fase de status, per command de exit, per criterium
-   pass/fail/inconclusive + bewijs, en een `Deliverables:` blok.
+   pass/fail/inconclusive + bewijs, en een `Deliverables:` blok. Een criterium dat
+   `inconclusive` blijft is een `AUDIT_GAP` met een `Blocker:`-regel: niet bewezen is niet af.
 
 ### Bij gaten
 
 1. Print `AUDIT_GAPS` met de lijst.
 2. Als een gat een regressie is die aan fase N is toe te schrijven: lees het rollback-doel
    uit `phase-N-rationale.md` en reverteer de getroffen deliverables naar de pre-fase
-   baseline (`git restore --source=<ref> -- <paths>`) voor je vooruit patcht.
+   snapshot (`bash .supergoal/repo-state.sh rollback <snapshot> <paths>`) voor je vooruit
+   patcht. Nooit `git reset --hard` of `git restore --source=HEAD`: dat wist ongecommit werk.
 3. Schrijf `.supergoal/phases/audit-fix-<round>.md`, een gerichte fix spec die alleen de
    falende criteria target. Geen scope creep. De evaluator-criteria zijn de success-gate.
 4. Voer de fix spec inline uit (generator bouwt, evaluator herbeoordeelt).
@@ -125,15 +132,11 @@ evaluator, niet de generator. Max 3 rondes; faalt ronde 3, dan `AUDIT_HANDOFF`.
 
 ### Bij nul gaten
 
-1. Bereken `audit coverage`: `re_verified / (re_verified + inconclusive)` als percentage.
-   `re_verified` = criteria met `pass` plus deliverables `present`. `inconclusive` =
-   criteria die de evaluator niet kon herdraaien.
-2. Print `AUDIT_COMPLETE` (rondes, fasen herverifieerd, commands schoon hergedraaid,
-   criteria pass/inconclusive, deliverables present/missing, coverage %).
-3. Print `SUPERGOAL_RUN_COMPLETE` met de 5-regelige samenvatting. Is `inconclusive /
-   (re_verified + inconclusive)` > 30%, prepend een eerlijkheidsbanner: `Audit coverage:
-   <re_verified> herverifieerd, <inconclusive> inconclusive (<pct>%). Check de open punten
-   handmatig voor merge.`
+Nul gaten betekent: elk criterium `pass`, elke deliverable `present`, geen `inconclusive`.
+
+1. Print `AUDIT_COMPLETE` (rondes, fasen herverifieerd, commands schoon hergedraaid,
+   criteria pass, deliverables present).
+2. Print `SUPERGOAL_RUN_COMPLETE` met de 5-regelige samenvatting.
 
 ## Failure recovery (3-strike, op REJECT van de evaluator)
 
@@ -157,7 +160,8 @@ evaluator, niet de generator. Max 3 rondes; faalt ronde 3, dan `AUDIT_HANDOFF`.
 ### 3e REJECT (fix spec ook afgekeurd)
 
 1. **Overweeg rollback.** Is het criterium gebroken door regressie in deze fase, reverteer
-   naar de pre-fase baseline uit `phase-N-rationale.md` voor je opgeeft.
+   met `bash .supergoal/repo-state.sh rollback <snapshot>` naar de pre-fase snapshot uit
+   `phase-N-rationale.md` voor je opgeeft.
 2. Print `FAILURE_HANDOFF`: falend criterium, volledige probe-historie (drie pogingen),
    volgende stap.
 3. Zet `STATE.md` op `BLOCKED`. Stop. De `/goal` conditie blijft onvervuld; toon de handoff

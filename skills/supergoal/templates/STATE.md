@@ -10,7 +10,7 @@
 
 ## Phase baselines
 
-Pre-execution snapshot ref per phase, appended by the generator at each phase boundary (`phase N pre: <ref>`). The rollback targets in `phase-N-rationale.md` resolve against these.
+Pre-execution snapshot per phase, appended by the generator at each phase boundary (`phase N pre: <sha>` from `repo-state.sh snapshot N`, which includes uncommitted work). The rollback targets in `phase-N-rationale.md` resolve against these.
 
 - (empty until dispatch)
 

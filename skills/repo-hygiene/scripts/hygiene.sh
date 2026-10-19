@@ -59,14 +59,28 @@ else
 fi
 echo
 
-# Merged PR heads (vangt squash/rebase merges die git zelf niet ziet)
+# Merged PR heads met hun laatste commit (vangt squash/rebase merges die git zelf niet ziet).
+# Een branchnaam alleen is niet genoeg: wordt die naam hergebruikt voor nieuw werk, dan is de
+# branch pas opruimbaar als zijn huidige commit de gemergede PR-commit is (of erin zit).
 MERGED_PR_HEADS=""
-[ $HAS_GH -eq 1 ] && MERGED_PR_HEADS=$(gh pr list --state merged --limit 300 --json headRefName -q '.[].headRefName' 2>/dev/null)
+[ $HAS_GH -eq 1 ] && MERGED_PR_HEADS=$(gh pr list --state merged --limit 300 --json headRefName,headRefOid -q '.[] | "\(.headRefName) \(.headRefOid)"' 2>/dev/null)
 if [ "$(printf '%s\n' "$MERGED_PR_HEADS" | grep -c .)" -ge 300 ]; then
   echo "WARN: 300 gemergede PR's opgehaald (limiet); oudere squash-merges kunnen als STALE of actief verschijnen"
 fi
 OPEN_PR_HEADS=""
 [ $HAS_GH -eq 1 ] && OPEN_PR_HEADS=$(gh pr list --state open --limit 200 --json headRefName -q '.[].headRefName' 2>/dev/null)
+
+# squash_merged <branch>: een gemergede PR van deze branch bevat zijn huidige commit.
+squash_merged() {
+  local tip name oid
+  tip=$(git rev-parse "origin/$1" 2>/dev/null) || return 1
+  while read -r name oid; do
+    [ "$name" = "$1" ] || continue
+    [ "$oid" = "$tip" ] && return 0
+    git merge-base --is-ancestor "$tip" "$oid" 2>/dev/null && return 0
+  done <<<"$MERGED_PR_HEADS"
+  return 1
+}
 
 # 2+3+4. remote branches
 echo "## 2. Remote branches (exclusief $MAIN${DEV:+, $DEV})"
@@ -87,7 +101,7 @@ git for-each-ref --format='%(refname:strip=3) %(committerdate:unix)' refs/remote
   if git merge-base --is-ancestor "origin/$b" "origin/$MAIN" ||
     { [ -n "$DEV" ] && git merge-base --is-ancestor "origin/$b" "origin/$DEV"; }; then
     status="DEAD (gemerged)"
-  elif echo "$MERGED_PR_HEADS" | grep -qxF "$b" && [ "$pr" = "-" ]; then
+  elif [ "$pr" = "-" ] && squash_merged "$b"; then
     status="DEAD (PR gemerged, squash)"
   elif [ "$age" -gt "$STALE_DAYS" ]; then
     status="STALE (niet gemerged)"
