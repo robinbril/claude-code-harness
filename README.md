@@ -1,44 +1,46 @@
-<p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, bewakers en poort" width="100%"></p>
+<p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.10.0-5B50E6" alt="versie 1.10.0">
+<img src="https://img.shields.io/badge/versie-1.10.1-5B50E6" alt="versie 1.10.1">
 <img src="https://img.shields.io/badge/skills-50-111827" alt="50 skills">
-<img src="https://img.shields.io/badge/bewakers-3-111827" alt="3 bewakers">
+<img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">
-<a href="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml"><img src="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml/badge.svg" alt="automatische controle"></a>
+<a href="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml"><img src="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
+
+<p align="center"><b>Van prompt tot bewezen resultaat.</b><br>Werkregels die altijd geladen zijn, 50 skills die zichzelf inzetten, hooks die afdwingen wat regels alleen vragen, en een quality gate die elk resultaat aan bewijs koppelt.</p>
 
 ## Het probleem
 
-AI-codeerhulpen zijn snel, maar maken steeds dezelfde vier fouten:
+AI-coding agents falen voorspelbaar, en altijd op dezelfde vier manieren:
 
-- Ze **gokken** wat je bedoelt en gaan daar zonder te vragen mee door.
-- Ze maken het **te ingewikkeld**: extra lagen, opties en code waar niemand om vroeg.
-- Ze **veranderen dingen die niet hoefden**, zodat je wijziging moeilijk na te kijken is.
-- Ze zeggen **"klaar"** zonder het geprobeerd te hebben.
+| Faalwijze | Wat er gebeurt | Wat deze harness doet |
+|---|---|---|
+| **Stille aannames** | De agent kiest een interpretatie en bouwt erop door zonder te checken | Aannames worden benoemd; bij echte twijfel vraagt Claude eerst |
+| **Overengineering** | Abstracties, opties en lagen waar niemand om vroeg | De simpelste oplossing die de eis volledig haalt, niets speculatiefs |
+| **Scope-drift** | Ongevraagde wijzigingen naast de taak maken elke diff onreviewbaar | Chirurgische wijzigingen: elke regel is herleidbaar naar het verzoek |
+| **Onbewezen "klaar"** | Succes geclaimd zonder dat er iets gedraaid is | Een klaar-claim na een wijziging vraagt `VERIFIED:` met een geslaagde check daarna, of een eerlijke `UNVERIFIED:`; een hook blokkeert al het andere |
 
-Dit pakket pakt alle vier aan. Je installeert het in twee minuten, daarna werkt het vanzelf:
+## Wat je krijgt
 
-| Onderdeel | Wat je ervan merkt |
+| Laag | Wat het afdwingt |
 |---|---|
-| **Werkregels** | Claude denkt eerst na, houdt het simpel, raakt alleen aan wat nodig is en zegt pas "klaar" met bewijs |
-| **50 skills** | Kant-en-klare werkwijzen voor veelvoorkomende klussen. Claude pakt ze zelf als ze passen, of jij typt `/naam` |
-| **3 bewakers** | Houden wachtwoorden uit je code en houden Claude tegen als het "klaar" zegt zonder bewijs |
-| **poort** | Een controle in je eigen project, voor je code met anderen deelt |
+| **Werkregels** | Tien regels in `guidelines/CLAUDE.md`, bij elke sessie geladen: denken voor bouwen, minimale diffs, verplicht bewijs, modelrouting |
+| **50 skills** | Beproefde methodes per type werk, van root-cause debugging tot autonome build-loops. Claude kiest zelf, of jij roept aan met `/naam` |
+| **3 hooks** | Deterministische bewaking buiten het model om: secrets uit commits, geen klaar-claim zonder bewijs |
+| **poort** | Quality gate voor je eigen repo's: checks per commit en push, en een PR-gate die bewijs aan de exacte commit bindt |
 
-## Zo werkt het
-
-<img src="assets/zo-werkt-het.svg" alt="Jij vraagt, de werkregels sturen, een skill pakt de klus op, de bewakers controleren, jij krijgt bewijs" width="100%">
+<img src="assets/zo-werkt-het.svg" alt="Prompt, werkregels, skill, hooks, bewijs" width="100%">
 
 ## Installeren
 
-**Als plugin** (de makkelijkste route, Claude Code 2.1.275 of nieuwer). Typ in Claude Code:
+**Als plugin** (Claude Code 2.1.275 of nieuwer):
 
 ```
 /plugin install dev-harness --marketplace robinbril/claude-code-harness
 ```
 
-**Of met het installatiescript**, als je de bestanden zelf wilt zien:
+**Of met het installatiescript**, als je de bestanden in je eigen `~/.claude` wilt:
 
 ```bash
 git clone https://github.com/robinbril/claude-code-harness.git
@@ -46,223 +48,222 @@ cd claude-code-harness
 bash install.sh
 ```
 
-Op Windows: `powershell -ExecutionPolicy Bypass -File .\install.ps1`. Het script bewaart eerst een kopie van alles wat het vervangt. Herstart Claude Code daarna.
+Windows: `powershell -ExecutionPolicy Bypass -File .\install.ps1`. Beide scripts maken eerst een back-up van wat ze vervangen. Herstart Claude Code daarna.
 
 | | Plugin | Script |
 |---|---|---|
-| Skills | Gaan vanzelf mee | Naar `~/.claude/skills/` |
-| Werkregels | Laden bij elke start | Worden je `~/.claude/CLAUDE.md` |
-| Bewakers | Staan meteen aan | Voeg `settings.example.json` toe aan je `~/.claude/settings.json` |
+| Skills | Automatisch | Naar `~/.claude/skills/` |
+| Werkregels | Via een `SessionStart`-hook | Worden `~/.claude/CLAUDE.md` |
+| Hooks | Direct actief via `hooks/hooks.json` | Merge `examples/settings.json` in `~/.claude/settings.json` |
 
 ## Uitgelicht: `/rea`
 
-**Uitzoeken hoe iets gebouwd is.** Geef `/rea` een website, een app of een programma, en Claude zoekt met [REA](https://github.com/morluto/rea) van morluto (MIT) uit hoe het werkt. Je krijgt bevindingen met bewijs en een bouwplan om het na te maken, geen gokwerk.
+**Reverse engineering met bewijs.** `/rea` laat Claude een website, applicatie, JavaScript-bundel of binary ontleden met [REA](https://github.com/morluto/rea) van morluto (MIT). Het resultaat is een dossier met herleidbare bevindingen en een reconstructie-blauwdruk, geen giswerk.
 
 <img src="assets/rea.svg" alt="Doel, inventaris, bewijs, blauwdruk" width="100%">
 
-| Je typt | Je krijgt |
+| Input | Output |
 |---|---|
-| `/rea https://voorbeeld.nl` | Alle pagina's, kleuren, lettertypes, plaatjes, gedrag op telefoon en desktop, en wat formulieren doen. Plus wat onbekend blijft |
-| `/rea ./MijnApp.app` | Hoe de app is opgebouwd, en wat er tussen twee versies veranderde |
-| `/rea firmware.bin` of een Android-app | Wat er in het programma zit en wat het aanroept |
+| `/rea https://voorbeeld.nl` | Alle publieke routes, design-tokens, fonts, assets, responsive regels, motion en formulierlogica, met expliciete gaten |
+| `/rea ./MijnApp.app` of een Electron-app | Statisch gereconstrueerde applicatiestructuur en een diff tussen versies |
+| `/rea firmware.bin` of een APK | Native en Android-analyse: decompilatie, resources, call-tracing |
 
-- **Werkt meteen.** Alleen Node.js nodig; REA wordt per keer opgehaald, er hoeft niets vast geïnstalleerd te worden.
-- **Netjes.** Verstuurt nooit formulieren of berichten om iets uit te proberen. Gezien, afgeleid en onbekend blijven gescheiden.
-- **Sneller.** Zet REA aan als vast gereedschap, zie [Extra gereedschap](#extra-gereedschap-mcp-servers).
+- **Zero-install.** Draait REA 6.4.0 via `npx`; alleen Node.js en npm nodig.
+- **Evidence-first.** Elke bevinding met URL, SHA-256 en Evidence ID. Waargenomen, afgeleid en onbekend blijven strikt gescheiden.
+- **Veilig.** Verstuurt nooit formulieren of berichten om gedrag te testen.
+- **Sneller als MCP-server**, zie [MCP-servers](#mcp-servers).
 
 ## Werkregels
 
-Staan in `guidelines/CLAUDE.md` en gelden in elk gesprek:
+`guidelines/CLAUDE.md`, tien secties:
 
-1. **Eerst nadenken.** Aannames hardop zeggen; bij twijfel vragen.
-2. **Simpel.** Zo min mogelijk code die het probleem oplost.
-3. **Precies.** Alleen aanraken wat de klus vraagt.
-4. **Doelgericht.** Elke taak wordt een doel dat je kunt controleren.
-5. **Bewijzen.** Pas "klaar" met de echte uitkomst (`VERIFIED:`), anders eerlijk `UNVERIFIED:`.
-6. **Opzoeken.** Namen, bestanden en gewoontes eerst lezen, niet gokken.
-7. **Ordelijk.** Bestanden van 200 tot 400 regels, nooit boven de 800.
-8. **Het juiste model.** Opus beslist, Sonnet bouwt, Haiku zoekt.
-9. **Voorzichtig.** Eerst zeggen wat er mis kan gaan (`BLAST RADIUS`); nooit zelf iets vastleggen of versturen.
-10. **Samenvatten.** Wat bewaard blijft als een gesprek te lang wordt.
+1. **Think before coding.** Aannames benoemen, afwegingen zichtbaar maken, bij twijfel vragen.
+2. **Simplicity first.** De minimale code die het probleem volledig oplost.
+3. **Surgical changes.** Alleen aanraken wat de taak vraagt.
+4. **Goal-driven execution.** Elke taak wordt een toetsbaar succescriterium.
+5. **Verify before "done".** `VERIFIED:` met echte output, of eerlijk `UNVERIFIED:`.
+6. **Look it up.** Identifiers, call-sites en conventies lezen voor je typt.
+7. **Structure.** Bestanden 200 tot 400 regels, 800 als harde grens; per feature groeperen.
+8. **Model routing.** Opus voor oordeel, Sonnet voor bouwwerk, Haiku voor zoeken en logs.
+9. **Before irreversible steps.** Eerst `BLAST RADIUS`; nooit autonoom committen of pushen.
+10. **Compacting.** Wat bewaard blijft bij samenvatten, en wat niet.
 
-## Hoe je merkt dat het werkt
+## Hoe je ziet dat het werkt
 
-- Claude stelt eerst een vraag in plaats van te gokken.
-- Wijzigingen zijn kleiner en raken alleen wat je vroeg.
-- Elk "klaar" komt met een `VERIFIED:`-regel die zegt wat er echt gedraaid is.
-- Een commit met een wachtwoord erin wordt tegengehouden voor hij in git staat.
+- Claude stelt een gerichte vraag waar het eerder zou gokken.
+- Diffs worden kleiner en raken alleen wat gevraagd is.
+- Elke klaar-melding eindigt met een `VERIFIED:`-regel: welk commando, welke output.
+- Een commit met een API-key wordt geblokkeerd voordat hij in de geschiedenis staat.
 
-**De afweging:** de regels maken Claude voorzichtiger dan snel. Bij een kleine klus, zoals een typfout, mag Claude zelf oordelen. Bij werk dat blijft staan, wint zorgvuldigheid.
+**Trade-off:** de regels kiezen voor zorgvuldigheid boven snelheid. Voor triviale taken gebruikt Claude eigen oordeel; voor alles wat in productie belandt, wint discipline.
 
 ## Skills
 
-Een skill is een vaste werkwijze voor een soort klus. Claude kiest er zelf een als je vraag erbij past. Je kunt er ook een starten met `/naam`; via de plugin heet dat `/dev-harness:naam`.
+Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` (via de plugin: `/dev-harness:naam`).
 
-### Nadenken en beslissen
-
-| Skill | Waarvoor |
-|---|---|
-| `rea` | Uitzoeken hoe een website, app of programma in elkaar zit, met bewijs |
-| `skill-finder` | Kijken of er al een skill is, voor je zelf iets bouwt |
-| `systematic-debugging` | Een fout stap voor stap oplossen: nadoen, insluiten, repareren, controleren |
-| `council` | Een lastige keuze voorleggen aan meerdere adviseurs die elkaar ook beoordelen |
-| `batch-grill-me` | Een plan laten doorvragen tot elke keuze gemaakt is, alle vragen per ronde tegelijk |
-| `projectstructuur` | Mappen en bestanden van een project logisch indelen en zo houden |
-
-### Controleren en opleveren
+### Methodiek en beslissen
 
 | Skill | Waarvoor |
 |---|---|
-| `find-bugs` | Fouten en beveiligingslekken zoeken in wat je veranderd hebt |
-| `code-audit` | Een volledige codecontrole. Vraagt het gratis hulpprogramma `ocr`: `npm install -g @alibaba-group/open-code-review` |
-| `commit-discipline` | Je werk in een paar logische stappen opslaan, niet in tientallen kleine |
-| `repo-hygiene` | Gezondheidscheck van je project zonder iets te veranderen: oude takken, conflicten, open verzoeken, mislukte controles |
-| `render-proof` | Een pagina als afbeelding laten maken en nakijken of hij er echt goed uitziet |
+| `rea` | Reverse engineering van sites, apps, bundels en binaries, met bewijsketen |
+| `skill-finder` | Eerst checken of een skill al bestaat, hier of upstream, voor je iets bouwt |
+| `systematic-debugging` | Root cause in vier fasen: reproduceren, isoleren, fixen, verifiëren |
+| `council` | Zware, moeilijk omkeerbare beslissingen via onafhankelijke adviseurs, blinde peer-review en synthese |
+| `batch-grill-me` | Een plan doorvragen tot elke beslissing genomen is, alle open vragen per ronde tegelijk |
+| `projectstructuur` | Repo-indeling ontwerpen, veilig herstructureren en bewaken |
 
-### Zelfstandig doorwerken
-
-<img src="assets/loops.svg" alt="Verkennen, plannen, bouwen, verbeteren, repareren, eindcontrole" width="100%">
-
-`keten-loop` doet alle stappen achter elkaar. Elke stap werkt ook los.
+### Kwaliteit en git
 
 | Skill | Waarvoor |
 |---|---|
-| `/goal` | Geef een einddoel; Claude werkt er zelf naartoe en laat per stap bewijs zien |
-| `supergoal` | Grote klussen in fasen, met een onafhankelijke controle na elke fase |
-| `keten-loop` | Van begin tot eind: verkennen, plannen, bouwen, verbeteren, repareren, eindcontrole |
-| `bouw-loop` | Een lijst taken een voor een afwerken |
-| `polijst-loop` | Iets bestaands steeds beter maken, tot het niet beter meer wordt |
-| `fix-loop` | Een mislukte test laten slagen zonder de test aan te passen |
-| `speur-loop` | Fouten zoeken in rondes, tot er niets nieuws meer opduikt |
-| `waak-loop` | Wachten tot iets klaar is (een controle, een website, een domeinwijziging) en dan verder |
-| `createloopprompt` | Een klus omzetten in een opdracht met duidelijke grenzen, voor Claude Code, Codex of Cursor |
+| `find-bugs` | Bugs, security-gaten en kwaliteitsproblemen in de branch-diff |
+| `code-audit` | Volledige codereview: open-code-review bepaalt dekking en regels, Claude reviewt. Vereist `ocr` (`npm install -g @alibaba-group/open-code-review`) |
+| `commit-discipline` | Geen commit-spam: werk verzamelen, op signaal drie tot zeven thematische commits |
+| `repo-hygiene` | Read-only audit: branch-drift, dode branches, merge-conflicten, open PR's, falende Actions |
+| `render-proof` | Headless render naar PNG om een UI-claim visueel te bewijzen |
 
-### Mooie schermen bouwen
+### Autonome loops
 
-| Skill | Waarvoor |
-|---|---|
-| `design-taste-frontend` | Een nieuw ontwerp met een eigen gezicht, niet het standaard AI-uiterlijk |
-| `redesign-existing-projects` | Een bestaand ontwerp opknappen zonder dat er iets stukgaat |
-| `emil-design-eng` | De kleine details die een scherm af laten voelen |
-| `make-interfaces-feel-better` | Schaduwen, letters en kleine reacties op klikken die het verschil maken |
-| `ux-heuristics` | Nakijken of een scherm makkelijk te gebruiken is, met bekende vuistregels |
-| `frontend-gotchas` | Veelgemaakte fouten in schermen voorkomen |
-| `fixing-accessibility` | Schermen bruikbaar maken voor iedereen: toetsenbord, voorleessoftware, contrast |
-| `transitions-dev` | Kant-en-klare overgangen voor menu's, pop-ups, meldingen en tabbladen |
+<img src="assets/loops.svg" alt="Verkennen, plannen, bouwen, polijsten, fixen, eindcheck" width="100%">
 
-### Animatie en beweging, van Emil Kowalski
+`keten-loop` rijgt de loops aan elkaar; elke loop werkt ook standalone.
 
 | Skill | Waarvoor |
 |---|---|
-| `animate` | Een animatie vanaf nul: moet hij er zijn, waarvoor, hoe snel, hoe vloeiend |
-| `animate-expo` | Hetzelfde voor telefoon-apps in React Native en Expo |
-| `animation-vocabulary` | Een vage beschrijving van beweging omzetten in het juiste vakwoord |
-| `apple-design` | Vloeiende, natuurlijke beweging zoals bij Apple, vertaald naar het web |
-| `ask-sonner` | Meldingen in beeld met de React-bibliotheek Sonner |
-| `find-animation-opportunities` | Plekken vinden waar beweging helpt, en zeggen waar niet |
-| `improve-animations` | Alle animaties nalopen en een verbeterlijst maken |
-| `review-animations` | Animaties streng beoordelen |
-| `mobile-native` | Een website op een telefoon laten voelen als een echte app |
-| `pick-ui-library` | De juiste bouwstenen-bibliotheek kiezen voor een klus (alleen als je erom vraagt) |
-| `prototype` | Een paar echt verschillende versies naast elkaar bouwen en de beste kiezen (alleen als je erom vraagt) |
+| `/goal` | Geef een uitkomst; de sessie werkt er zelfstandig naartoe, met bewijs per stap |
+| `supergoal` | Grote taken in fasen, elke fase gegated door een onafhankelijke evaluator |
+| `keten-loop` | End-to-end: verkennen, plannen, bouwen, polijsten, fixen, eindcheck |
+| `bouw-loop` | Een feature of backlog story voor story bouwen |
+| `polijst-loop` | Itereren tegen een rubric tot de score plateaut |
+| `fix-loop` | Een falend commando groen krijgen zonder tests aan te passen |
+| `speur-loop` | Bug-hunting in rondes tot er niets nieuws meer bijkomt |
+| `waak-loop` | Wachten op externe state (CI, deploy, DNS) en bij verandering handelen |
+| `createloopprompt` | Een taak omzetten in een begrensde loop-prompt voor Claude Code, Codex of Cursor |
 
-### Testen alsof je een gebruiker bent
+### Frontend-design
 
 | Skill | Waarvoor |
 |---|---|
-| `e2e` | Tests die je app gebruiken zoals een mens: klikken, typen, nakijken. Met [e2e](https://github.com/tester-army/e2e) |
-| `e2e-rules` | Wanneer zo'n test nodig is, hoe hij heet en wanneer hij af is |
+| `design-taste-frontend` | Anti-slop: audit-first, een eigen design-systeem per brief |
+| `redesign-existing-projects` | Een bestaand product opwaarderen zonder functionaliteit te breken |
+| `emil-design-eng` | UI-polish, animatiekeuzes en de onzichtbare details |
+| `make-interfaces-feel-better` | Schaduw, typografie en micro-interacties die een interface af maken |
+| `ux-heuristics` | Usability-audit volgens Nielsen, Krug en cognitive walkthrough |
+| `frontend-gotchas` | Terugkerende frontend-valkuilen voor ze in je code belanden |
+| `fixing-accessibility` | Toegankelijkheid auditen en fixen: ARIA, toetsenbord, focus, contrast |
+| `transitions-dev` | Productieklare CSS-transities voor dropdowns, modals, toasts en tabs |
 
-### Documenten en beeld
+### Motion design, door Emil Kowalski
 
 | Skill | Waarvoor |
 |---|---|
-| `office-docs` | PowerPoint, Excel en Word laten maken |
-| `brandkit` | Een merk vastleggen: kleuren, letters, toon |
-| `data-visualization` | De juiste grafiek kiezen bij je cijfers |
-| `diagram-design` | Schema's en stroomdiagrammen tekenen |
-| `readme` | Opmaak, omschrijving en afbeeldingen van een README en de korte repo-omschrijving op GitHub, zodat iemand in tien seconden snapt wat het is. Deze pagina is ermee gemaakt |
+| `animate` | Een animatie vanaf nul in de volgorde die bepaalt of hij goed voelt: noodzaak, doel, tool, curve, duur |
+| `animate-expo` | Hetzelfde voor React Native en Expo: threads, springs, gesture-overdracht |
+| `animation-vocabulary` | Een vage omschrijving van beweging vertalen naar de juiste term |
+| `apple-design` | Apple's fysieke, vloeiende interactiemodel vertaald naar het web |
+| `ask-sonner` | Sonner, de React-toastbibliotheek: setup, promise-toasts, styling |
+| `find-animation-opportunities` | Waar beweging iets toevoegt, en waar niet, met exacte waarden |
+| `improve-animations` | Audit van alle animatiecode, met geprioriteerde uitvoerplannen |
+| `review-animations` | Animatiecode keuren tegen een hoge vakmanschapslat |
+| `mobile-native` | Een web-app native laten voelen op mobiel: tap-states, viewport, inputs |
+| `pick-ui-library` | De juiste UI-bibliotheek uit een gecureerde lijst (alleen op verzoek) |
+| `prototype` | Meerdere echt verschillende varianten achter een switcher, de beste wint (alleen op verzoek) |
+
+### End-to-end testen
+
+| Skill | Waarvoor |
+|---|---|
+| `e2e` | Agentische end-to-end-tests voor web en mobiel met [e2e](https://github.com/tester-army/e2e) |
+| `e2e-rules` | Huisregels: wanneer een test verplicht is, naamgeving, config, definition of done |
+
+### Documenten en visuals
+
+| Skill | Waarvoor |
+|---|---|
+| `office-docs` | PowerPoint, Excel en Word programmatisch genereren |
+| `brandkit` | Merkidentiteit en brand-guidelines-boards |
+| `data-visualization` | Het juiste charttype vanuit de relatie in je data |
+| `diagram-design` | Architectuur-, flow- en procesdiagrammen als HTML/SVG |
+| `readme` | README en repo-omschrijving die in tien seconden overtuigen: verhaallijn, eigen SVG-visuals voor licht en donker, gerenderd met GitHub's eigen engine. Deze pagina is ermee gebouwd |
 
 ### PolpoHire en The Staffing Society
 
 | Skill | Waarvoor |
 |---|---|
-| `polpohire-design` | Een PolpoHire-scherm bouwen in de huidige huisstijl |
-| `bi-dashboards` | Rapporten en dashboards zoals in Power BI, maar in een eigen Vue-app |
-| `theme-selector` | De themakiezer van PolpoHire en TSS nabouwen: kleuren, letters, dichtheid |
-| `pre-pr-gates` | Vaste controles voor je werk deelt: verkeerde versies, verzwegen databasefouten, ontbrekende tests, verouderde beschrijving |
+| `polpohire-design` | PolpoHire-schermen in de actuele designtaal: tokens, componenten, motion |
+| `bi-dashboards` | Power BI-niveau rapportage in een eigen Vue-app met ECharts |
+| `theme-selector` | De PolpoHire/TSS-themakiezer: presets, eigen kleuren, typografie, dichtheid |
+| `pre-pr-gates` | Harde PR-gates: ghost versions, geslikte DB-fouten, ontbrekende org_id-tests, verouderde PR-tekst |
 
-## Wat je het vaakst typt
+## Commando's
 
-Via de plugin zet je `dev-harness:` ervoor, dus `/dev-harness:rea` in plaats van `/rea`.
-
-| Typ | Wat er gebeurt |
+| Commando | Wat |
 |---|---|
-| `/rea <doel>` | Uitzoeken hoe een website, app of programma werkt, met bewijs en een bouwplan |
-| `/readme` | Een README en repo-omschrijving maken of opknappen, met eigen afbeeldingen voor licht en donker |
-| `/goal <uitkomst>` | Claude werkt zelf naar je doel toe; `ga door` gaat verder waar het was |
-| `/supergoal` | Hetzelfde voor grote klussen, met een controle per fase |
-| `/keten-loop` | Alles van verkennen tot eindcontrole, zuinig met rekenkracht |
-| `/batch-grill-me` | Doorvragen tot elke keuze in je plan gemaakt is |
-| `/council` | Meerdere adviseurs, die elkaar blind beoordelen, en een eindoordeel |
-| `/find-bugs` | Fouten en lekken in wat je veranderd hebt |
-| `/code-audit` | Volledige codecontrole van het hele project |
-| `/repo-hygiene` | Gezondheid van je project, zonder iets te veranderen |
-| `/pre-pr-gates` | De vaste controles, voor je je werk deelt |
+| `/rea <doel>` | Reverse engineering met bewijsdossier en reconstructie-blauwdruk |
+| `/readme` | README en repo-omschrijving bouwen of herontwerpen, inclusief visuals |
+| `/goal <uitkomst>` | Autonoom naar een uitkomst; `ga door` hervat een lopende run |
+| `/supergoal` | Zwaarste variant: gefaseerd plan, onafhankelijke evaluator per fase |
+| `/keten-loop` | Token-zuinige keten van verkennen tot eindcheck |
+| `/batch-grill-me` | Doorvragen tot elke beslissing in een plan genomen is |
+| `/council` | Meerdere adviseurs, blinde peer-review, een synthese |
+| `/find-bugs` | Bugs en security-gaten in je branch-diff |
+| `/code-audit` | Volledige codereview met dekking tegen de hele git-inventaris |
+| `/repo-hygiene` | Repo-gezondheid zonder iets te wijzigen |
+| `/pre-pr-gates` | Alle gates lopen voor `gh pr create` |
 
-## Bewakers
+## Hooks
 
-Kleine scripts die op vaste momenten meekijken (in Claude Code heten ze *hooks*). Ze hebben Node.js nodig.
+Deterministische scripts die op vaste momenten in Claude Code meedraaien, onafhankelijk van wat het model besluit. Vereisen Node.js.
 
-| Bewaker | Wanneer | Wat |
+| Hook | Moment | Effect |
 |---|---|---|
-| `guidelines` | Bij het opstarten | Laadt de werkregels (alleen bij de plugin) |
-| `commit-guard` | Als Claude iets opslaat in git | Houdt wachtwoorden, sleutels en tijdelijke bestanden tegen; waarschuwt bij e-mailadressen. Eigen woorden blokkeren kan in `.harness-blocklist` |
-| `verified-claim-guard` | Als Claude zegt dat het klaar is | Houdt "klaar" tegen als er niets gecontroleerd is. Eerlijk `UNVERIFIED:` mag altijd |
+| `guidelines` | `SessionStart` (plugin) | Laadt `guidelines/CLAUDE.md` als context, omdat een plugin geen eigen `CLAUDE.md` kan meeleveren |
+| `commit-guard` | `PreToolUse` op `git commit` | Blokkeert secrets, API-keys en temp-bestanden (`.env`, `*.tmp`, `*.bak`); waarschuwt bij e-mailadressen. Eigen patronen via `.harness-blocklist` |
+| `verified-claim-guard` | `Stop` | Blokkeert een klaar-claim na een muterende beurt zonder echte tool-observatie; `UNVERIFIED:` mag altijd |
 
-Twee instellingen die toestemmingsvragen overslaan (`defaultMode: auto` en `remoteControlAtStartup`) staan er bewust niet in. Die zet je zelf aan als je dat wilt.
+Twee instellingen ontbreken bewust in `examples/settings.json`: `defaultMode: auto` slaat permissie-prompts over, en `remoteControlAtStartup` koppelt elke sessie aan Remote Control. Beide verdienen een eigen, bewuste keuze.
 
-## Extra gereedschap (MCP-servers)
+## MCP-servers
 
-MCP-servers geven Claude extra gereedschap, zoals een eigen browser. Ze zitten niet in de plugin: je kiest zelf welke je aanzet. Kopieer [`.mcp.example.json`](.mcp.example.json) naar `.mcp.json` in je project, of voeg ze een voor een toe:
+Optioneel en per project te kiezen. Kopieer [`examples/mcp.json`](examples/mcp.json) naar `.mcp.json` in je project, of voeg ze los toe:
 
-| Gereedschap | Waarvoor | Aanzetten |
+| Server | Waarvoor | Toevoegen |
 |---|---|---|
-| `chrome-devtools` | Een pagina doorlichten: fouten, netwerk, snelheid | `claude mcp add chrome-devtools -- npx -y chrome-devtools-mcp@1.11.0 --isolated` |
-| `playwright` | Een browser besturen om iets door te klikken | `claude mcp add playwright -- npx -y @playwright/mcp@0.0.83` |
-| `e2e` | Je app live gebruiken en er tests van maken | `claude mcp add e2e -- npx -y e2e@0.21.2 mcp` |
-| `terminal` | Programma's bedienen die om invoer vragen | `claude mcp add terminal -- npx -y mcp-interactive-terminal@1.0.9` |
-| `rea` | Uitzoekwerk van `/rea` als vast gereedschap | `claude mcp add rea -- npx -y rea-agents@6.4.0 --mcp` |
-| `supabase` | Je Supabase-database, opslag en documentatie | `claude mcp add --transport http supabase "https://mcp.supabase.com/mcp?project_ref=JOUW_PROJECT_REF&features=database,storage,docs"` |
+| `chrome-devtools` | Pagina's inspecteren: console, netwerk, performance | `claude mcp add chrome-devtools -- npx -y chrome-devtools-mcp@1.11.0 --isolated` |
+| `playwright` | Browserflows aansturen en screenshotten | `claude mcp add playwright -- npx -y @playwright/mcp@0.0.83` |
+| `e2e` | De app live besturen en e2e-tests schrijven | `claude mcp add e2e -- npx -y e2e@0.21.2 mcp` |
+| `terminal` | Interactieve sessies: REPL's, prompts, langlopende processen | `claude mcp add terminal -- npx -y mcp-interactive-terminal@1.0.9` |
+| `rea` | Reverse engineering als native tools | `claude mcp add rea -- npx -y rea-agents@6.4.0 --mcp` |
+| `supabase` | Database, storage en docs van je Supabase-project | `claude mcp add --transport http supabase "https://mcp.supabase.com/mcp?project_ref=JOUW_PROJECT_REF&features=database,storage,docs"` |
 
-De versies staan vast, zodat er niets ongemerkt verandert. Los hiervan: Claude in Chrome werkt in je eigen ingelogde browser, en koppelingen met Gmail of Outlook zet je aan in je claude.ai-account.
+Alle versies zijn gepind; updaten is een bewuste stap. Claude in Chrome (je ingelogde browser) en connectors als Gmail en Outlook beheer je in je claude.ai-account.
 
 ## poort
 
-`tools/poort/` is een kwaliteitscontrole voor je eigen projecten, zonder extra installaties (versie 0.4.0):
+`tools/poort/` is poort v0.4.0: een quality gate in één bestand, zonder dependencies.
 
-<img src="assets/poort.svg" alt="Bij elke commit, bij elke push, bij een PR, op GitHub" width="100%">
+<img src="assets/poort.svg" alt="Commit-checks, push-checks, PR-gate, CI" width="100%">
 
-Zet hem in een project met `node <pad-naar-deze-map>/tools/poort/poort.mjs init`. Daarna:
+Installeren in een repo: `node <pad-naar-deze-harness>/tools/poort/poort.mjs init`. Daarna:
 
-| Typ | Wat er gebeurt |
+| Commando | Wat |
 |---|---|
-| `node .poort/poort.mjs doctor` | Laat zien wat er nog ontbreekt |
-| `node .poort/poort.mjs run push` | Alle controles; wat niet veranderde wordt overgeslagen |
-| `node .poort/poort.mjs verify` | Controleert na je commit of elke controle al bewijs heeft voor precies die versie; `run push` maakt dat bewijs |
-| `node .poort/poort.mjs e2e --record` | Neemt de klikproeven opnieuw op na een bewuste schermwijziging |
+| `node .poort/poort.mjs doctor` | Welke tools per check ontbreken en of je stack draait |
+| `node .poort/poort.mjs run push` | Alle push-checks; ongewijzigde checks komen uit de cache |
+| `node .poort/poort.mjs verify` | Controleert na je commit of elke verplichte check bewijs heeft voor exact die commit; `run push` levert dat bewijs |
+| `node .poort/poort.mjs e2e --record` | E2E-stappen opnieuw opnemen na een bewuste UI-wijziging |
 
-poort laat de klikproeven via je eigen Claude-abonnement lopen, zonder aparte sleutels. Uitleg per controle: [`tools/poort/README.md`](tools/poort/README.md).
+E2E-opnames draaien op je eigen Claude-seat: geen API-keys, geen proxy. Details per check en profiel: [`tools/poort/README.md`](tools/poort/README.md).
 
-## Onderhoud
+## Onderhoud en CI
 
-Overnemen, bijhouden en opruimen, per onderwerp: [`ONDERHOUD.md`](ONDERHOUD.md).
+Overnemen, onderhouden, herstructureren en opschonen per onderwerp: [`docs/ONDERHOUD.md`](docs/ONDERHOUD.md).
 
-Bij elke wijziging controleert GitHub automatisch of alles klopt: elke skill staat in deze pagina en in `ONDERHOUD.md`, versies en bewakers kloppen, er staan geen persoonlijke paden in, de scripts zijn foutloos en de tests van poort en `repo-hygiene` slagen.
+Elke PR en push naar `main` draait CI: skill-namen en frontmatter, dekking van elke skill in deze README en `docs/ONDERHOUD.md`, versie- en hook-consistentie, geen persoonlijke paden, syntax van alle scripts, README-visuals reproduceerbaar uit `assets/visuals.json`, de volledige poort-testsuite en de repo-hygiene-e2e.
 
-## Statusbalk (optioneel)
+## Statusline (optioneel)
 
-Zie onderaan Claude Code hoe vol het gesprek zit en waar Claude mee bezig is, met [claude-hud](https://github.com/jarrodwatts/claude-hud) van Jarrod Watts:
+Context-gebruik, actieve tools, agents en voortgang in je statusbalk: [claude-hud](https://github.com/jarrodwatts/claude-hud) van Jarrod Watts.
 
 ```
 /plugin install claude-hud
@@ -273,17 +274,17 @@ Zie onderaan Claude Code hoe vol het gesprek zit en waar Claude mee bezig is, me
 
 | Onderdeel | Bron | Licentie |
 |---|---|---|
-| Basis van de werkwijze | [Superpowers](https://github.com/obra/superpowers) v5.1.0 van Jesse Vincent | MIT (zie `LICENSE`) |
+| Methodiek-basis | [Superpowers](https://github.com/obra/superpowers) v5.1.0 van Jesse Vincent | MIT (zie `LICENSE`) |
 | `find-bugs` | [getsentry/skills](https://github.com/getsentry/skills) | Apache-2.0 |
 | `make-interfaces-feel-better` | [jakubkrehel](https://github.com/jakubkrehel/make-interfaces-feel-better) | MIT |
 | `e2e` | [tester-army/e2e](https://github.com/tester-army/e2e) | Apache-2.0, met NOTICE |
 | `fixing-accessibility` | [ibelick/ui-skills](https://github.com/ibelick/ui-skills) | MIT |
 | `transitions-dev` | [Jakubantalik/transitions-dev](https://github.com/Jakubantalik/transitions-dev) | MIT |
-| `emil-design-eng` en de animatieskills | Emil Kowalski | MIT |
+| `emil-design-eng` en de motion-skills | Emil Kowalski | MIT |
 | `batch-grill-me` | gebaseerd op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) | MIT |
 | `code-audit` | gebaseerd op open-code-review-delegate uit [alibaba/open-code-review](https://github.com/alibaba/open-code-review), aangepast (zie `NOTICE`) | Apache-2.0 |
-| `rea` | eigen skill rond [morluto/rea](https://github.com/morluto/rea) 6.4.0, met de originele instructies in `references/upstream/` | MIT |
-| `readme` | eigen skill; de opbouw (probleem, hoe je merkt dat het werkt, afweging) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
-| `tools/poort/` | Reforge Recruitment | Niet MIT: alle rechten voorbehouden. Inzien mag, hergebruik alleen met toestemming |
+| `rea` | eigen skill rond [morluto/rea](https://github.com/morluto/rea) 6.4.0, met de upstream-instructies in `references/upstream/` | MIT |
+| `readme` | eigen skill; de verhaallijn (probleem, bewijs dat het werkt, trade-off) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
+| `tools/poort/` | Reforge Recruitment | Niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
 
-Overgenomen skills hebben hun licentie in hun eigen map. De meeste skills zijn algemeen bruikbaar; `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gemaakt voor PolpoHire en The Staffing Society.
+Overgenomen skills hebben hun licentie in hun eigen map. `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gebouwd voor PolpoHire en The Staffing Society; de rest is generiek.

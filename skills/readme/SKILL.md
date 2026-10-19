@@ -1,11 +1,11 @@
 ---
 name: readme
-description: Layout, wording and visuals for a README and the one-line GitHub repo description - problem first, plain language, custom light/dark SVG images, verified in GitHub's own renderer. Use for /readme, a new README, a README overhaul or a repo description.
+description: Layout, wording and visuals for a README and the one-line GitHub repo description - problem first, sharp expert copy, custom light/dark SVG images, verified in GitHub's own renderer. Use for /readme, a new README, a README overhaul or a repo description.
 ---
 
 # README
 
-A README has one job: a stranger understands in ten seconds what this is, why they want it and how to start. Facts come from the repo, words from the reader's world, visuals from a spec you can regenerate.
+A README has one job: a stranger understands in ten seconds what this is, why they want it and how to start. It reads like a serious engineering product: confident, precise, impressive. Facts come from the repo, visuals from a spec you can regenerate.
 
 ## 1. Collect facts first
 
@@ -15,9 +15,9 @@ Read manifests, entry points, install scripts, existing docs and the license fil
 
 Use this order. Drop a section only when it has nothing true to say.
 
-1. **Banner** with name, one-line promise and the 3 to 5 parts.
-2. **The problem** in two or three sentences, in the reader's words: what goes wrong today.
-3. **What you get**: one table, part and what you notice of it.
+1. **Banner** with name, one-line promise and the 3 to 5 parts; under the badges a bold one-line positioning statement.
+2. **The problem**: the failure modes the reader already suffers, ideally as a table of failure, what happens, what this project does about it.
+3. **What you get**: one table, layer and what it enforces or delivers.
 4. **How it works**: one flow visual, four to six steps.
 5. **Install**: the shortest route first, one command per block; the alternative after it.
 6. **Featured**: the one thing people come for, with "you type / you get" examples.
@@ -28,11 +28,12 @@ Use this order. Drop a section only when it has nothing true to say.
 
 The problem, "how you know it works" and "tradeoff" sections follow the README of [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills): naming the failure first is what makes a reader recognise themselves.
 
-## 3. Plain language
+## 3. Sharp, not simple
 
-- Write for a smart reader who is not a developer. Short sentences, active verbs.
-- A technical term appears only when the reader has to type or recognise it; explain it once in a few words ("hooks: small scripts that watch at fixed moments").
-- No marketing adjectives, no em-dashes, no emoji unless the project uses them.
+- Write for a sharp, busy engineer. Clear is not childish: never explain the obvious, never use toddler wording ("klikproeven", "bewakers") for a term the audience knows (e2e tests, hooks).
+- Precise domain terms are the impressive part: quality gate, root cause, deterministic, scope drift. Explain a term once only when the audience may not know it.
+- Lead each line with the strongest concrete fact: a mechanism, a guarantee, a number. Impressive comes from specifics, not adjectives.
+- Short sentences, active verbs. No hype words ("powerful", "revolutionary", "seamless"), no em-dashes, no emoji unless the project uses them.
 - Table columns answer "what" and "when", never restate the name.
 - Numbers that can drift (counts, versions) live in text and badges, never inside images.
 

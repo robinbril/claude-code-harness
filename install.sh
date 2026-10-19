@@ -41,4 +41,4 @@ echo "Hooks geplaatst in ${hooks_dst}"
 
 echo ""
 echo "Klaar. Herstart Claude Code. De skills triggeren vanzelf (of typ '/')."
-echo "Optioneel: merge settings.example.json in ~/.claude/settings.json om de twee hooks (commit-guard, verified-claim-guard) aan te zetten."
+echo "Optioneel: merge examples/settings.json in ~/.claude/settings.json om de twee hooks (commit-guard, verified-claim-guard) aan te zetten."
