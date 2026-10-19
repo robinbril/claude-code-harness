@@ -27,7 +27,7 @@ Get-ChildItem (Join-Path $here 'skills') -Directory | ForEach-Object {
 Write-Host "Skills geplaatst: $copied"
 
 # 2. CLAUDE.md plaatsen (bestaande wordt geback-upt, niet overschreven)
-$cmdSrc = Join-Path $here 'CLAUDE.md'
+$cmdSrc = Join-Path $here 'guidelines\CLAUDE.md'
 $cmdDst = Join-Path $claude 'CLAUDE.md'
 if (Test-Path $cmdDst) {
     Copy-Item $cmdDst "$cmdDst.bak-$stamp" -Force
@@ -39,7 +39,7 @@ Write-Host "CLAUDE.md geplaatst in $claude"
 # Hooks (commit-guard, verified-claim-guard) voor de script-install route
 $hooksDst = Join-Path $claude 'claude-code-harness\hooks'
 New-Item -ItemType Directory -Force -Path $hooksDst | Out-Null
-Copy-Item (Join-Path $here 'hookserified-claim-guard.js') $hooksDst -Force
+Copy-Item (Join-Path $here 'hooks\verified-claim-guard.js') $hooksDst -Force
 Copy-Item (Join-Path $here 'hooks\commit-guard.js') $hooksDst -Force
 Write-Host "Hooks geplaatst in $hooksDst"
 

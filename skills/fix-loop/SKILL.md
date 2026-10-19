@@ -61,7 +61,7 @@ Per iteratie:
 - **Regressie-check verplicht** bij exit 0: draai eenmaal de bredere suite (of typecheck + lint). Nieuw rood door de fix = terug de loop in met dat als doelcommand. Sla dit nooit over.
 - **Onafhankelijke keuring (RC5, verplicht voor DONE).** Groen doelcommando bewijst niet dat de fix het echte probleem raakt zonder iets anders stuk te maken of buiten scope te gaan. Draai vóór `Status: DONE` een vijandige keurder: een verse subagent, bij voorkeur op een ander model, met de brief "probeer deze claim te weerleggen".
   `VERDICT: NOT_REAL` (exit 3): het gat terug de loop in als nieuw doelcommand, niet afronden. `VERDICT: REAL`: DONE mag.
-- Raakte de fix markup/CSS: render met `node scripts/shoot.js <bestand> <out.png> [selector]` en `Read` de PNG (verwachting vooraf) voor je groen claimt.
+- Raakte de fix markup/CSS: render met skill `render-proof` en `Read` de PNG (verwachting vooraf) voor je groen claimt.
 - Geen commits; werk blijft in de working tree (commit-discipline). Zet `Status: DONE` in de state-file bij groen.
 
 ## Eindrapport

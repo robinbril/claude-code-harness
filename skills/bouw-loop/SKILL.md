@@ -53,12 +53,12 @@ Zijn er 3+ stories zonder onderlinge `dependsOn` en zonder file-overlap, draai z
 - Eindcheck: draai eenmaal de volledige suite + typecheck. **Rood door het bouwwerk: draai het fix-loop-patroon erop (max 3 iteraties) voor je afrondt**, niet doorschuiven naar de gebruiker.
 - **Onafhankelijke keuring (RC5, verplicht voor DONE).** Je eigen verificatie vangt geen scope-drift en geen half-gedekte claim. Draai vóór `Status: DONE` een vijandige keurder: een verse subagent, bij voorkeur op een ander model, met de brief "probeer deze claim te weerleggen".
   Hij ijkt het artefact tegen je claim én het spec-dossier. `VERDICT: NOT_REAL` (exit 3): het genoemde gat terug de loop in als nieuwe story, niet afronden. `VERDICT: REAL`: DONE mag. Sla dit nooit over.
-- **Visueel bouwwerk**: raakte een story markup/CSS, render vóór afronding met `node scripts/shoot.js <bestand> <out.png> [selector]` en `Read` de PNG met de verwachting vooraf uitgeschreven. Een DOM-read bewijst geen layout.
+- **Visueel bouwwerk**: raakte een story markup/CSS, render vóór afronding met skill `render-proof` en `Read` de PNG met de verwachting vooraf uitgeschreven. Een DOM-read bewijst geen layout.
 - Zet `Status: DONE` (of `BLOCKED`) in `plan.md`. Geen commits zonder signaal. Eindig met: wat af is, wat BLOCKED (en waarom), bewijs per story (command + resultaat), het keurder-verdict, en een voorstel van 3-7 thematische commit-groepen (commit-discipline).
 
 ## UI-bewijs
 
 Elke fase of gate die iets in een browser bewijst, gebruikt een echte render met een vooraf opgeschreven verwachting:
-- Statische render: `node scripts/shoot.js <url|bestand> <out.png> [selector]` uit deze harness, of `npx --no-install playwright screenshot` (lokaal geinstalleerd). Lees het vooraf opgeschreven feit af.
+- Statische render: skill `render-proof` (headless Playwright-render naar PNG), of `npx --no-install playwright screenshot` (lokaal geinstalleerd). Lees het vooraf opgeschreven feit af.
 - Flow of gedrag (klik, zoek, navigeer): een e2e-test met skill `e2e` (`npx --no-install e2e run`).
 - Ingelogde of hover-state met echte data: de eigen browser van de gebruiker. Pagina's met klant- of persoonsgegevens nooit naar een extern model.

@@ -69,7 +69,7 @@ require constant clarification.
 - "Done" exists only after a tool call that proves it: a test, build, curl, render or query.
   End with `VERIFIED: <what ran> -> <real output>` or `UNVERIFIED: <why not>`. Enforced by
   `verified-claim-guard`.
-- Something a human must see: a real render (`node scripts/shoot.js`) or an e2e run (skill `e2e`).
+- Something a human must see: a real render (skill `render-proof`) or an e2e run (skill `e2e`).
 
 ## 6. Look It Up, Don't Assume
 

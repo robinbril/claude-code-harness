@@ -159,7 +159,7 @@ Applies when the diff touches `.vue`, `.tsx`, `.jsx`, `.css`, `.scss` or
       line per route with the expected fact (a number, a label, a position)
       written BEFORE any render. "Looks right" is not a fact.
 - [ ] **Render at three widths.** Per changed route:
-      `node scripts/shoot.js <url> <out.png> "" 1440` (uit deze harness),
+      skill `render-proof` (`<url> <out.png> "" 1440`),
       then 768 and 390. `Read` each PNG and read the expected fact off it. A
       mismatch is a code fix, not a note.
 - [ ] **Console clean.** Open each changed route in a browser (or an e2e run)
