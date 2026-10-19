@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.11.0-5B50E6" alt="versie 1.11.0">
+<img src="https://img.shields.io/badge/versie-1.11.1-5B50E6" alt="versie 1.11.1">
 <img src="https://img.shields.io/badge/skills-50-111827" alt="50 skills">
 <img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">

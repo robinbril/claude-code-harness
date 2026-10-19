@@ -11,7 +11,7 @@
  * `-a`/`--all` adds tracked working-tree changes; `git commit <paths>` adds the
  * working-tree version of those paths. A commit the hook cannot inspect (wrapped in
  * `bash -c`/`eval`, GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE overrides, `--git-dir`,
- * `--pathspec-from-file`, or a shell expansion in a path) is refused.
+ * `--pathspec-from-file`, or a shell expansion in a path other than $HOME and ~) is refused.
  *
  * Self-contained, no dependencies. To hard-block project-specific strings (a name,
  * a company, an internal hostname), add one regex per line to `.harness-blocklist`
@@ -85,13 +85,16 @@ function segments(cmd) {
   return out;
 }
 
-const hasExpansion = (s) => /[$`]/.test(s);
+// $HOME is always known; any other variable or substitution makes a path unknowable.
+const expandHome = (s) => s.replace(/\$\{HOME\}|\$HOME\b/g, os.homedir());
+const hasExpansion = (s) => /[$`]/.test(expandHome(s));
 const isGit = (w) => w === 'git' || path.basename(w) === 'git';
 // Shell keywords that can precede a command in the same segment.
 const LEADING = new Set(['{', '}', 'then', 'do', 'else', 'elif', 'if', 'while', 'until', '!', 'time']);
 
-function resolveDir(base, target) {
-  if (hasExpansion(target)) throw new Unsupported(`path with a shell expansion: ${target}`);
+function resolveDir(base, raw) {
+  if (hasExpansion(raw)) throw new Unsupported(`path with a shell expansion: ${raw}`);
+  const target = expandHome(raw);
   const expanded = target === '~' ? os.homedir() : target.startsWith('~/') ? path.join(os.homedir(), target.slice(2)) : target;
   return path.resolve(base, expanded);
 }
@@ -131,7 +134,7 @@ function parseCommitArgs(args) {
     paths.push(w);
   }
   for (const p of paths) if (hasExpansion(p)) throw new Unsupported(`path with a shell expansion: ${p}`);
-  return { all, paths };
+  return { all, paths: paths.map(expandHome) };
 }
 
 // `git add` / `git stage` earlier in the same command stages files the commit will record.
@@ -145,7 +148,7 @@ function parseAddArgs(args) {
     else if (w.startsWith('--pathspec-from-file')) throw new Unsupported('git add --pathspec-from-file');
     else if (w === '--' || w.startsWith('-')) continue;
     else if (hasExpansion(w)) throw new Unsupported(`path with a shell expansion: ${w}`);
-    else paths.push(w);
+    else paths.push(expandHome(w));
   }
   return { all, update, paths };
 }

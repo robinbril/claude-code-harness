@@ -1,7 +1,7 @@
 {
   "name": "dev-harness",
   "description": "A focused Claude Code harness: methodology, frontend design and craft skills, /goal and a loop collection, agentic e2e tests, decision council, plus commit-guard and verified-claim-guard hooks. Built on Superpowers (MIT).",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "author": {
     "name": "Robin Bril",
     "url": "https://github.com/robinbril"
