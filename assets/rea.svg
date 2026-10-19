@@ -3,13 +3,13 @@ text{font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial
 .card{fill:#F7F6FF;stroke:#DDD9FF;stroke-width:1.5}
 .hero{fill:url(#g)}
 .t{fill:#111827}.m{fill:#4B5563}.w{fill:#FFFFFF}.wm{fill:#E4E1FF}
-.acc{fill:#5B50E6}.accs{stroke:#5B50E6}.soft{fill:#ECEAFF}
+.acc{fill:#5B50E6}
 .line{stroke:#A9A3F7;stroke-width:2.5;fill:none}.arrow{fill:#A9A3F7}
 .ico{stroke:#FFFFFF;stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
 @media (prefers-color-scheme: dark){
 .card{fill:#161B22;stroke:#30363D}
 .t{fill:#F0F6FC}.m{fill:#9DA7B3}
-.acc{fill:#7C73FF}.accs{stroke:#7C73FF}.soft{fill:#25224A}
+.acc{fill:#7C73FF}
 .line{stroke:#4D47A8}.arrow{fill:#4D47A8}
 }
 </style>

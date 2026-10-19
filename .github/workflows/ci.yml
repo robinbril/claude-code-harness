@@ -21,9 +21,15 @@ jobs:
       - name: Syntax van hooks en scripts
         run: |
           sh -n skills/rea/scripts/run-rea.sh
+          python3 -m py_compile skills/readme-design/scripts/make_svgs.py
+          node --check skills/readme-design/scripts/render_readme.mjs
           for f in hooks/*.js skills/render-proof/scripts/shoot.js skills/projectstructuur/tools/*.js tools/poort/poort.mjs .github/scripts/*.mjs; do
             node --check "$f"
           done
+      - name: README-afbeeldingen kloppen met assets/visuals.json
+        run: |
+          python3 skills/readme-design/scripts/make_svgs.py assets/visuals.json assets
+          git diff --exit-code -- assets
       - name: poort-tests
         working-directory: tools/poort
         run: node --test --test-concurrency=1 test/*.test.mjs
