@@ -1,0 +1,14 @@
+code-audit
+
+Gebaseerd op de skill "open-code-review-delegate" uit alibaba/open-code-review
+(https://github.com/alibaba/open-code-review), commit
+23992511c8876f51c1a31e52938fac02ac42f842, Apache License 2.0 (zie LICENSE).
+
+Gewijzigd ten opzichte van het origineel (Apache-2.0, sectie 4b):
+- naam en aanroep: code-audit, te starten met /code-audit;
+- beschrijving ingekort tot wanneer je de skill gebruikt;
+- extra regels bovenaan de werkwijze: alleen `ocr delegate` gebruiken, geen
+  API-provider of model wisselen, geen `ocr review`/`ocr scan` als terugval,
+  dekking rapporteren tegen de volledige git-inventaris, broncode, secrets en
+  persoonsgegevens op de eigen Claude-seat houden, en niets publiceren,
+  committen, mergen of deployen zonder toestemming van de gebruiker.
