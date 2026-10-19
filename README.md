@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.10.1-5B50E6" alt="versie 1.10.1">
+<img src="https://img.shields.io/badge/versie-1.11.0-5B50E6" alt="versie 1.11.0">
 <img src="https://img.shields.io/badge/skills-50-111827" alt="50 skills">
 <img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">
@@ -259,7 +259,7 @@ E2E-opnames draaien op je eigen Claude-seat: geen API-keys, geen proxy. Details 
 
 Overnemen, onderhouden, herstructureren en opschonen per onderwerp: [`docs/ONDERHOUD.md`](docs/ONDERHOUD.md).
 
-Elke PR en push naar `main` draait CI: skill-namen en frontmatter, dekking van elke skill in deze README en `docs/ONDERHOUD.md`, versie- en hook-consistentie, geen persoonlijke paden, syntax van alle scripts, README-visuals reproduceerbaar uit `assets/visuals.json`, de volledige poort-testsuite en de repo-hygiene-e2e.
+Elke PR en push naar `main` draait CI: skill-namen en frontmatter, dekking van elke skill in deze README en `docs/ONDERHOUD.md`, versie- en hook-consistentie, geen persoonlijke paden, syntax van alle scripts, README-visuals reproduceerbaar uit `assets/visuals.json`, gedragstests van de hooks, supergoal en skill-tools (`tests/`), de volledige poort-testsuite en de repo-hygiene-e2e.
 
 ## Statusline (optioneel)
 
