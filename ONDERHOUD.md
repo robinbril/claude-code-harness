@@ -22,18 +22,20 @@ Lees ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens sectie 
 ```
 
 1. **Inventaris, alleen lezen.** Breng je huidige `~/.claude` in kaart: skills, commands, agents, hooks, `CLAUDE.md`. Tel per skill het gebruik (commando in deel 2) en zoek overlap met de skills in deze repo.
-2. **Per onderwerp kiezen.** Gebruik een grilling-skill, bijvoorbeeld `/grill-me` uit [mattpocock/skills](https://github.com/mattpocock/skills). Een ronde per onderwerp. Per item een genummerde vraag: houden, toevoegen, samenvoegen of archiveren, met een aanbevolen antwoord en een regel bewijs (gebruiksaantal, overlap met welke skill, of waarom kapot). "Ja" accepteert de aanbeveling.
+2. **Per onderwerp kiezen.** Gebruik `/batch-grill-me` uit deze repo. Een ronde per onderwerp. Per item een genummerde vraag: houden, toevoegen, samenvoegen of archiveren, met een aanbevolen antwoord en een regel bewijs (gebruiksaantal, overlap met welke skill, of waarom kapot). "Ja" accepteert de aanbeveling.
 
    | # | Onderwerp | Uit deze repo |
    |---|---|---|
-   | 1 | Methodiek | `skill-finder`, `systematic-debugging`, `supergoal`, `council` |
-   | 2 | Frontend-design, kern | `design-taste-frontend`, `redesign-existing-projects`, `frontend-design`, `designing-beautiful-websites`, `landing-page-design`, `emil-design-eng`, `ux-heuristics`, `frontend-gotchas` |
-   | 3 | Stijlvarianten, kies er hooguit een | `design-taste-frontend-v1`, `high-end-visual-design`, `gpt-taste`, `minimalist-ui`, `industrial-brutalist-ui`, `stitch-design-taste`, `image-to-code`, `imagegen-frontend-web`, `imagegen-frontend-mobile` |
-   | 4 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `diagram-design` |
-   | 5 | Hooks | `commit-guard`, `verified-claim-guard` |
-   | 6 | Richtlijnen in `CLAUDE.md` | Per sectie kiezen |
-   | 7 | Externe repo's, optioneel | [mattpocock/skills](https://github.com/mattpocock/skills) (grilling, TDD, specs), [tester-army/e2e](https://github.com/tester-army/e2e) (agentische e2e-tests), [morluto/rea](https://github.com/morluto/rea) (reverse engineering), [robinbril/infinite-agent-memory](https://github.com/robinbril/infinite-agent-memory) (blijvend geheugen) |
-   | 8 | Je eigen bestaande harness uitdunnen | Per overlap, ongebruikte skill of migratierest een vraag, volgens deel 4 |
+   | 1 | Methodiek | `skill-finder`, `systematic-debugging`, `council`, `batch-grill-me`, `projectstructuur` |
+   | 2 | Kwaliteit en git | `find-bugs`, `commit-discipline`, `repo-hygiene` |
+   | 3 | Loops en autonoom bouwen | `goal`, `supergoal`, `keten-loop`, `bouw-loop`, `polijst-loop`, `fix-loop`, `speur-loop`, `waak-loop`, `createloopprompt` |
+   | 4 | Frontend-design | `design-taste-frontend`, `redesign-existing-projects`, `emil-design-eng`, `make-interfaces-feel-better`, `ux-heuristics`, `frontend-gotchas` |
+   | 5 | E2E-tests | `e2e`, `e2e-rules` |
+   | 6 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `diagram-design` |
+   | 7 | Hooks | `commit-guard`, `verified-claim-guard` |
+   | 8 | Richtlijnen in `CLAUDE.md` | Per sectie kiezen |
+   | 9 | Externe repo's, optioneel | [mattpocock/skills](https://github.com/mattpocock/skills) (TDD, specs, tickets), [morluto/rea](https://github.com/morluto/rea) (reverse engineering), [robinbril/infinite-agent-memory](https://github.com/robinbril/infinite-agent-memory) (blijvend geheugen) |
+   | 10 | Je eigen bestaande harness uitdunnen | Per overlap, ongebruikte skill of migratierest een vraag, volgens deel 4 |
 
 3. **Uitvoeren.** Alleen wat je bevestigde, een onderwerp tegelijk. Back-up voor elke wijziging; diff tonen voor `CLAUDE.md` en `settings.json`. Bestaat een skill al onder dezelfde naam: vergelijken en voorleggen, niet overschrijven.
 

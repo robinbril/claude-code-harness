@@ -4,8 +4,8 @@
   "plugins": [
     {
       "name": "claude-code-harness",
-      "description": "25 skills plus commit-guard and verified-claim-guard hooks for Claude Code.",
-      "version": "1.3.0",
+      "description": "29 skills plus commit-guard and verified-claim-guard hooks for Claude Code.",
+      "version": "1.4.0",
       "source": "./"
     }
   ]
