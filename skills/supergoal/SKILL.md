@@ -1,6 +1,6 @@
 ---
 name: supergoal
-description: Plan and autonomously build a software task end-to-end, with verification the executor cannot fake. Triggered by `/supergoal`, "plan and ship X", "supercharged plan", "autonomous build", "plan it out and don't stop until it's done", "I don't want to babysit this", or any non-trivial feature/refactor/redesign the user wants driven to completion. What makes it more than a plain plan or the native loop is that it decomposes the task into independently verifiable phases, then gates every phase with an independent evaluator in a separate context that re-runs each check against repository ground truth and the running artifact, blind to the executor's self-report. Nothing is marked done until something independent proves it against the original spec. Recons the codebase, applies preloaded memory, researches best practices with available tools, gets one confirmation, then hands off a single ready-to-paste `/goal` that drives the whole chain with retry, rollback, per-phase memory writeback, and a final audit. Works on Claude Code and Codex.
+description: Plan and autonomously build a task end-to-end in independently verified phases. A separate evaluator re-checks every phase against the repo and the running result, blind to the builder's own report. Use for `/supergoal`, "plan and ship X", "autonomous build", "don't stop until it's done", or any non-trivial feature, refactor or redesign the user wants driven to completion. Works on Claude Code and Codex.
 argument-hint: <beschrijf wat je wilt bouwen, fixen of verschepen>
 ---
 

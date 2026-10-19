@@ -1,0 +1,59 @@
+{
+  "banner": {
+    "file": "banner.svg",
+    "alt": "Dev Harness voor Claude Code: werkregels, skills, bewakers en poort",
+    "title": "Dev Harness voor Claude Code",
+    "tagline": "Een collega die eerst nadenkt, netjes werkt en laat zien dat het klopt.",
+    "pillars": [
+      { "icon": "boek", "title": "Werkregels", "text": "altijd aan" },
+      { "icon": "blokken", "title": "Skills", "text": "werkwijzen per klus" },
+      { "icon": "schild", "title": "Bewakers", "text": "houden fouten tegen" },
+      { "icon": "poort", "title": "Poort", "text": "keurt voor je deelt" }
+    ]
+  },
+  "flows": [
+    {
+      "file": "zo-werkt-het.svg",
+      "alt": "Zo werkt het: van vraag tot bewezen resultaat",
+      "steps": [
+        { "icon": "vraag", "title": "Jij vraagt", "lines": ["Gewoon in je eigen", "woorden"] },
+        { "icon": "boek", "title": "Werkregels", "lines": ["Claude denkt eerst na", "en houdt het simpel"] },
+        { "icon": "blokken", "title": "Skill", "lines": ["De juiste werkwijze", "pakt de klus op"] },
+        { "icon": "schild", "title": "Bewakers", "lines": ["Geen geheimen in git,", "geen klaar zonder bewijs"] },
+        { "icon": "bewijs", "title": "Bewijs", "lines": ["Je ziet wat er echt", "gecontroleerd is"] }
+      ]
+    },
+    {
+      "file": "rea.svg",
+      "alt": "Zo werkt /rea: van doel naar blauwdruk",
+      "steps": [
+        { "icon": "zoek", "title": "Doel", "lines": ["Website, app,", "code of programma"] },
+        { "icon": "plan", "title": "Inventaris", "lines": ["Pagina's, broncode,", "plaatjes, letters"] },
+        { "icon": "bewijs", "title": "Bewijs", "lines": ["Elke bevinding met", "bron en vingerafdruk"] },
+        { "icon": "blokken", "title": "Blauwdruk", "lines": ["Hoe je het nabouwt,", "en wat onbekend blijft"] }
+      ]
+    },
+    {
+      "file": "loops.svg",
+      "alt": "Zo werkt keten-loop: van verkennen tot eindcontrole",
+      "steps": [
+        { "icon": "zoek", "title": "Verkennen", "lines": ["speur-loop"] },
+        { "icon": "plan", "title": "Plannen", "lines": ["wat, in welke", "volgorde"] },
+        { "icon": "bouw", "title": "Bouwen", "lines": ["bouw-loop,", "stap voor stap"] },
+        { "icon": "glans", "title": "Verbeteren", "lines": ["polijst-loop"] },
+        { "icon": "fix", "title": "Repareren", "lines": ["fix-loop,", "tot alles groen is"] },
+        { "icon": "check", "title": "Eindcontrole", "lines": ["door een frisse", "beoordelaar"] }
+      ]
+    },
+    {
+      "file": "poort.svg",
+      "alt": "Zo werkt poort: drie controles voor je code deelt",
+      "steps": [
+        { "icon": "commit", "title": "Bij elke commit", "lines": ["Snelle checks,", "in seconden"] },
+        { "icon": "push", "title": "Bij elke push", "lines": ["Alle checks; wat niet", "veranderde, wordt overgeslagen"] },
+        { "icon": "pr", "title": "Bij een PR", "lines": ["Bewijs gekoppeld aan", "precies jouw versie"] },
+        { "icon": "venster", "title": "GitHub", "lines": ["Controleert alleen", "nog het bewijs"] }
+      ]
+    }
+  ]
+}

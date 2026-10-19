@@ -34,7 +34,7 @@ Lees ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens sectie 
    | 6 | E2E-tests | `e2e`, `e2e-rules` |
    | 7 | PolpoHire en TSS | `polpohire-design`, `bi-dashboards`, `theme-selector`, `pre-pr-gates` |
    | 8 | Kwaliteitspoort | `tools/poort`: per repo `node tools/poort/poort.mjs init` |
-   | 9 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `diagram-design` |
+   | 9 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `diagram-design`, `readme` |
    | 10 | Hooks | `guidelines`, `commit-guard`, `verified-claim-guard` |
    | 11 | MCP-servers | `.mcp.example.json`: per server kiezen, zie README |
    | 12 | Werkregels in `guidelines/CLAUDE.md` | Per sectie kiezen |
