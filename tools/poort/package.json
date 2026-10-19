@@ -1,0 +1,23 @@
+{
+  "name": "poort",
+  "version": "0.4.0",
+  "description": "Quality gate voor git-hooks en e2e, voor mensen en agents. Eén bestand, geen dependencies.",
+  "type": "module",
+  "bin": {
+    "poort": "poort.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "files": [
+    "poort.mjs",
+    "checks/",
+    "integrations/",
+    "profiles/"
+  ]
+}

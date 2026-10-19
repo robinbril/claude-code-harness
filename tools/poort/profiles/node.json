@@ -1,0 +1,115 @@
+{
+  "$comment": "JavaScript/TypeScript-app. {web} is de map met package.json; init vult hem in. `if` = hoort de check hier; `needs` = de tool die hij nodig heeft (ontbreekt die, dan is de check rood).",
+  "prepare": [
+    {
+      "id": "npm",
+      "cwd": "{web}",
+      "when": [
+        "{web}/package-lock.json"
+      ],
+      "creates": "{web}/node_modules",
+      "run": "npm ci --no-audit --no-fund",
+      "$why": "Verse worktree of gewijzigde lockfile: eerst installeren, anders faalt elke check op iets wat niets met de wijziging te maken heeft.",
+      "if": "test -f package-lock.json"
+    },
+    {
+      "id": "pnpm",
+      "cwd": "{web}",
+      "when": [
+        "{web}/pnpm-lock.yaml"
+      ],
+      "creates": "{web}/node_modules",
+      "run": "pnpm install --frozen-lockfile",
+      "if": "test -f pnpm-lock.yaml"
+    },
+    {
+      "id": "yarn",
+      "cwd": "{web}",
+      "when": [
+        "{web}/yarn.lock"
+      ],
+      "creates": "{web}/node_modules",
+      "run": "yarn install --frozen-lockfile",
+      "if": "test -f yarn.lock"
+    }
+  ],
+  "checks": [
+    {
+      "id": "pre-commit",
+      "tier": "commit",
+      "when": ".",
+      "run": "pre-commit run --files {files}",
+      "if": "test -f .pre-commit-config.yaml",
+      "ifHint": "geen .pre-commit-config.yaml",
+      "needs": "command -v pre-commit",
+      "needsHint": "pipx install pre-commit",
+      "all": false
+    },
+    {
+      "id": "typecheck",
+      "tier": "push",
+      "cwd": "{web}",
+      "when": [
+        "^{web/}.*\\.(ts|tsx|mts|cts|vue)$",
+        "^{web/}(tsconfig[^/]*\\.json|package\\.json|package-lock\\.json|pnpm-lock\\.yaml|yarn\\.lock)$"
+      ],
+      "$why": "Het typecheck-script van de repo, anders tsc -b bij project references (Vite), anders tsc --noEmit. Lockfiles in when: een dependency-update kan types breken.",
+      "run": "node {poort}/checks/typecheck.mjs",
+      "if": "test -f tsconfig.json",
+      "ifHint": "geen tsconfig.json",
+      "needs": "test -x node_modules/.bin/tsc || test -x node_modules/.bin/vue-tsc",
+      "needsHint": "npm ci (of pnpm install / yarn install)",
+      "timeout": 240,
+      "heavy": true
+    },
+    {
+      "id": "vitest",
+      "tier": "push",
+      "cwd": "{web}",
+      "when": [
+        "^{web/}.*\\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|vue)$",
+        "^{web/}(package\\.json|package-lock\\.json|pnpm-lock\\.yaml|yarn\\.lock|vite(st)?\\.config\\.[cm]?[jt]s)$"
+      ],
+      "fullOn": "^{web/}(package\\.json|package-lock\\.json|pnpm-lock\\.yaml|yarn\\.lock|vite(st)?\\.config\\.[cm]?[jt]s)$",
+      "$why": "Alleen de tests die bij de gewijzigde bestanden horen (vitest related); na een dependency- of config-wijziging alle tests (fullOn).",
+      "run": "if printf '%s\\n' {files} | grep -qE '(^|/)(package\\.json|package-lock\\.json|pnpm-lock\\.yaml|yarn\\.lock|vite(st)?\\.config\\.[cm]?[jt]s)$'; then npx --no-install vitest run --passWithNoTests; else npx --no-install vitest related --run --passWithNoTests {files}; fi",
+      "if": "grep -q '\"vitest\"' package.json",
+      "ifHint": "vitest niet in package.json",
+      "needs": "test -x node_modules/.bin/vitest",
+      "needsHint": "npm ci (of pnpm install / yarn install)",
+      "timeout": 240,
+      "heavy": true
+    },
+    {
+      "id": "e2e-replay",
+      "tier": "push",
+      "type": "e2e",
+      "dir": "{web}",
+      "$why": "Speelt de opgenomen e2e-stappen af zonder model; e2e.config start de app zelf.",
+      "when": "^{web/}(src/|app/|pages/|components/|index\\.html$|tests/[^/]*\\.e2e\\.ts$|e2e\\.config\\.m?ts$|\\.e2e/cache/)",
+      "if": "test -f e2e.config.ts || test -f e2e.config.mts",
+      "ifHint": "geen e2e.config.ts",
+      "needs": "test -d node_modules/e2e",
+      "needsHint": "npm i -D e2e @e2e-dev/web",
+      "timeout": 180,
+      "heavy": true
+    },
+    {
+      "id": "stale-branch",
+      "tier": "push",
+      "when": ".",
+      "cache": false,
+      "$why": "Blokkeert alleen een echt inhoudsconflict met de target-branch (git merge-tree); achterstand is advies. De branch komt uit POORT_BASE_REF, die poort zet.",
+      "run": "node {poort}/checks/stale-branch.mjs",
+      "timeout": 60
+    },
+    {
+      "id": "ripple",
+      "tier": "push",
+      "when": "^{web/}.*\\.(ts|tsx|mts|cts|js|jsx|mjs|vue)$",
+      "$why": "Advies: dezelfde functie elders nog eens gedefinieerd (een kopie die niet meeverandert).",
+      "run": "node {poort}/checks/ripple.mjs {files}",
+      "timeout": 60
+    }
+  ]
+}
