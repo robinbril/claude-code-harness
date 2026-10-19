@@ -30,7 +30,7 @@ if [ -e "${claude}/CLAUDE.md" ]; then
   cp "${claude}/CLAUDE.md" "${claude}/CLAUDE.md.bak-${stamp}"
   echo "Bestaande CLAUDE.md geback-upt"
 fi
-cp "${here}/CLAUDE.md" "${claude}/CLAUDE.md"
+cp "${here}/guidelines/CLAUDE.md" "${claude}/CLAUDE.md"
 echo "CLAUDE.md geplaatst in ${claude}"
 
 # Hooks (commit-guard, verified-claim-guard) voor de script-install route
