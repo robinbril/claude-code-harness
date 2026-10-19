@@ -18,12 +18,22 @@ echo "🔍 Searching for test that creates: $POLLUTION_CHECK"
 echo "Test pattern: $TEST_PATTERN"
 echo ""
 
-# Get list of test files
-TEST_FILES=$(find . -path "$TEST_PATTERN" | sort)
-TOTAL=$(echo "$TEST_FILES" | wc -l | tr -d ' ')
+# Get list of test files. `find` prints paths as ./src/..., so match against ./<pattern>.
+# A pattern like src/**/*.test.ts must also find src/a.test.ts, so try ** as zero dirs too.
+PATTERN="./${TEST_PATTERN#./}"
+TEST_FILES=$( {
+  find . -path "$PATTERN" -not -path './node_modules/*'
+  find . -path "${PATTERN//\*\*\//}" -not -path './node_modules/*'
+} 2>/dev/null | sort -u)
+TOTAL=$(printf '%s\n' "$TEST_FILES" | grep -c . || true)
 
 echo "Found $TOTAL test files"
 echo ""
+
+if [ "$TOTAL" -eq 0 ]; then
+  echo "❌ No test files match '$TEST_PATTERN'; nothing was tested."
+  exit 2
+fi
 
 COUNT=0
 for TEST_FILE in $TEST_FILES; do

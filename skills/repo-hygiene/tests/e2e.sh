@@ -80,6 +80,11 @@ setup_repo() { # bouwt $TMP/<naam>/{origin.git,work}; $1 = naam, $2 = met dev-br
     commit squash.txt "gesquasht" "squash feature"
     git push -q -u origin squashed-feature
 
+    git checkout -q -b reused-feature dev
+    commit reused.txt "oud" "werk van een gemergede PR"
+    commit reused.txt "nieuw" "nieuw werk op dezelfde branchnaam"
+    git push -q -u origin reused-feature
+
     git checkout -q -b open-feature dev
     commit open.txt "open" "open pr feature"
     git push -q -u origin open-feature
@@ -122,6 +127,8 @@ reject "main en dev staan niet in de branchtabel" '^\| (main|dev) \|' "$OUT"
 echo "## Scenario 2: dezelfde repo, met nep-gh"
 OUT="$(PATH="$FAKE_GH:/usr/bin:/bin" bash "$SCRIPT" "$TMP/full/work" 2>&1)"
 expect "squash-merge herkend via PR" '\| squashed-feature \| DEAD \(PR gemerged, squash\)' "$OUT"
+reject "hergebruikte branchnaam met nieuw werk is niet DEAD" '\| reused-feature \| DEAD' "$OUT"
+expect "hergebruikte branchnaam blijft actief" '\| reused-feature \| actief' "$OUT"
 expect "open PR gemarkeerd" '\| open-feature \| actief \| [0-9]+d \| 1 \| OK \| ja \|' "$OUT"
 expect "conflicterende PR als FAIL" 'mergeable=FAIL CONFLICTING' "$OUT"
 expect "Actions-run op main" 'OK   CI \| success' "$OUT"

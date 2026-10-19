@@ -11,10 +11,15 @@
 'use strict';
 const path = require('path');
 
-// Resolve playwright robustly, even when the script runs outside the home cwd.
+// Resolve playwright from the project you run this in first, then this skill, then your home folder.
 let chromium;
-try { ({ chromium } = require('playwright')); }
-catch (_) { ({ chromium } = require(path.join(process.env.HOME || process.env.USERPROFILE, 'node_modules', 'playwright'))); }
+try {
+  const home = process.env.HOME || process.env.USERPROFILE || '';
+  ({ chromium } = require(require.resolve('playwright', { paths: [process.cwd(), __dirname, home] })));
+} catch (_) {
+  console.error('Playwright not found. In your project: npm i -D playwright && npx playwright install chromium');
+  process.exit(2);
+}
 
 const url = process.argv[2];
 const out = process.argv[3];

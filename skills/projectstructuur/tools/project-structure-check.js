@@ -19,8 +19,8 @@ function readJson(file) {
 // Gitignored build output (node_modules, .venv) is not part of the layout.
 function gitIgnored(root, names) {
   if (!names.length) return new Set();
-  const result = spawnSync('git', ['-C', root, 'check-ignore', ...names], { encoding: 'utf8' });
-  return new Set((result.stdout || '').split(/\r?\n/).filter(Boolean));
+  const result = spawnSync('git', ['-C', root, 'check-ignore', '-z', ...names], { encoding: 'utf8' });
+  return new Set((result.stdout || '').split('\0').filter(Boolean));
 }
 function normalize(rel) { return rel.split(path.sep).join('/'); }
 function findProject(start) {
@@ -74,9 +74,10 @@ function walk(root, visit, relative = '') {
 }
 // Files git does not ignore; outside a git repo, every file except .git and node_modules.
 function projectFiles(root) {
-  const result = spawnSync('git', ['-C', root, 'ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8' });
+  // -z: NUL-separated and unquoted, so names with accents or spaces are not lost.
+  const result = spawnSync('git', ['-C', root, 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8' });
   if (result.status === 0) {
-    return result.stdout.split(/\r?\n/).filter(Boolean).map(file => file.split('/').join(path.sep)).filter(rel => fs.existsSync(path.join(root, rel)));
+    return result.stdout.split('\0').filter(Boolean).map(file => file.split('/').join(path.sep)).filter(rel => fs.existsSync(path.join(root, rel)));
   }
   const files = [];
   walk(root, rel => files.push(rel));
