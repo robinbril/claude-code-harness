@@ -1,0 +1,651 @@
+/* dialog_v2.css - Theme-dialoog Odysseus, een samenhangend design-systeem */
+
+/* ---------------------------------------------------------------
+   1. Lokale fallbacks. Engine zet deze vars live; hier de rust-stand.
+   Reforge Blue als neutrale merk-accent.
+   --------------------------------------------------------------- */
+#theme-modal {
+  --tss-font: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --tss-brand: var(--brand, #170144);
+  --tss-brand-end: var(--brand-end, #4800DD);
+  --tss-brand-soft: var(--brand-soft, rgba(23, 1, 68, 0.10));
+  --tss-brand-text: var(--brand-text, #170144);
+  --tss-panel: var(--panel, #FFFDFA);
+  --tss-surface: var(--surface, #F1F0ED);
+  --tss-surface-2: var(--surface-2, #EEEAE2);
+  --tss-border: var(--border, #DBD5C9);
+  --tss-text: var(--text, #131313);
+  --tss-text-2: var(--text-2, #6B6764);
+  --tss-input-bg: var(--input-bg, #FFFDFA);
+  --tss-input-border: var(--input-border, #DBD5C9);
+  --tss-toggle-active: var(--toggle-active, var(--tss-brand));
+  --tss-e1: var(--e1, 0 1px 2px rgba(19, 19, 19, 0.06));
+  --tss-e2: var(--e2, 0 4px 12px rgba(19, 19, 19, 0.10));
+  --tss-e3: var(--e3, 0 16px 40px rgba(19, 19, 19, 0.16));
+  --tss-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------------------------------------------------------------
+   2. Overlay
+   --------------------------------------------------------------- */
+#theme-modal.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(19, 19, 19, 0.44);
+  font-family: var(--tss-font);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#theme-modal.modal[hidden],
+#theme-modal.modal.is-hidden {
+  display: none;
+}
+
+/* Matglas alleen op rand-UI, achter de materiaal-gates */
+html.app-frosted #theme-modal.modal,
+body.theme-frosted #theme-modal.modal {
+  background: rgba(19, 19, 19, 0.34);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  backdrop-filter: saturate(1.4) blur(14px);
+}
+
+html.liquid-glass #theme-modal.modal {
+  background: rgba(19, 19, 19, 0.28);
+  -webkit-backdrop-filter: saturate(1.8) blur(28px);
+  backdrop-filter: saturate(1.8) blur(28px);
+}
+
+/* ---------------------------------------------------------------
+   3. Paneel
+   --------------------------------------------------------------- */
+#theme-popup.tss-modal.modal-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border: 1px solid var(--tss-border);
+  border-radius: 20px;
+  background: var(--tss-panel);
+  box-shadow: var(--tss-e3);
+  color: var(--tss-text);
+  font-family: var(--tss-font);
+  animation: theme-pop 200ms var(--tss-ease) both;
+}
+
+@keyframes theme-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------
+   4. Header
+   --------------------------------------------------------------- */
+.theme-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid var(--tss-border);
+}
+
+h2#theme-popup-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  color: var(--tss-text);
+}
+
+button.theme-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--tss-border);
+  border-radius: 50%;
+  background: var(--tss-surface);
+  color: var(--tss-text-2);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 160ms var(--tss-ease), color 160ms var(--tss-ease);
+}
+
+button.theme-close:hover {
+  background: var(--tss-surface-2);
+  color: var(--tss-text);
+}
+
+button.theme-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--tss-panel), 0 0 0 4px var(--tss-brand);
+}
+
+/* ---------------------------------------------------------------
+   5. Tab-nav: capsule-track met schuivende pill
+   --------------------------------------------------------------- */
+nav#theme-tabs.theme-tabs {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  margin: 20px 20px 0;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--tss-surface-2);
+  isolation: isolate;
+}
+
+span.theme-tab-indicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 0;
+  width: 0;
+  height: calc(100% - 8px);
+  border-radius: 999px;
+  background: var(--tss-panel);
+  box-shadow: var(--tss-e1);
+  transition: left 240ms var(--tss-ease), width 240ms var(--tss-ease);
+  pointer-events: none;
+}
+
+button.theme-tab {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tss-text-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 160ms var(--tss-ease);
+}
+
+button.theme-tab:hover {
+  color: var(--tss-text);
+}
+
+button.theme-tab.is-active {
+  color: var(--tss-text);
+}
+
+button.theme-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--tss-brand);
+}
+
+/* ---------------------------------------------------------------
+   6. Panelen
+   --------------------------------------------------------------- */
+.theme-tab-panel {
+  display: none;
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.theme-tab-panel.is-active {
+  display: block;
+}
+
+.theme-tab-panel.is-hidden,
+.theme-tab-panel[hidden] {
+  display: none;
+}
+
+.theme-tab-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.theme-tab-panel::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--tss-surface-2);
+}
+
+/* ---------------------------------------------------------------
+   7. Themas-tab
+   --------------------------------------------------------------- */
+#themeGrid.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+button.cw-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--tss-border);
+  border-radius: 12px;
+  background: var(--tss-panel);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms var(--tss-ease), box-shadow 160ms var(--tss-ease);
+}
+
+button.cw-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--tss-e2);
+}
+
+button.cw-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--tss-brand);
+}
+
+button.cw-card.is-active {
+  box-shadow: inset 0 0 0 2px var(--tss-brand);
+}
+
+button.cw-card.is-active:hover {
+  box-shadow: inset 0 0 0 2px var(--tss-brand), var(--tss-e2);
+}
+
+.cw-swatches {
+  display: flex;
+  height: 52px;
+}
+
+span.cw-sw {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.cw-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--tss-border);
+}
+
+span.cw-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--tss-text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+span.cw-dot {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(19, 19, 19, 0.10);
+}
+
+/* ---------------------------------------------------------------
+   8. Kleuren-tab: label-kolom 120px plus swatch
+   --------------------------------------------------------------- */
+.cw-chan-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cw-chan-row + .cw-chan-row {
+  margin-top: 12px;
+}
+
+label.cw-chan-label {
+  flex: 0 0 120px;
+  width: 120px;
+  color: var(--tss-text-2);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+input[type="color"].cw-chan {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--tss-border);
+  border-radius: 8px;
+  background: var(--tss-input-bg);
+  cursor: pointer;
+  transition: box-shadow 160ms var(--tss-ease);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="color"].cw-chan::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+input[type="color"].cw-chan::-webkit-color-swatch {
+  border: 0;
+  border-radius: 6px;
+}
+
+input[type="color"].cw-chan::-moz-color-swatch {
+  border: 0;
+  border-radius: 6px;
+}
+
+input[type="color"].cw-chan:hover {
+  box-shadow: var(--tss-e1);
+}
+
+input[type="color"].cw-chan:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--tss-panel), 0 0 0 4px var(--tss-brand);
+}
+
+button.cw-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 8px 16px;
+  border: 1px solid var(--tss-border);
+  border-radius: 12px;
+  background: var(--tss-surface);
+  color: var(--tss-text-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: background 160ms var(--tss-ease), color 160ms var(--tss-ease);
+}
+
+button.cw-reset:hover {
+  background: var(--tss-surface-2);
+  color: var(--tss-text);
+}
+
+button.cw-reset:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--tss-panel), 0 0 0 4px var(--tss-brand);
+}
+
+/* ---------------------------------------------------------------
+   9. Weergave-tab: label-kolom 120px plus control
+   --------------------------------------------------------------- */
+.display-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+}
+
+.display-row + .display-row {
+  margin-top: 16px;
+}
+
+label.display-label {
+  flex: 0 0 120px;
+  width: 120px;
+  color: var(--tss-text-2);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Selects */
+#theme-font-select,
+#theme-density-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--tss-input-border);
+  border-radius: 10px;
+  background: var(--tss-input-bg);
+  color: var(--tss-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 160ms var(--tss-ease), box-shadow 160ms var(--tss-ease);
+}
+
+#theme-font-select:hover,
+#theme-density-select:hover {
+  border-color: var(--tss-text-2);
+}
+
+#theme-font-select:focus-visible,
+#theme-density-select:focus-visible {
+  outline: none;
+  border-color: var(--tss-brand);
+  box-shadow: 0 0 0 3px var(--tss-brand-soft);
+}
+
+/* Basis-toggle */
+label.switch {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 44px;
+  height: 26px;
+}
+
+label.switch input#theme-frosted-toggle {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+label.switch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--tss-border);
+  border-radius: 999px;
+  background: var(--tss-surface-2);
+  transition: background 200ms var(--tss-ease), border-color 200ms var(--tss-ease);
+  pointer-events: none;
+}
+
+label.switch::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--tss-panel);
+  box-shadow: var(--tss-e1);
+  transition: transform 200ms var(--tss-ease);
+  pointer-events: none;
+}
+
+label.switch:has(input#theme-frosted-toggle:checked)::before {
+  border-color: transparent;
+  background: var(--tss-toggle-active);
+}
+
+label.switch:has(input#theme-frosted-toggle:checked)::after {
+  transform: translateX(18px);
+}
+
+label.switch:has(input#theme-frosted-toggle:focus-visible)::before {
+  box-shadow: 0 0 0 3px var(--tss-brand-soft);
+}
+
+/* Ranges */
+input#theme-frost-range[type="range"],
+input#theme-intensity-range[type="range"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input#theme-frost-range[type="range"]::-webkit-slider-runnable-track,
+input#theme-intensity-range[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--tss-surface-2);
+}
+
+input#theme-frost-range[type="range"]::-webkit-slider-thumb,
+input#theme-intensity-range[type="range"]::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--tss-brand);
+  box-shadow: var(--tss-e1);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input#theme-frost-range[type="range"]::-moz-range-track,
+input#theme-intensity-range[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--tss-surface-2);
+}
+
+input#theme-frost-range[type="range"]::-moz-range-thumb,
+input#theme-intensity-range[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--tss-brand);
+  box-shadow: var(--tss-e1);
+}
+
+input#theme-frost-range[type="range"]:focus-visible,
+input#theme-intensity-range[type="range"]:focus-visible {
+  outline: none;
+}
+
+input#theme-frost-range[type="range"]:focus-visible::-webkit-slider-thumb,
+input#theme-intensity-range[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--tss-brand-soft);
+}
+
+input#theme-frost-range[type="range"]:focus-visible::-moz-range-thumb,
+input#theme-intensity-range[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px var(--tss-brand-soft);
+}
+
+/* Materiaal-segment */
+#theme-material-seg {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--tss-surface-2);
+}
+
+button.material-opt {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tss-text-2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: background 160ms var(--tss-ease), color 160ms var(--tss-ease);
+}
+
+button.material-opt:hover {
+  color: var(--tss-text);
+}
+
+button.material-opt.is-active {
+  background: var(--tss-brand-soft);
+  color: var(--tss-brand-text);
+  box-shadow: var(--tss-e1);
+}
+
+button.material-opt:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--tss-brand);
+}
+
+/* ---------------------------------------------------------------
+   10. Kleine schermen: label boven control, marges gelijk
+   --------------------------------------------------------------- */
+@media (max-width: 480px) {
+  #theme-modal.modal {
+    padding: 12px;
+  }
+
+  .display-row,
+  .cw-chan-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  label.display-label,
+  label.cw-chan-label {
+    flex-basis: 100%;
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------
+   11. Bewegingsvoorkeur
+   --------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  #theme-popup.tss-modal.modal-content,
+  span.theme-tab-indicator,
+  button.cw-card,
+  label.switch::after {
+    animation: none;
+    transition: none;
+  }
+
+  button.cw-card:hover {
+    transform: none;
+  }
+}

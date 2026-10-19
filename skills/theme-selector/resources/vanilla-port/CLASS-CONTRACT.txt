@@ -1,0 +1,44 @@
+GEDEELD CONTRACT v2. Lees volledig. Je bouwt EEN GROOT, SAMENHANGEND domein van een theme-dialoog plus Reforge-branding voor het Odysseus-platform (vanilla-JS PWA, FastAPI-shell, GEEN build-step). De vorige poging faalde doordat de UI over te veel losse agents was verdeeld; nu bouw jij een compleet domein in een keer, zodat spacing, uitlijning en ritme consistent zijn. Lever UITSLUITEND de gevraagde bestandsinhoud. Geen uitleg, geen markdown-fences, geen em-dashes.
+
+## Stijl-doel (TSS, Linear, Vercel, Apple-instellingen)
+Strak, rustig, een consistent design-systeem. Verplicht:
+- Spacing-schaal: gebruik ALLEEN 4, 8, 12, 16, 20, 24px. Paneel-padding 20px.
+- Alles links uitgelijnd op dezelfde marge. Label-kolom plus control-kolom netjes uitgelijnd (grid of flex met vaste label-breedte rond 120px).
+- Consistente radius (kaarten en controls 12px, paneel 20px, pills capsule), 1px borders var(--border), zachte schaduwen var(--e1), var(--e2), var(--e3).
+- Rustige typografie: titels gewicht 600 tot 700, labels var(--text-2) 13 tot 14px. Geen felle kleuren buiten var(--brand).
+- GEEN debug- of preview-tekst, GEEN dump van variabelenamen, GEEN losse zwevende elementen. Elk element heeft een duidelijke plek in de layout.
+
+## Reforge-brandbook (huisstijl, verplicht voor branding-onderdelen)
+- Brandkleur (Reforge Blue): #170144. Gradient-eind: #4800DD. Gradient: linear-gradient(120deg, #170144 0%, #4800DD 100%).
+- Beige-palet voor rustige vlakken: Off White #FFFDFA, Light Beige #F1F0ED, Beige #EEEAE2, Dark Beige #DBD5C9, Light Blue #CEEAED. Ink #131313. Mid gray #C7C3C1.
+- Font (web, CSP blokkeert externe fonts, GEEN @font-face naar internet): font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif. Koppen letter-spacing -0.01em, body regelhoogte 1.5.
+- Reforge-merkteken (officieel, inline SVG, fill currentColor, viewBox 436.3263 x 485.2138, NIET vervormen):
+<svg viewBox="0 0 436.3263 485.2138" role="img" aria-label="Reforge" fill="currentColor"><path d="M428.2828,121.3092c-5.2741-9.134-12.8759-16.7358-21.9502-21.9509L248.172,8.0212c-18.5327-10.6949-41.5141-10.6949-59.9878,0L29.9941,99.3295C11.4912,109.9949,0,129.9123,0,151.3029v182.6152c0,21.3906,11.4912,41.308,29.9941,51.9734l158.1901,91.3083c9.0452,5.2439,19.4164,8.014,29.9937,8.014,10.5482,0,20.9194-2.7701,29.9941-8.014l158.1606-91.3083c18.5028-10.6654,29.9937-30.5828,29.9937-51.9734v-182.6152c0-10.5187-2.7989-20.8899-8.0435-29.9937ZM348.9667,376.9942v-166.5282l-54.3605-36.3583v234.2649l-49.263,28.4616v-191.9844l-54.3307-36.3583v228.3427l-49.2925-28.4616v-122.9219l-54.3307-36.3878v127.9608l-39.2162-22.6573c-7.2774-4.1843-11.7854-12.0214-11.7854-20.4483v-182.6152c0-8.4269,4.508-16.2639,11.7854-20.4475L206.363,39.5183c7.1598-4.1253,16.4114-4.1253,23.6003,0l158.1897,91.3371c7.2778,4.1836,11.7854,12.0206,11.7854,20.4475v182.6152c0,8.4269-4.5077,16.2639-11.7854,20.4483l-39.1863,22.6278Z"/></svg>
+
+## Techniek (hard)
+- Plain ES6 of plain CSS. GEEN TypeScript, GEEN build-step, GEEN libraries, GEEN markdown-fences.
+- CSP-veilig: JS zet stijl via element.style.setProperty of classList. NOOIT een style-element of innerHTML met style-tag.
+- Matglas (backdrop-filter) alleen op rand-UI, nooit op de berichtkolom.
+- Nederlandse comments, kort.
+
+## Engine-API (bestaat al, NIET herschrijven, alleen importeren)
+import { COLOURWAYS, deriveVars, colourwayById, resolvePalette, paletteIsDark, PALETTE_CHANNELS } from './colourways.js';
+import { applyColourway, computeVars, resolveColourwayId, loadV2, saveV2, migrateFromV1 } from './theme_v2.js';
+- COLOURWAYS: 18 objecten {id,name,bg,fg,panel,border,accent}. FEATURED: polpohire, midnight, iris.
+- deriveVars(palette): tokenmap met keys MET dubbele streep, dus v['--bg'], v['--surface'], v['--brand'], v['--text']. NIET v['bg'].
+- applyColourway(id, {overrides,intensity,mode,frosted,font,density,frost}): zet alle vars live.
+- loadV2() en saveV2(state): de v2-keuze {id,overrides,intensity,mode,frosted,font,density,frost,material}.
+
+## HARD CLASS-CONTRACT. JS en CSS MOETEN deze EXACTE namen gebruiken
+Dialoog-wrapper: #theme-modal.modal (overlay) bevat #theme-popup.tss-modal.modal-content (paneel).
+Header: header.theme-popup-header bevat h2#theme-popup-title plus button.theme-close.
+Tab-nav: nav#theme-tabs.theme-tabs (capsule) bevat button.theme-tab[data-tab="theme-tab-browse|theme-tab-customize|theme-tab-display"]. Actieve knop krijgt class is-active. Een schuivende pill span.theme-tab-indicator binnen #theme-tabs die via JS (left en width uit de actieve knop) meebeweegt.
+Panelen: div.theme-tab-panel met id theme-tab-browse of theme-tab-customize of theme-tab-display. Verborgen paneel: attribuut hidden plus class is-hidden. Zichtbaar paneel: class is-active. CSS: .theme-tab-panel{display:none} en .theme-tab-panel.is-active{display:block}.
+Themas-tab: div#themeGrid.theme-grid bevat per colourway button.cw-card[data-cw=id] met daarin div.cw-swatches (4x span.cw-sw) plus div.cw-label (span.cw-name plus span.cw-dot). Actieve kaart krijgt is-active.
+Kleuren-tab: per kanaal div.cw-chan-row met label.cw-chan-label plus input[type=color].cw-chan[data-chan="bg|fg|panel|border|accent"]. Plus button.cw-reset met tekst Kleuren herstellen. GEEN preview die var-namen toont.
+Weergave-tab: rijen div.display-row met label.display-label plus een control. Controls: select#theme-font-select, select#theme-density-select, iOS-switch label.switch met input#theme-frosted-toggle, input#theme-frost-range type range, input#theme-intensity-range type range, en materiaal-segment div#theme-material-seg met 3x button.material-opt[data-material="flat|frosted|liquid"] (labels Standaard, Matglas, Liquid Glass), actief krijgt is-active.
+
+## Frosted-gates
+Gewone matglas: prefix html.app-frosted of body.theme-frosted. iOS-variant: prefix html.liquid-glass. Materiaal is exclusief (nooit twee tegelijk).
+
+Einde contract. Hieronder je opdracht:
