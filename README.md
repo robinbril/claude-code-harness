@@ -54,7 +54,7 @@ Windows: `powershell -ExecutionPolicy Bypass -File .\install.ps1`. Beide scripts
 |---|---|---|
 | Skills | Automatisch | Naar `~/.claude/skills/` |
 | Werkregels | Via een `SessionStart`-hook | Worden `~/.claude/CLAUDE.md` |
-| Hooks | Direct actief via `hooks/hooks.json` | Merge `settings.example.json` in `~/.claude/settings.json` |
+| Hooks | Direct actief via `hooks/hooks.json` | Merge `examples/settings.json` in `~/.claude/settings.json` |
 
 ## Uitgelicht: `/rea`
 
@@ -221,11 +221,11 @@ Deterministische scripts die op vaste momenten in Claude Code meedraaien, onafha
 | `commit-guard` | `PreToolUse` op `git commit` | Blokkeert secrets, API-keys en temp-bestanden (`.env`, `*.tmp`, `*.bak`); waarschuwt bij e-mailadressen. Eigen patronen via `.harness-blocklist` |
 | `verified-claim-guard` | `Stop` | Blokkeert een klaar-claim na een muterende beurt zonder echte tool-observatie; `UNVERIFIED:` mag altijd |
 
-`defaultMode: auto` en `remoteControlAtStartup` ontbreken bewust in `settings.example.json`: die slaan permissie-prompts over en verdienen een eigen, bewuste keuze.
+`defaultMode: auto` en `remoteControlAtStartup` ontbreken bewust in `examples/settings.json`: die slaan permissie-prompts over en verdienen een eigen, bewuste keuze.
 
 ## MCP-servers
 
-Optioneel en per project te kiezen. Kopieer [`.mcp.example.json`](.mcp.example.json) naar `.mcp.json`, of voeg ze los toe:
+Optioneel en per project te kiezen. Kopieer [`examples/mcp.json`](examples/mcp.json) naar `.mcp.json` in je project, of voeg ze los toe:
 
 | Server | Waarvoor | Toevoegen |
 |---|---|---|
@@ -257,9 +257,9 @@ E2E-opnames draaien op je eigen Claude-seat: geen API-keys, geen proxy. Details 
 
 ## Onderhoud en CI
 
-Overnemen, onderhouden, herstructureren en opschonen per onderwerp: [`ONDERHOUD.md`](ONDERHOUD.md).
+Overnemen, onderhouden, herstructureren en opschonen per onderwerp: [`docs/ONDERHOUD.md`](docs/ONDERHOUD.md).
 
-Elke PR en push naar `main` draait CI: skill-namen en frontmatter, dekking van elke skill in deze README en `ONDERHOUD.md`, versie- en hook-consistentie, geen persoonlijke paden, syntax van alle scripts, README-visuals reproduceerbaar uit `assets/visuals.json`, de volledige poort-testsuite en de repo-hygiene-e2e.
+Elke PR en push naar `main` draait CI: skill-namen en frontmatter, dekking van elke skill in deze README en `docs/ONDERHOUD.md`, versie- en hook-consistentie, geen persoonlijke paden, syntax van alle scripts, README-visuals reproduceerbaar uit `assets/visuals.json`, de volledige poort-testsuite en de repo-hygiene-e2e.
 
 ## Statusline (optioneel)
 

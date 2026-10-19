@@ -8,7 +8,7 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\
 const errors = [];
 
 const readme = read('README.md');
-const onderhoud = read('ONDERHOUD.md');
+const onderhoud = read('docs/ONDERHOUD.md');
 const skillDirs = fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
 
 for (const name of skillDirs) {
@@ -20,7 +20,7 @@ for (const name of skillDirs) {
   if (!declared || declared[1] !== name) errors.push(`${file}: name is ${declared ? declared[1] : 'leeg'}, verwacht ${name}`);
   if (!/^description:\s*\S/m.test(front[1])) errors.push(`${file}: description ontbreekt`);
   if (!readme.includes(`\`${name}\``) && !readme.includes(`\`/${name}\``)) errors.push(`README.md noemt skill ${name} niet`);
-  if (!onderhoud.includes(`\`${name}\``)) errors.push(`ONDERHOUD.md noemt skill ${name} niet`);
+  if (!onderhoud.includes(`\`${name}\``)) errors.push(`docs/ONDERHOUD.md noemt skill ${name} niet`);
 }
 
 const plugin = JSON.parse(read('.claude-plugin/plugin.json'));
