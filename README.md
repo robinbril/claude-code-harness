@@ -181,7 +181,7 @@ Een skill is een vaste werkwijze voor een soort klus. Claude kiest er zelf een a
 | `brandkit` | Een merk vastleggen: kleuren, letters, toon |
 | `data-visualization` | De juiste grafiek kiezen bij je cijfers |
 | `diagram-design` | Schema's en stroomdiagrammen tekenen |
-| `readme-design` | Een README die in tien seconden uitlegt wat iets is, met eigen afbeeldingen voor licht en donker. Deze pagina is ermee gemaakt |
+| `readme` | Opmaak, omschrijving en afbeeldingen van een README en de korte repo-omschrijving op GitHub, zodat iemand in tien seconden snapt wat het is. Deze pagina is ermee gemaakt |
 
 ### PolpoHire en The Staffing Society
 
@@ -199,6 +199,7 @@ Via de plugin zet je `dev-harness:` ervoor, dus `/dev-harness:rea` in plaats van
 | Typ | Wat er gebeurt |
 |---|---|
 | `/rea <doel>` | Uitzoeken hoe een website, app of programma werkt, met bewijs en een bouwplan |
+| `/readme` | Een README en repo-omschrijving maken of opknappen, met eigen afbeeldingen voor licht en donker |
 | `/goal <uitkomst>` | Claude werkt zelf naar je doel toe; `ga door` gaat verder waar het was |
 | `/supergoal` | Hetzelfde voor grote klussen, met een controle per fase |
 | `/keten-loop` | Alles van verkennen tot eindcontrole, zuinig met rekenkracht |
@@ -282,7 +283,7 @@ Zie onderaan Claude Code hoe vol het gesprek zit en waar Claude mee bezig is, me
 | `batch-grill-me` | gebaseerd op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) | MIT |
 | `code-audit` | gebaseerd op open-code-review-delegate uit [alibaba/open-code-review](https://github.com/alibaba/open-code-review), aangepast (zie `NOTICE`) | Apache-2.0 |
 | `rea` | eigen skill rond [morluto/rea](https://github.com/morluto/rea) 6.4.0, met de originele instructies in `references/upstream/` | MIT |
-| `readme-design` | eigen skill; de opbouw (probleem, hoe je merkt dat het werkt, afweging) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
+| `readme` | eigen skill; de opbouw (probleem, hoe je merkt dat het werkt, afweging) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
 | `tools/poort/` | Reforge Recruitment | Niet MIT: alle rechten voorbehouden. Inzien mag, hergebruik alleen met toestemming |
 
 Overgenomen skills hebben hun licentie in hun eigen map. De meeste skills zijn algemeen bruikbaar; `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gemaakt voor PolpoHire en The Staffing Society.
