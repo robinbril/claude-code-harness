@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Skills, docs en plugin-metadata
+        run: node .github/scripts/check-skills.mjs
+      - name: Syntax van hooks en scripts
+        run: |
+          for f in hooks/*.js skills/render-proof/scripts/shoot.js skills/projectstructuur/tools/*.js tools/poort/poort.mjs .github/scripts/*.mjs; do
+            node --check "$f"
+          done
+      - name: poort-tests
+        working-directory: tools/poort
+        run: node --test --test-concurrency=1 test/*.test.mjs
+      - name: repo-hygiene e2e
+        run: bash skills/repo-hygiene/tests/e2e.sh
