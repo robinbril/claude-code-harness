@@ -28,7 +28,7 @@ Lees docs/ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens se
    |---|---|---|
    | 1 | Methodiek | `skill-finder`, `systematic-debugging`, `council`, `batch-grill-me`, `projectstructuur`, `rea` |
    | 2 | Kwaliteit en git | `find-bugs`, `code-audit`, `commit-discipline`, `repo-hygiene`, `render-proof` |
-   | 3 | Loops en autonoom bouwen | `goal`, `supergoal`, `keten-loop`, `bouw-loop`, `polijst-loop`, `fix-loop`, `speur-loop`, `waak-loop`, `createloopprompt` |
+   | 3 | Loops en autonoom bouwen | `goal`, `supergoal`, `keten-loop`, `bouw-loop`, `polijst-loop`, `fix-loop`, `speur-loop`, `dicht-loop`, `waak-loop`, `createloopprompt` |
    | 4 | Frontend-design | `design-taste-frontend`, `redesign-existing-projects`, `emil-design-eng`, `make-interfaces-feel-better`, `ux-heuristics`, `frontend-gotchas`, `fixing-accessibility`, `transitions-dev` |
    | 5 | Animatie en beweging | `animate`, `animate-expo`, `animation-vocabulary`, `apple-design`, `ask-sonner`, `find-animation-opportunities`, `improve-animations`, `review-animations`, `mobile-native`, `pick-ui-library`, `prototype` |
    | 6 | E2E-tests | `e2e`, `e2e-rules` |
