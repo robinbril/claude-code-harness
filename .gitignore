@@ -8,10 +8,12 @@ __pycache__/
 .DS_Store
 
 # Process artifacts stay local (specs, loop state, handoffs, plans, caches, scratch)
-.harness/
+**/.harness/*
+!**/.harness/projectstructuur/
 .loops/
 .run/
-.e2e/
+**/.e2e/*
+!**/.e2e/cache/
 vite-cache/
 scratchpad/
 .tmp*/
