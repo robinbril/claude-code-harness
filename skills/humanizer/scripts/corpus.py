@@ -19,7 +19,7 @@ from datetime import datetime
 
 from kenmerken import meet, woorden
 
-THUIS = os.path.expanduser(os.environ.get("MENSENTAAL_HOME", "~/.local/share/mensentaal"))
+THUIS = os.path.expanduser(os.environ.get("HUMANIZER_HOME", "~/.local/share/humanizer"))
 BEURT_SECONDEN = 150
 ANTWOORD_SECONDEN = 24 * 3600
 REEKS = 7
