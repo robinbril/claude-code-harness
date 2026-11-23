@@ -103,3 +103,129 @@ test('validate-phase: criteria without a validation class fail', () => {
   const res = runScript('bash', [tool('skills/supergoal/scripts/validate-phase.sh'), path.join(dir, 'phase-1.md')], dir);
   assert.equal(res.status, 1, res.stdout);
 });
+
+const mt = (script) => tool(`skills/mensentaal/scripts/${script}`);
+
+function mensentaalHome() {
+  const home = tempDir('mensentaal-');
+  write(home, 'chat.txt', [
+    '[23-11-2026, 14:05:12] Anna: lukt het vrijdag?',
+    '[23-11-2026, 14:06:01] Ik Zelf: ja vrijdag is prima',
+    '[23-11-2026, 14:06:20] Ik Zelf: neem jij de sleutel mee',
+    '23-11-2026 15:00 - Ik Zelf: hierbij stuur ik je de volledige samenvatting van ons overleg van vandaag toe',
+    '23-11-2026 15:30 - Anna: top dank',
+    '[23-11-2026, 16:00:00] Ik Zelf: mijn wachtwoord is geheim123 voor straks',
+  ].join('\n'));
+  return { home, env: { HOME: home, MENSENTAAL_HOME: path.join(home, 'mt'), PYTHONDONTWRITEBYTECODE: '1' } };
+}
+
+test('mensentaal corpus: only own turns, bursts joined, secrets left out, private file mode', () => {
+  const { home, env } = mensentaalHome();
+  const res = runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'chat.txt'), '--naam', 'Ik Zelf', '--relatie', 'werk'], home, env);
+  assert.equal(res.status, 0, res.stderr);
+  const file = path.join(home, 'mt/corpus/app.jsonl');
+  const rows = fs.readFileSync(file, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].tekst, 'ja vrijdag is prima\nneem jij de sleutel mee');
+  assert.equal(rows[0].vorige, 'lukt het vrijdag?');
+  assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+});
+
+test('mensentaal corpus schoon: text that an assistant drafted is removed', () => {
+  const { home, env } = mensentaalHome();
+  runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'chat.txt'), '--naam', 'Ik Zelf'], home, env);
+  write(home, '.claude/projects/p/s.jsonl', `${JSON.stringify({ type: 'assistant', timestamp: '2026-11-23T10:00:00Z', message: { role: 'assistant', content: [{ type: 'text', text: 'Hierbij stuur ik je de volledige samenvatting van ons overleg van vandaag toe.' }] } })}\n`);
+  const res = runScript('python3', [mt('corpus.py'), 'schoon'], home, env);
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stdout, /app: 1 door een assistent opgesteld, 1 over/);
+  assert.match(fs.readFileSync(path.join(home, 'mt/corpus/weg/app.jsonl'), 'utf8'), /volledige samenvatting/);
+});
+
+test('mensentaal meet: an unknown register and an empty text fail instead of reporting green', () => {
+  const { home, env } = mensentaalHome();
+  write(home, 'tekst.txt', 'Dit is een gewone zin.\n');
+  write(home, 'leeg.txt', '\n');
+  assert.notEqual(runScript('python3', [mt('meet.py'), '--register', 'app-werk', path.join(home, 'tekst.txt')], home, env).status, 0);
+  assert.notEqual(runScript('python3', [mt('meet.py'), '--register', 'artikel', path.join(home, 'leeg.txt')], home, env).status, 0);
+  const ok = runScript('python3', [mt('meet.py'), '--register', 'artikel', path.join(home, 'tekst.txt')], home, env);
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.match(ok.stdout, /vergeleken met 294 menselijke teksten/);
+});
+
+test('mensentaal corpus: nothing recognised or nothing searched is a failure, not a green report', () => {
+  const { home, env } = mensentaalHome();
+  const wrongName = runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'chat.txt'), '--naam', 'Iemand Anders'], home, env);
+  assert.notEqual(wrongName.status, 0);
+  assert.match(wrongName.stderr, /geen berichten van 'Iemand Anders' herkend/);
+  runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'chat.txt'), '--naam', 'Ik Zelf'], home, env);
+  const noTranscripts = runScript('python3', [mt('corpus.py'), 'schoon'], home, env);
+  assert.notEqual(noTranscripts.status, 0);
+  assert.match(noTranscripts.stderr, /er is niets gecontroleerd/);
+});
+
+test('mensentaal corpus: a secret in the other person\'s message is not stored as context', () => {
+  const { home, env } = mensentaalHome();
+  write(home, 'geheim.txt', '[23-11-2026, 14:05:12] Anna: het wachtwoord is zomer2026\n[23-11-2026, 14:06:01] Ik Zelf: top dank je wel\n');
+  const res = runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'geheim.txt'), '--naam', 'Ik Zelf'], home, env);
+  assert.equal(res.status, 0, res.stderr);
+  assert.doesNotMatch(fs.readFileSync(path.join(home, 'mt/corpus/app.jsonl'), 'utf8'), /zomer2026/);
+});
+
+test('mensentaal corpus schoon: a genuine text that an assistant quoted later is kept', () => {
+  const { home, env } = mensentaalHome();
+  runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'chat.txt'), '--naam', 'Ik Zelf'], home, env);
+  write(home, '.claude/projects/p/s.jsonl', `["assistant"]\n${JSON.stringify({ timestamp: '2026-12-01T10:00:00Z', message: { role: 'assistant', content: [{ type: 'tool_use', input: { prompt: 'Voorbeeld: hierbij stuur ik je de volledige samenvatting van ons overleg van vandaag toe' } }] } })}\n`);
+  const res = runScript('python3', [mt('corpus.py'), 'schoon'], home, env);
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stdout, /app: 0 door een assistent opgesteld, 2 over/);
+});
+
+test('mensentaal corpus map: quoted mail from others is cut in the common formats', () => {
+  const { home, env } = mensentaalHome();
+  const own = 'Hi Anna, ik heb de planning bekeken en vrijdag om tien uur past mij het beste.';
+  const quotes = [
+    'Van: Anna\nVerzonden: maandag\nGEHEIME TEKST VAN ANNA',
+    '-----Oorspronkelijk bericht-----\nGEHEIME TEKST VAN ANNA',
+    'Op 23 nov 2026 om 10:00 heeft Anna <a@example.com> het volgende geschreven:\n\nGEHEIME TEKST VAN ANNA',
+    'Op ma 23 nov. 2026 10:00 schreef Anna <\na@example.com>:\n> GEHEIME TEKST VAN ANNA',
+    'On Mon, 23 Nov 2026 at 10:00, Anna wrote:\nGEHEIME TEKST VAN ANNA',
+  ];
+  quotes.forEach((q, i) => write(home, `mails/2026-11-0${i + 1}-m.txt`, `${own.replace('tien', `${i + 10}`)}\n\n${q}\n`));
+  fs.writeFileSync(path.join(home, 'mails/2026-11-09-oud.txt'), Buffer.from(`${own} Met caf\xe9 erbij.`, 'latin1'));
+  write(home, 'mails/zonder-datum.txt', own);
+  const res = runScript('python3', [mt('corpus.py'), 'map', path.join(home, 'mails'), '--register', 'mail'], home, env);
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stderr, /1 bestanden overgeslagen/);
+  const body = fs.readFileSync(path.join(home, 'mt/corpus/mail.jsonl'), 'utf8');
+  assert.equal(body.trim().split('\n').length, 6);
+  assert.doesNotMatch(body, /GEHEIME/);
+});
+
+test('mensentaal corpus: system lines, stale context, keys and ibans stay out; too little text keeps the old bands', () => {
+  const { home, env } = mensentaalHome();
+  write(home, 'a.txt', [
+    '01-03-2026 10:00 - Anna: oude vraag van maart',
+    '23-11-2026 14:05 - Ik: ja dat is prima hoor',
+    '23-11-2026 14:06 - Anna heeft Piet Jansen toegevoegd',
+    `23-11-2026 15:00 - Ik: sleutel is ${['sk', 'ant', 'api03', 'abcdefgh1234'].join('-')}`,
+    '23-11-2026 16:00 - Ik: betaal op NL12 ABCD 0123 4567 89 graag',
+  ].join('\n'));
+  runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'a.txt'), '--naam', 'Ik'], home, env);
+  const rows = fs.readFileSync(path.join(home, 'mt/corpus/app.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  assert.deepEqual(rows.map((r) => [r.tekst, r.vorige]), [['ja dat is prima hoor', '']]);
+  write(home, 'mt/banden.json', '{"mail":1}');
+  assert.notEqual(runScript('python3', [mt('corpus.py'), 'banden'], home, env).status, 0);
+  assert.equal(fs.readFileSync(path.join(home, 'mt/banden.json'), 'utf8'), '{"mail":1}');
+  const wrong = runScript('python3', [mt('voorbeelden.py'), '--register', 'app', '--relatie', 'werk'], home, env);
+  assert.notEqual(wrong.status, 0);
+  assert.match(wrong.stderr, /geen teksten met relatie werk/);
+});
+
+test('mensentaal toets: missing or invalid verdicts fail, lower case counts', () => {
+  const { home, env } = mensentaalHome();
+  write(home, 'k.json', '{"1":"A","2":"B"}');
+  const run = (name, json) => { write(home, name, json); return runScript('python3', [mt('toets.py'), 'score', path.join(home, 'k.json'), path.join(home, name)], home, env); };
+  assert.match(run('goed.json', '[{"nr":1,"mens":"a","reden":"x"},{"nr":"2","mens":"b","reden":"y"}]').stdout, /2\/2 = 100%/);
+  assert.notEqual(run('half.json', '[{"nr":1,"mens":"A"}]').status, 0);
+  assert.notEqual(run('raar.json', '[{"nr":1,"mens":"A"},{"nr":2,"mens":"?"}]').status, 0);
+});
