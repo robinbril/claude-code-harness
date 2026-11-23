@@ -1,0 +1,3 @@
+when: risk:money
+Money: decimals, rounding point and mode, sign, currency. Dates: local day against UTC, inclusive ends, month length, daylight saving. Text: what must never be taken as input (quotes, attachments, names, places, other people's words), what must survive (symbols, digits, accents, case), separators at the edges, empty and huge input.
+Try three inputs the tests do not have. For a parser, normaliser or round trip, name the rule that must hold for every input: same out after a second pass, everything kept or rejected, output only from the user's own words. Breaking that rule is the finding.

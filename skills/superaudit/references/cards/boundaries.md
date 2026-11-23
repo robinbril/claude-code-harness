@@ -1,0 +1,2 @@
+when: suffix:.py,.ts,.tsx,.vue,.js,.go
+**Pairs that must agree.** Limit in client and server; timeout in client and deadline in server (equal is wrong: the client gives up first); page or cap first and filter after (empty list, wrong count); a total over rows that overlap; a closed list of types, states or fields against everything that can be produced; a nullable id used as key; a period shown without its year; a flag or date that cannot be read: does it fail open? Money and rounding per row against the total.

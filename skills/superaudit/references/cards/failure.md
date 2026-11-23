@@ -1,0 +1,3 @@
+when: risk:data,route,egress,erase,upload,llm
+**Stop it halfway.** Between each two effects (commit, send, file, second call, status, lock): the process dies, the call times out, the user retries, a second worker runs. What is lost, done twice, left behind or shown wrong? Cursor before send loses; create then second call duplicates on retry; check before the row lock lets a stale write through; a session held open during mail or a model call; rollback of a migration that leaves files.
+A failure must reach the person who can act, with the right cause. Empty answer, swallowed error, wrong blame: finding.

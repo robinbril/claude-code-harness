@@ -37,3 +37,11 @@ jobs:
         run: node --test --test-concurrency=1 test/*.test.mjs
       - name: repo-hygiene e2e
         run: bash skills/repo-hygiene/tests/e2e.sh
+      # Without a working bwrap the sandbox tests skip, so it has to work here.
+      - name: Sandbox voor superaudit-tests
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq bubblewrap
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          bwrap --unshare-all --ro-bind / / true
+      - name: superaudit-tests
+        run: python3 -B skills/superaudit/scripts/test_superaudit.py

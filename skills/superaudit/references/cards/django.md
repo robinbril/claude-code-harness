@@ -1,0 +1,2 @@
+when: ask
+Exception caught inside `atomic` breaks it. Mail, network, `delay()` after `on_commit`. `get_or_create` needs a unique constraint. `update`, `bulk_*` skip `save`, signals and `auto_now`. `SerializerMethodField` with `.all()` is N+1. `distinct` with ordering on a relation duplicates. `date.today()` is server time. `select_for_update` only in `atomic`. Views without the house mixin; `admin_site.each_context` does not log in.

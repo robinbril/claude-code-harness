@@ -1,0 +1,2 @@
+when: suffix:.ts,.tsx,.vue,.js,.jsx,.svelte,.py,.go,.json,.yml,.yaml
+Field, enum, status code, error shape, event, prop, slot, CSS hook, env var, CLI flag or file format renamed, retyped, removed or given another default: who reads it? `uses OLDNAME`. Types, mocks, schema and docs in step? Additive where others depend on it? Counts and caps match what the user can reach; a removed path leaves no setting behind.
