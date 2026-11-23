@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import subprocess
@@ -16,10 +17,10 @@ NAMED_BOTS = ("[bot]", "coderabbit", "github-actions", "copilot", "greptile")
 
 
 def gh(repo: Path, *args: str) -> dict | None:
-    out = subprocess.run(["gh", *args], cwd=repo, capture_output=True, text=True, check=False)
     try:
+        out = subprocess.run(["gh", *args], cwd=repo, capture_output=True, text=True, check=False)
         return json.loads(out.stdout) if not out.returncode else None
-    except json.JSONDecodeError:
+    except (FileNotFoundError, json.JSONDecodeError):
         return None
 
 
@@ -51,8 +52,12 @@ def collect(repo: Path) -> list[dict]:
     return out
 
 
+def cache_file(run: Path, repo: Path) -> Path:
+    return run.parent / f"reviews-cache-{hashlib.sha1(str(Path(repo).resolve()).encode()).hexdigest()[:8]}.json"
+
+
 def near(run: Path, repo: Path, changed: set[str], keep: int = 12) -> list[str]:
-    cache = run.parent / "reviews-cache.json"
+    cache = cache_file(run, repo)
     if cache.exists() and time.time() - cache.stat().st_mtime < WEEK:
         rows = json.loads(cache.read_text(encoding="utf-8"))
     else:

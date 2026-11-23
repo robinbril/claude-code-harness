@@ -27,7 +27,7 @@ import gate
 import growth
 import lessons
 import prcheck
-from common import DIFF, fail, git, patch_lines, save
+from common import DIFF, LEAK, fail, git, patch_lines, save
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 SMALL, MEDIUM, LARGE = 200, 1500, 6000
@@ -67,10 +67,6 @@ RISK = {
 # One hit is enough where a single line can open a door.
 ONE_HIT = {"auth", "route", "sink", "upload"}
 RISK_RX = {name: re.compile(rx, re.I if name not in ("data", "route") else 0) for name, rx in RISK.items()}
-LEAK = re.compile(
-    r"(AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9_-]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|"
-    r"-----BEGIN [A-Z ]*PRIVATE KEY-----|eyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{20,})"
-)
 UI = {".vue", ".tsx", ".jsx", ".svelte", ".html", ".css", ".scss"}
 E2E_CONFIG = re.compile(r"(^|/)(e2e|playwright)\.config\.[cm]?[jt]s$")
 MAX_LOAD = 30
@@ -287,9 +283,13 @@ def area_name(files: list[dict]) -> str:
 def make_areas(files: list[dict], max_readers: int) -> list[dict]:
     readable = [f for f in files if f["kind"] != "generated"]
     kinds = {"A": ("code", "migration", "release", "manifest", "style", "lock"), "T": ("test",), "D": ("doc",)}
-    members = {g: [f for f in readable if f["kind"] in k] for g, k in kinds.items()}
+    members = {g: m for g, k in kinds.items() if (m := [f for f in readable if f["kind"] in k])}
     if max_readers == 1:
         members = {"A": readable}
+    # Fewer readers than kinds: docs go to the test reader, then both to the code reader.
+    while len(members) > max(1, max_readers):
+        last, into = list(members)[-1], list(members)[-2]
+        members[into] = members[into] + members.pop(last)
     limit = max(MIN_AREA_WEIGHT, sum(map(weight, readable)) / max_readers)
     cap = MAX_AREA_FILES
     parts = {g: pool(split(m, limit, cap), limit, cap) for g, m in members.items() if m}

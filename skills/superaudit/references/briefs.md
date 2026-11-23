@@ -52,7 +52,7 @@ Output as area reader, lens `sprawl`, with `sprawl_class` and `net_lines`. Start
 
 ## UI prover
 
-Output as area reader, id `U-ui`, lens `correctness` or `contract`. Use the repo's own e2e setup (the `e2e` skill and MCP server when present, else Playwright). Demo data only, own session, own port; never production or a stack in use. Code from a fork: do not start it.
+Output as area reader, id `U-ui`, lens `correctness` or `contract`. Use the repo's own e2e setup (the `e2e` skill and MCP server when present, else Playwright). Your own session may use loopback on its own port; no other network. Demo data only, own session, own port; never production or a stack in use. Code from a fork: do not start it.
 
 1. At most six user goals that this change touches. Each once as a user at desktop and 390 px wide, plus one unhappy path (empty, error, slow, back, double click, wrong role).
 2. A finding needs the steps, seen against promised, a screenshot path in `evidence`, and the line that causes it. Same fault on base: `[pre-existing]`.
@@ -70,7 +70,7 @@ You did not write these findings. Assume each is wrong and try to prove that. Ou
 6. Otherwise `confirmed`, with the severity the evidence supports. Improve `fix`: smallest, at the place all callers share; no new layer, flag or fallback. Low and medium: steps 1 to 6 on the pack are usually enough.
 7. Critical and high: run it when a sandbox exists. Smallest reproduction in a directory of your own, `python3 -B SKILL/scripts/sandbox.py RUN --overlay <dir> -- <command>`, then with `--base`. Quote command and last lines. Exit 3: judge from source and say so.
 8. Critical and high: one sibling search with `grep` on the root cause (the invariant, not the line), at most three requests. Real siblings: list path:line in `reason`.
-9. Removals: `grep` the name as a string before you confirm. `P-` findings: resolved here is `rejected` with the lines; still there is `confirmed` with the new place.
+9. Removals: `grep` the name as a string before you confirm. `P-` findings: resolved here is `rejected` with the lines; still there is `confirmed` with the new place in `reason`. Other fields of a finding stay as the reader wrote them.
 
 ## Variant hunter
 

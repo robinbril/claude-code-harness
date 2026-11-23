@@ -25,6 +25,8 @@ from common import ACTIONS, DECISIONS, LENSES, SEVERITIES, fail, git, load, save
 PACKET_SIZE = 28
 NEAR = 10
 TEXT_FIELDS = ("id", "lens", "severity", "path", "title", "scenario", "evidence", "refutation_tried", "fix")
+# What a verifier may set; where a finding points and what it claims stay as they were checked.
+VERDICT_FIELDS = ("decision", "severity", "reason", "fix", "test", "size", "net_lines", "duplicate_of", "options")
 OPEN = ("confirmed", "needs_validation", "product_decision")
 
 
@@ -79,7 +81,7 @@ def coverage(run: Path, plan: dict) -> tuple[list[str], dict]:
 
 
 def key_of(f: dict) -> str:
-    text = "\0".join(str(f.get(k)) for k in (*TEXT_FIELDS, "line"))
+    text = "\0".join(str(f.get(k)) for k in (*TEXT_FIELDS, "line", "net_lines"))
     return hashlib.sha1(text.encode("utf-8", "surrogateescape")).hexdigest()[:10]
 
 
@@ -88,7 +90,8 @@ def lines_at(repo: str, head: str, path: str) -> int:
     """Lines of a file at the pinned head, 0 when it is not a file there. From git, so it also works after clean."""
     if git(repo, "cat-file", "-t", f"{head}:{path}", check=False).strip() != "blob":
         return 0
-    return git(repo, "cat-file", "blob", f"{head}:{path}").count("\n") + 1
+    text = git(repo, "cat-file", "blob", f"{head}:{path}")
+    return text.count("\n") + (not text.endswith("\n"))
 
 
 def check(f: dict, plan: dict) -> list[str]:
@@ -147,27 +150,35 @@ def given(run: Path, found: list[dict]) -> dict[str, list[dict]]:
     return out
 
 
+def invalid(v: dict) -> str:
+    if v.get("decision") not in DECISIONS or not str(v.get("reason") or "").strip():
+        return f"decision {v.get('decision')!r} or reason missing"
+    if v.get("duplicate_of") and v["decision"] != "duplicate_of":
+        return f"names a duplicate but decides {v['decision']}; a duplicate counts once"
+    if v["decision"] in OPEN and v.get("severity") not in SEVERITIES:
+        return f"{v['decision']} needs a severity"
+    if v["decision"] == "product_decision":
+        options = v.get("options")
+        if not isinstance(options, list) or len([o for o in options if isinstance(o, str) and o.strip()]) < 2:
+            return "product_decision needs a list of at least two options"
+    if v.get("net_lines") is not None and type(v["net_lines"]) is not int:
+        return "net_lines must be a whole number"
+    return ""
+
+
 def verdicts(run: Path, plan: dict) -> tuple[list[str], list[dict]]:
     problems, found = findings(run, plan)
     if problems:
         return problems, []
     got: dict[str, dict] = {}
     for i, votes in given(run, found).items():
-        v = votes[0]
-        if len(votes) > 1:
-            problems.append(f"{i} has {len(votes)} verdicts")
-        elif v.get("decision") not in DECISIONS or not str(v.get("reason") or "").strip():
-            problems.append(f"{i}: decision {v.get('decision')!r} or reason missing")
-        elif v.get("duplicate_of") and v["decision"] != "duplicate_of":
-            problems.append(f"{i}: names a duplicate but decides {v['decision']}; a duplicate counts once")
-        elif v["decision"] in OPEN and v.get("severity") not in SEVERITIES:
-            problems.append(f"{i}: {v['decision']} needs a severity")
-        elif v["decision"] == "product_decision" and len(v.get("options") or []) < 2:
-            problems.append(f"{i}: product_decision needs at least two options")
-        elif v.get("net_lines") is not None and type(v["net_lines"]) is not int:
-            problems.append(f"{i}: net_lines must be a whole number")
+        good = [v for v in votes if not invalid(v)]
+        if len(good) > 1:
+            problems.append(f"{i} has {len(good)} verdicts")
+        elif good:
+            got[i] = good[0]
         else:
-            got[i] = v
+            problems.append(f"{i}: {invalid(votes[-1])}; run packets for a new verdict")
     problems += [f"{f['id']} has no valid verdict" for f in found if f["id"] not in got]
     for i, v in got.items():
         if v["decision"] != "duplicate_of":
@@ -180,7 +191,7 @@ def verdicts(run: Path, plan: dict) -> tuple[list[str], list[dict]]:
             problems.append(f"{i}: duplicate_of {v.get('duplicate_of')!r} must end at a finding that stands")
     merged = []
     for f in found:
-        v = {k: x for k, x in got.get(f["id"], {}).items() if x not in (None, "") and k != "key"}
+        v = {k: x for k, x in got.get(f["id"], {}).items() if x not in (None, "") and k in VERDICT_FIELDS}
         if v.get("severity") not in SEVERITIES:
             v.pop("severity", None)
         merged.append({**f, "reader_severity": f["severity"], **v})
@@ -244,7 +255,7 @@ def write_packets(run: Path, found: list[dict]) -> list[int]:
         f["maybe_same_as"] = sorted(near - {f["id"]})
         for other in f["maybe_same_as"]:
             parent[root(other)] = root(f["id"])
-    decided = given(run, found)
+    decided = {i for i, votes in given(run, found).items() if not all(map(invalid, votes))}
     clusters = defaultdict(list)
     for f in sorted(found, key=lambda f: (f["path"], f.get("line") or 0)):
         if f["id"] not in decided:

@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 import cards
-from common import DIFF, fail, git, load, save
+from common import DIFF, fail, git, load, redact, save
 
 SKILL = Path(__file__).resolve().parent.parent
 # Below what a shell tool returns in one piece; a longer answer would be read twice.
@@ -40,6 +40,8 @@ class Agent:
     def __init__(self, run: Path, ident: str) -> None:
         self.run, self.id, self.plan = run, ident, load(run / "plan.json")
         self.repo, self.head, self.base = self.plan["repo"], self.plan["head"], self.plan["merge_base"]
+        # Characters of code that still fit in this answer; a pack is paged and has no limit.
+        self.room: int | None = None
         self.file = run / "ctx" / f"{ident}.json"
         self.state = json.loads(self.file.read_text()) if self.file.exists() else {"used": 0, "given": {}, "log": []}
         self.packet = load(run / "packets" / f"{ident}.json")["findings"] if re.fullmatch(r"V\d+", ident) else []
@@ -72,11 +74,26 @@ class Agent:
         fresh = self.new_lines(path, a, b)
         if not fresh:
             return f"{path}:{a}-{b} is already above."
-        self.state["given"].setdefault(path, []).extend(fresh)
-        parts = ["\n".join(f"{n:5} {text[n - 1]}" for n in range(x, y + 1)) for x, y in fresh]
-        return f"== {path}:{a}-{b}\n" + "\n   ... (already above)\n".join(parts)
+        parts, cut = [], ""
+        for x, y in fresh:
+            rows = [f"{n:5} {text[n - 1]}" for n in range(x, y + 1)]
+            sent = len(rows)
+            if self.room is not None:
+                rows = [r if len(r) <= 3000 else r[:3000] + " [long line]" for r in rows]
+                sent, size = 0, 0
+                while sent < len(rows) and size + len(rows[sent]) < self.room:
+                    size, sent = size + len(rows[sent]) + 1, sent + 1
+                self.room -= size
+            if sent:
+                self.state["given"].setdefault(path, []).append((x, x + sent - 1))
+                parts.append("\n".join(rows[:sent]))
+            if sent < len(rows):
+                cut = f"\n[cut at line {x + sent}: ask for {x + sent}-{b}]"
+                break
+        return f"== {path}:{a}-{b}\n" + "\n   ... (already above)\n".join(parts) + cut
 
     def finish(self, command: str, text: str, cap: int) -> str:
+        text = redact(text)
         if len(text) > cap:
             text = text[:cap].rsplit("\n", 1)[0] + "\n[cut: ask for a narrower part]"
         self.state["used"] += len(text)
@@ -130,21 +147,20 @@ def numbered_diff(a: Agent, f: dict) -> str:
                   *[f":(literal){p}" for p in paths]).split("\n")
         if len(raw) <= 380:
             break
-    out, n, begin = [f"== {f['path']} {f['status']} +{f['added']} -{f['deleted']}"], 0, None
+    out, n, begin, sent = [f"== {f['path']} {f['status']} +{f['added']} -{f['deleted']}"], 0, None, []
     for line in raw:
         m = re.match(r"@@ -\d+(?:,\d+)? \+(\d+)", line)
         if m:
-            if begin is not None:
-                a.state["given"].setdefault(f["path"], []).append((begin, n - 1))
             n = begin = int(m.group(1))
             out.append("  ---")
         elif begin is not None and line[:1] == "-":
             out.append(f"      -{line[1:]}")
         elif begin is not None and line[:1] in ("+", " "):
             out.append(f"{n:5} {line}")
+            sent += [n] if len(out) <= 420 else []
             n += 1
-    if begin is not None:
-        a.state["given"].setdefault(f["path"], []).append((begin, n - 1))
+    # Only what is really in the pack; the rest can still be asked for.
+    a.state["given"].setdefault(f["path"], []).extend((x, x) for x in sent)
     if len(out) > 420:
         out = out[:420] + [f"[{len(out) - 420} more lines: show {f['path']}:A-B]"]
     return "\n".join(out)
@@ -157,8 +173,8 @@ def hits(a: Agent, args: list[str], keep: int) -> list[str]:
 
 
 def uses(a: Agent, name: str, tests: bool, keep: int = 25) -> list[str]:
-    rows = hits(a, ["-wF", "-e", name, a.head], 400)
-    return [r for r in rows if bool(TESTS.search(r.split(":", 1)[0])) == tests][:keep]
+    rows = [r for r in hits(a, ["-wF", "-e", name, a.head], 10**6) if bool(TESTS.search(r.split(":", 1)[0])) == tests]
+    return rows[:keep] + ([f"[{len(rows) - keep} more]"] if len(rows) > keep else [])
 
 
 def section(name: str) -> str:
@@ -259,7 +275,7 @@ def main() -> int:
         cache = a.run / "ctx" / f"{a.id}.pack.txt"
         if not cache.exists():
             cache.parent.mkdir(exist_ok=True)
-            cache.write_text(pack(a), encoding="utf-8", errors="surrogateescape")
+            cache.write_text(redact(pack(a)), encoding="utf-8", errors="surrogateescape")
         text, pages = cache.read_text(encoding="utf-8", errors="surrogateescape"), []
         while text:
             cut = len(text) if len(text) <= PAGE else text.rfind("\n", 0, PAGE) + 1 or PAGE
@@ -278,6 +294,7 @@ def main() -> int:
     if a.state["used"] > a.budget and not why:
         print('Budget used. Decide now, or repeat with --why "which finding the answer would change".')
         return 1
+    a.room = ANSWER - 700
     sys.stdout.buffer.write((a.finish(f"{what} {' '.join(rest)} {why}", answer(a, what, rest), ANSWER) + "\n").encode("utf-8", "replace"))
     return 0
 

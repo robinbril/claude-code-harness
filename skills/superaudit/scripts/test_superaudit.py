@@ -54,7 +54,7 @@ class Case(unittest.TestCase):
         code, out = self.script("plan.py", *(args or ("main...work",)), "--run", str(self.run_dir))
         self.assertEqual(code, 0, out)
         self.out = out
-        return json.loads((self.run_dir / "plan.json").read_text())
+        return json.loads((self.run_dir / "plan.json").read_text(encoding="utf-8"))
 
     def put(self, rel: str, data: object) -> None:
         path = self.run_dir / rel
@@ -81,7 +81,8 @@ class Case(unittest.TestCase):
         return self.script("gate.py", step, str(self.run_dir))
 
     def verdict(self) -> str:
-        self.script("render.py", str(self.run_dir))
+        code, out = self.script("render.py", str(self.run_dir))
+        self.assertEqual(code, 0, out)
         return json.loads((self.run_dir / "verdict.json").read_text())["verdict"]
 
     def change(self) -> None:
@@ -185,6 +186,11 @@ class Plan(Case):
             self.write(f"pkg{i}/m.py", "".join(f"v{j} = {j}\n" for j in range(400)))
         self.commit("many")
         self.assertLessEqual(len(self.plan("main...work", "--max-readers", "5")["areas"]), 5)
+        self.write("tests/test_x.py", "x = 1\n")
+        self.write("docs/x.md", "x\n")
+        self.commit("kinds")
+        self.run_dir = self.home / "run2"
+        self.assertLessEqual(len(self.plan("main...work", "--max-readers", "2")["areas"]), 2)
 
 
     def test_small_change_has_one_reader_and_ui_is_used_only_when_possible(self) -> None:
@@ -271,7 +277,7 @@ class Reviewers(Case):
         self.assertEqual(len(reviews.points(body)), 2)
         runs = self.home / "runs"
         runs.mkdir()
-        (runs / "reviews-cache.json").write_text(json.dumps([{"pr": 7, "point": "a.py overwrites", "files": ["app/a.py"]}, {"pr": 8, "point": "other", "files": ["x/y.py"]}]))
+        reviews.cache_file(runs / "one", self.repo).write_text(json.dumps([{"pr": 7, "point": "a.py overwrites", "files": ["app/a.py"]}, {"pr": 8, "point": "other", "files": ["x/y.py"]}]))
         self.assertEqual(reviews.near(runs / "one", self.repo, {"app/a.py"}), ["- PR 7: a.py overwrites"])
 
     def test_revertcheck_names_the_hunk_that_no_test_notices(self) -> None:
@@ -328,6 +334,36 @@ class Router(Case):
         self.assertTrue("app/user.py" in uses and "tests/test_big.py" not in uses and "tests/test_big.py" in tests)
         self.assertIn("y = x", self.ctx("A1", "base", "app/big.py:801-803")[1])
 
+    def test_a_cut_answer_leaves_the_rest_to_ask_for(self) -> None:
+        self.write("app/wide.py", "".join(f"v{i} = '{'x' * 90}'\n" for i in range(200)))
+        self.commit("wide")
+        self.run_dir = self.home / "run2"
+        self.plan("main...edit")
+        out = self.ctx("T9", "show", "app/wide.py:1-200")[1]
+        self.assertIn("cut at line", out)
+        first = int(out.split("cut at line ")[1].split(":")[0])
+        self.assertIn(f"v{first - 1} =", self.ctx("T9", "show", f"app/wide.py:{first}-200")[1])
+
+    def test_keys_never_reach_an_agent(self) -> None:
+        body = "\n".join("Ab1/" * 16 for _ in range(3))
+        token = "gh" + "p_" + "a1" * 20
+        kind = "RSA " + "PRIVATE"
+        self.write("app/k.py", f"t = '{token}'\nk = '''-----BEGIN {kind} KEY-----\n{body}\n-----END {kind} KEY-----'''\n")
+        self.commit("k")
+        self.run_dir = self.home / "run2"
+        self.plan("main...edit")
+        seen = self.ctx("A1", "start")[1] + self.ctx("B1", "show", "app/k.py:1-6")[1] + self.ctx("B1", "grep", "ghp_")[1] + self.ctx("B1", "show", "app/k.py:4-4")[1]
+        self.assertIn("[key]", seen)
+        self.assertFalse(token in seen or "Ab1/Ab1/" in seen)
+        self.assertIn("SECRETS?", self.out)
+
+    def test_tests_are_found_behind_many_uses(self) -> None:
+        self.write("app/many.py", "target\n" * 500)
+        self.run_dir = self.home / "run2"
+        self.commit("many")
+        self.plan("main...edit")
+        self.assertIn("tests/test_big.py", self.ctx("A1", "tests", "target")[1])
+
     def test_budget_asks_why_and_then_stops(self) -> None:
         self.ctx("A1", "start")
         path = self.run_dir / "ctx/A1.json"
@@ -371,13 +407,32 @@ class Sandbox(Case):
         self.assertIn("patched", self.box("--overlay", str(self.home / "over"), "--", "/bin/cat", "app/a.py")[1])
 
     def test_no_network_no_secrets_no_outside_writes(self) -> None:
-        secret = self.repo / "secret.txt"
-        for command in (f"echo x > {self.repo}/evil", "echo x > /private/tmp/superaudit-evil", f"cat {Path.home()}/.zshrc",
+        secret = self.home / "secret.txt"
+        secret.write_text("readable outside\n")
+        for command in (f"cat {secret}", f"echo x > {self.repo}/evil", "echo x > /private/tmp/superaudit-evil", f"cat {Path.home()}/.zshrc",
                         f"cat {Path.home()}/.ssh/*", "exec 3<>/dev/tcp/1.1.1.1/53", "/usr/bin/security list-keychains -d user && /usr/bin/security dump-keychain"):
             with self.subTest(command):
                 self.assertNotEqual(self.box("--", "/bin/bash", "-c", command)[0], 0)
-        self.assertFalse((self.repo / "evil").exists() or secret.exists() or Path("/private/tmp/superaudit-evil").exists())
+        self.assertFalse((self.repo / "evil").exists() or Path("/private/tmp/superaudit-evil").exists())
         self.assertNotIn("GIT_AUTHOR_NAME", self.box("--", "/usr/bin/env")[1])
+
+    def test_signals_stay_inside(self) -> None:
+        other = subprocess.Popen(["/bin/sleep", "60"])
+        self.addCleanup(other.wait)
+        self.addCleanup(other.kill)
+        self.assertNotEqual(self.box("--", "/bin/bash", "-c", f"kill -9 {other.pid}")[0], 0)
+        self.assertIsNone(other.poll())
+        self.assertEqual(self.box("--", "/bin/bash", "-c", "/bin/sleep 30 & kill -9 $!")[0], 0)
+
+    def test_copy_is_the_committed_tree(self) -> None:
+        self.write(".gitattributes", "tests export-ignore\napp/*.py export-subst\n")
+        self.write("tests/test_a.py", "x = 1\n")
+        self.write("app/sub.py", "v = '$Format:%H$'\n")
+        self.commit("attributes")
+        self.run_dir = self.home / "run2"
+        self.plan()
+        self.assertEqual(self.box("--", "/bin/cat", "tests/test_a.py")[0], 0)
+        self.assertIn("$Format:%H$", self.box("--", "/bin/cat", "app/sub.py")[1])
 
     def test_timeout_and_exit_code(self) -> None:
         self.assertEqual(self.box("--seconds", "2", "--", "/bin/sleep", "30")[0], 124)
@@ -403,7 +458,7 @@ class Gates(Case):
     def test_bad_citations_are_refused(self) -> None:
         self.change()
         plan = self.plan()
-        for over in ({"line": "1"}, {"line": 999}, {"line": None}, {"path": "../../../etc/hosts"}, {"path": "nope.py"},
+        for over in ({"line": "1"}, {"line": 3}, {"line": 999}, {"line": None}, {"path": "../../../etc/hosts"}, {"path": "nope.py"},
                      {"net_lines": "-12"}, {"lens": "sprawl"}, {"scenario": ""}, {"carried": True, "line": 999}):
             with self.subTest(over):
                 self.read_all(plan, [self.finding(**over)])
@@ -443,13 +498,39 @@ class Gates(Case):
                 f = json.loads(p.read_text())["findings"][0]
                 self.put(f"verdicts/{p.name}", {"verdicts": [{"id": f["id"], "key": f["key"], "decision": "confirmed", "severity": "critical", "reason": "r"}]})
 
+    def test_an_invalid_verdict_goes_to_a_new_verifier(self) -> None:
+        self.change()
+        self.read_all(self.plan(), [self.finding()])
+        self.judge(reason=" ")
+        self.assertIn("run packets", self.gate("verdicts")[1])
+        self.judge_only_new()
+        self.assertEqual(self.gate("verdicts")[0], 0)
+        self.assertTrue((self.run_dir / "verdicts/V2.json").exists())
+
+    def test_a_verdict_cannot_move_the_citation(self) -> None:
+        self.change()
+        self.read_all(self.plan(), [self.finding()])
+        self.judge(path="missing.py", title="other")
+        self.assertEqual(self.gate("verdicts")[0], 0)
+        f = json.loads((self.run_dir / "verified.json").read_text())
+        f = (f["findings"] if isinstance(f, dict) else f)[0]
+        self.assertEqual((f["path"], f["title"]), ("app/a.py", "t"))
+
+    def test_a_broken_render_leaves_no_verdict(self) -> None:
+        self.change()
+        self.read_all(self.plan())
+        self.assertEqual(self.verdict(), "MERGE")
+        (self.run_dir / "findings/A1.json").write_text("{")
+        self.assertNotEqual(self.script("render.py", str(self.run_dir))[0], 0)
+        self.assertFalse((self.run_dir / "verdict.json").exists())
+
     def test_open_critical_of_any_kind_blocks(self) -> None:
         self.change()
         plan = self.plan()
         self.read_all(plan, [self.finding()])
         for over, want in (({}, "DO NOT MERGE"), ({"severity": "high"}, "MERGE AFTER FIXES"), ({"severity": "low"}, "MERGE"),
                            ({"decision": "needs_validation"}, "DO NOT MERGE"), ({"decision": "needs_validation", "severity": "none"}, "INCOMPLETE"),
-                           ({"decision": "product_decision", "options": ["a", "b"]}, "DO NOT MERGE"), ({"decision": "product_decision"}, "INCOMPLETE"),
+                           ({"decision": "product_decision", "options": ["a", "b"]}, "DO NOT MERGE"), ({"decision": "product_decision"}, "INCOMPLETE"), ({"decision": "product_decision", "options": "ab"}, "INCOMPLETE"),
                            ({"decision": "duplicate_of", "duplicate_of": "A1-01"}, "INCOMPLETE"), ({"duplicate_of": "A1-09"}, "INCOMPLETE")):
             with self.subTest(over):
                 for p in (self.run_dir / "verdicts").glob("*.json"):

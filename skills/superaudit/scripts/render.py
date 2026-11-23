@@ -82,6 +82,8 @@ def main() -> int:
     if len(sys.argv) != 2:
         fail(__doc__)
     run = Path(sys.argv[1]).resolve()
+    # A render that fails halfway leaves no verdict of an earlier one behind.
+    (run / "verdict.json").unlink(missing_ok=True)
     plan, grown = load(run / "plan.json"), load(run / "growth.json")
     info = optional(run / "run.json", {})
     # Recomputed here: a result file from an earlier moment never decides the verdict.

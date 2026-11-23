@@ -24,10 +24,10 @@ SKIP_CODE = re.compile(r"(@pytest\.mark\.(?:skip|xfail)|pytest\.skip\(|\.(?:skip
 
 
 def gh(repo: Path, *args: str) -> object:
-    out = subprocess.run(["gh", *args], cwd=repo, capture_output=True, text=True, check=False)
     try:
+        out = subprocess.run(["gh", *args], cwd=repo, capture_output=True, text=True, check=False)
         return json.loads(out.stdout) if not out.returncode else None
-    except json.JSONDecodeError:
+    except (FileNotFoundError, json.JSONDecodeError):
         return None
 
 

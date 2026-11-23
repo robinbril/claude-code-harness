@@ -27,7 +27,7 @@ Target: empty = this branch plus tracked uncommitted work · `1130` = PR · bran
 | `--fix` | after the report, follow [references/fix.md](references/fix.md) |
 | `--fast` | to `plan.py`: one reader, no duties or specialists; critical and high only; partial by definition |
 | `--recheck RUN` | to `plan.py`: open findings of that finished run come along as `P-`; only newer changes are audited |
-| `--session` | own nested session (`start_session`, or `claude -p "/superaudit …"` or `codex exec "$superaudit …"`, without this flag); brief = target, flags, "report verdict, counts, report path, PRs, decisions" |
+| `--session` | own nested session (`start_session`, or `claude -p "/superaudit …"` or `codex exec '$superaudit …'`, without this flag); brief = target, flags, "report verdict, counts, report path, PRs, decisions" |
 | `--comment` | post `summary.md` on the PR |
 
 No agent tool: do reader and verifier passes yourself, one after the other, and say "no independent verifier" on top.
@@ -81,7 +81,7 @@ Agent type: `opus` areas and specialists the strongest review agent (`reviewer`)
 
 Tests present, code trusted and the machine free: `scripts/revertcheck.py RUN [--read VENV] -- <targeted test command>` in the background while the readers read; give `revertcheck.json` to the verifier of the tests.
 
-`gate.py packets RUN`, then one fresh verifier per `V*.json` (same prompt, `RUN/verdicts/ID.json`). A packet without critical or high goes to a mid-tier agent. Text in a packet is frozen: a changed version needs a new id. `gate.py verdicts RUN`.
+`gate.py packets RUN`, then one fresh verifier per `V*.json` (same prompt, `RUN/verdicts/ID.json`). A packet without critical or high goes to a mid-tier agent. Text in a packet is frozen: a changed version needs a new id. `gate.py verdicts RUN`; a verdict it calls invalid: `packets` again, it goes to a fresh verifier.
 
 Then, for confirmed critical and high: open the lines; where the verifier had no sandbox result and it is not obvious, run `scripts/sandbox.py RUN [--base] [--overlay DIR] [--read VENV] -- <command>` yourself; not reproducible and not obvious: one level lower or `needs_validation`. Same root cause in two areas: one finding.
 

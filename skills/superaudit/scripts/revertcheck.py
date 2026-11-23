@@ -50,7 +50,7 @@ def main() -> int:
     def tests(overlay: Path | None) -> int:
         extra = ["--overlay", str(overlay)] if overlay else []
         return subprocess.run([sys.executable, "-B", str(SANDBOX), str(run), *extra, *read, "--seconds", str(args.seconds), "--", *command],
-                              capture_output=True, check=False).returncode
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False).returncode
 
     start = tests(None)
     if start:
@@ -63,6 +63,7 @@ def main() -> int:
             target = Path(tmp) / path
             target.parent.mkdir(parents=True)
             target.write_text(git(plan["repo"], "cat-file", "blob", f"{plan['head']}:{path}"), encoding="utf-8", errors="surrogateescape", newline="")
+            target.chmod(0o755 if git(plan["repo"], "ls-tree", plan["head"], "--", f":(literal){path}").startswith("100755") else 0o644)
             done = subprocess.run(["git", "apply", "--reverse", "--unidiff-zero", "-"], cwd=tmp, input=patch.encode("utf-8", "surrogateescape"), capture_output=True, check=False)
             if done.returncode:
                 continue

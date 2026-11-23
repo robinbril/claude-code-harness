@@ -4,9 +4,9 @@ Order: before, fixers, after, ship. Rules: a fix adds no layer, flag, fallback o
 
 ## Orchestrator: before the fixers start
 
-0. Run the tests around the touched code on the untouched head, isolated: that red was already there. A merged PR branches from, and opens PRs into, the branch it was merged into; a path audit uses the default branch; a fork or someone else's branch gets a patch, no push.
+0. Run the tests around the touched code on the untouched head, isolated: that red was already there. Fix target, used below as start and as PR base: the audited head branch; for a merged PR the branch it was merged into; for a path audit the default branch. A fork or someone else's branch gets a patch, no push.
 
-1. Fetch the audited head branch and branch from its fresh tip. Not from the base: the audited code is not there. Check each confirmed finding on that tip; already solved: `dropped`, with the commit as proof.
+1. Fetch the fix target and branch from its fresh tip. Not from the base of an open PR: the audited code is not there. Check each confirmed finding on that tip; already solved: `dropped`, with the commit as proof.
 2. Make a fix plan: theme, branch, worktree, finding ids, files owned, test commands, reserved numbers (migrations of open PRs). No file has two owners at the same time. A root cause seen in several areas goes to the branch that owns the shared place.
 3. Isolated test environment per fixer: own database name, port and cache; never the shared dev stack. Install dependencies once, from the lock file.
 4. At most 6 fixers at once. A refactor starts after the fixes that touch its files are committed.
@@ -51,7 +51,7 @@ Output `RUN/fixes/<branch>.json`:
 1. Read each diff. Reject: unrelated changes, weakened tests, new indirection, swallowed errors, a fix in one caller of many, text that explains history.
 2. Rerun at least every critical and high red test yourself, on the untouched head (red) and on the branch (green).
 3. Merge all branches into a throwaway branch in merge order; full checks there. Conflicts: solve in the later branch. New red against the baseline goes back to its fixer; red that was there before is named as such.
-4. Post-fix sweep: run `plan.py` on the throwaway branch against the head branch tip, with its own `--run`, and give that diff one fresh area reader. Fixes create bugs too. Confirmed ones get one more round.
+4. Post-fix sweep: run `plan.py` on the throwaway branch against the tip of the fix target, with its own `--run`, and give that diff one fresh area reader. Fixes create bugs too. Confirmed ones get one more round.
 5. Before the PR: `plan.py` on the branch shows the facts reviewers ask about (merge, other PRs, claims, skipped checks); solve them. Every sentence in the body is true on this head: counts from the last run, consumers named one by one, each changed behaviour listed, nothing skipped without a reason. Optional `revertcheck.py` on the touched tests.
 6. PR body: what and why · Behaviour delta · findings closed, with ids · proof · design note for a large one · net lines · merge order and what it depends on · open decisions.
-7. Push, open the PRs into the audited head branch by the repo's PR and attribution rules, run the repo's review skill on each (at most two rounds), `render.py RUN`, `gate.py clean RUN`. Remove only your own worktrees and containers.
+7. Push, open the PRs into the fix target by the repo's PR and attribution rules, run the repo's review skill on each (at most two rounds), `render.py RUN`, `gate.py clean RUN`. Remove only your own worktrees and containers.

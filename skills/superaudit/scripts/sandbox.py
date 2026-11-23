@@ -7,6 +7,7 @@
 --overlay   copy these files over it first (a reproduction or a red test)
 --read      extra read-only path under the home folder, such as a virtualenv
 Exit code of the command; 124 on timeout; 3 when this machine offers no sandbox.
+macOS has no process namespace: a child that starts its own session outlives the command, still boxed in.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ import tarfile
 import tempfile
 from pathlib import Path
 
-from common import fail, load
+from common import fail, git, load
 
 # Keychain, login services and starting other apps stay out of reach.
 SERVICES = ("com.apple.SecurityServer", "com.apple.securityd.xpc", "com.apple.coreservices.launchservicesd",
@@ -35,15 +36,14 @@ def quoted(path: Path | str) -> str:
 
 def profile(work: Path, read: list[Path]) -> str:
     """Seatbelt profile; the last matching rule wins."""
-    home = Path.home().resolve()
+    closed = "".join(f"(subpath {quoted(p)})" for p in (Path.home().resolve(), "/Users", "/Volumes", "/private/tmp", "/private/var/tmp", "/private/var/folders"))
     allowed = "".join(f"(allow file-read* (subpath {quoted(p)}))" for p in read)
     services = "".join(f"(global-name {quoted(s)})" for s in SERVICES)
     return (
-        "(version 1)(allow default)(deny network*)(deny appleevent-send)"
+        "(version 1)(allow default)(deny network*)(deny appleevent-send)(deny signal)(allow signal (target same-sandbox))"
         f"(deny mach-lookup {services})(deny file-write*)"
-        f"(deny file-read* (subpath {quoted(home)}))(allow file-read-metadata (subpath {quoted(home)}))"
-        # Other sessions and other people's temporary files are not ours to read.
-        '(deny file-read* (subpath "/private/tmp"))'
+        # Homes, mounted disks and the temporary files of other programs are not ours to read.
+        f"(deny file-read* {closed})(allow file-read-metadata {closed})"
         f"{allowed}(allow file-read* file-write* (subpath {quoted(work)}))"
         '(allow file-write* (literal "/dev/null") (literal "/dev/zero") (literal "/dev/stdout") (literal "/dev/stderr"))'
     )
@@ -58,6 +58,24 @@ def wrap(work: Path, read: list[Path], command: list[str]) -> list[str] | None:
         return ["bwrap", "--unshare-all", "--die-with-parent", *ro, "--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
                 "--bind", str(work), str(work), "--chdir", str(work / "code"), *command]
     return None
+
+
+def snapshot(repo: str, commit: str, into: Path) -> None:
+    """The tree as committed. An empty repository on the same objects keeps export-ignore and export-subst
+    of the audited code, and the filters of this machine, out of it."""
+    shadow = into.parent / "shadow.git"
+    subprocess.run(["git", "init", "-q", "--bare", "--template=", f"--object-format={git(repo, 'rev-parse', '--show-object-format').strip()}", str(shadow)], check=True)
+    objects = Path(repo, git(repo, "rev-parse", "--git-path", "objects").strip()).resolve()
+    (shadow / "objects/info").mkdir(parents=True, exist_ok=True)
+    (shadow / "objects/info/alternates").write_text(f"{objects}\n")
+    (shadow / "info").mkdir(exist_ok=True)
+    (shadow / "info/attributes").write_text("* -export-ignore -export-subst -filter\n")
+    packed = subprocess.run(["git", "--git-dir", str(shadow), "archive", "--format=tar", commit], capture_output=True, check=False)
+    if packed.returncode:
+        fail(packed.stderr.decode(errors="replace")[:300])
+    with tarfile.open(fileobj=io.BytesIO(packed.stdout)) as tar:
+        tar.extractall(into, filter="data")
+    shutil.rmtree(shadow)
 
 
 def limits() -> None:
@@ -88,12 +106,7 @@ def main() -> int:
 
     work = Path(tempfile.mkdtemp(prefix="superaudit-box-")).resolve()
     try:
-        commit = pin["merge_base"] if args.base else pin["head"]
-        packed = subprocess.run(["git", "-C", pin["repo"], "archive", "--format=tar", commit], capture_output=True, check=False)
-        if packed.returncode:
-            fail(packed.stderr.decode(errors="replace")[:300])
-        with tarfile.open(fileobj=io.BytesIO(packed.stdout)) as tar:
-            tar.extractall(work / "code", filter="data")
+        snapshot(pin["repo"], pin["merge_base"] if args.base else pin["head"], work / "code")
         if args.overlay:
             shutil.copytree(args.overlay, work / "code", dirs_exist_ok=True, symlinks=True)
         for name in ("home", "tmp"):
