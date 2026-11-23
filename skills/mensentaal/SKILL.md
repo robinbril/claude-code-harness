@@ -41,7 +41,7 @@ python3 "$SKILL/scripts/corpus.py" schoon
 python3 "$SKILL/scripts/corpus.py" banden
 ```
 
-`schoon` haalt teksten weg die een assistent opstelde: zeven woorden op rij die ook in de eigen transcripts van Claude Code of Codex staan, over meer dan 30% van de tekst. Sla dat nooit over. Wie met een assistent mailt, heeft een verzonden map vol machinetekst.
+`schoon` haalt teksten weg die een assistent opstelde: zeven woorden op rij die ook in de eigen transcripts van Claude Code of Codex staan, over minstens 30% van de tekst. Een eigen tekst die een assistent later letterlijk citeerde valt ook weg; tekst uit een webchat vindt het niet. Sla het nooit over. Wie met een assistent mailt, heeft een verzonden map vol machinetekst.
 
 ```bash
 python3 "$SKILL/scripts/voorbeelden.py" --register app --relatie werk --soort vraag --over "kern van het bericht" --woorden 25 -n 5

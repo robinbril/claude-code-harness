@@ -14,6 +14,7 @@ import json
 import os
 import re
 import statistics as st
+import sys
 from datetime import datetime
 
 from kenmerken import meet, woorden
@@ -72,13 +73,15 @@ def voeg_toe(register, nieuw):
 
 def whatsapp(bestanden, naam, relatie):
     nieuw = []
-    for nr, bestand in enumerate(bestanden):
+    for bestand in bestanden:
         berichten = []
         for regel in open(bestand, encoding="utf-8"):
             m = WA_REGEL.match(regel.rstrip("\n"))
             if m:
                 d, u, wie, tekst = m.groups()
                 dag, maand, jaar = re.split(r"[-/.]", d)
+                if int(maand) > 12:
+                    sys.exit(f"{bestand}: datum {d} is geen dag-maand-jaar")
                 berichten.append([datetime(int(jaar) + (2000 if len(jaar) == 2 else 0), int(maand), int(dag), *map(int, u.split(":"))), wie.strip(), tekst])
             elif berichten:
                 berichten[-1][2] += "\n" + regel.rstrip("\n")
@@ -87,7 +90,7 @@ def whatsapp(bestanden, naam, relatie):
         def sluit():
             t = "\n".join(beurt).strip()
             if len(woorden(t)) >= 2 and not GEVOELIG.search(t):
-                nieuw.append(record("app", relatie, f"chat{nr}", laatste.strftime("%Y-%m-%d"), t, ander, len(beurt)))
+                nieuw.append(record("app", relatie, os.path.basename(bestand), laatste.strftime("%Y-%m-%d"), t, ander, len(beurt)))
 
         for tijd, wie, tekst in berichten:
             eigen = wie == naam
@@ -99,9 +102,11 @@ def whatsapp(bestanden, naam, relatie):
                     beurt.append(tekst)
                     laatste = tijd
             else:
-                ander = tekst
+                ander = "" if GEVOELIG.search(tekst) else tekst
         if beurt:
             sluit()
+    if not nieuw:
+        sys.exit(f"geen berichten van '{naam}' herkend; controleer de naam en het exportformaat (dag-maand-jaar, 24 uur)")
     voeg_toe("app", nieuw)
 
 
@@ -111,6 +116,8 @@ def map_(dir_, register, relatie):
         t = re.split(r"\n(?:>|Op .{5,60} schreef|On .{5,60} wrote|-{3,}Orig)", open(f, encoding="utf-8").read())[0].strip()
         if len(woorden(t)) >= 12 and not GEVOELIG.search(t):
             nieuw.append(record(register, relatie, os.path.basename(f), datetime.fromtimestamp(os.path.getmtime(f)).strftime("%Y-%m-%d"), t))
+    if not nieuw:
+        sys.exit(f"geen .txt met 12 woorden of meer in {dir_}")
     voeg_toe(register, nieuw)
 
 
@@ -153,6 +160,8 @@ def schoon():
                     bron = b if isinstance(b, str) else (b.get("text") or b.get("input")) if isinstance(b, dict) else None
                     for s in strings(bron or ""):
                         gevonden.update(x for x in reeksen(s) if x in gezocht)
+    if not bestanden:
+        sys.exit("geen transcripts van Claude Code of Codex gevonden; er is niets gecontroleerd")
     for reg in registers:
         rs = lees(reg)
         houd = [r for r in rs if not (x := alles[(reg, r["id"])]) or sum(s in gevonden for s in x) / len(x) < MAX_OVERLAP]

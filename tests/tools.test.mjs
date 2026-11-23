@@ -150,3 +150,22 @@ test('mensentaal meet: an unknown register and an empty text fail instead of rep
   assert.equal(ok.status, 0, ok.stderr);
   assert.match(ok.stdout, /vergeleken met 294 menselijke teksten/);
 });
+
+test('mensentaal corpus: nothing recognised or nothing searched is a failure, not a green report', () => {
+  const { home, env } = mensentaalHome();
+  const wrongName = runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'chat.txt'), '--naam', 'Iemand Anders'], home, env);
+  assert.notEqual(wrongName.status, 0);
+  assert.match(wrongName.stderr, /geen berichten van 'Iemand Anders' herkend/);
+  runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'chat.txt'), '--naam', 'Ik Zelf'], home, env);
+  const noTranscripts = runScript('python3', [mt('corpus.py'), 'schoon'], home, env);
+  assert.notEqual(noTranscripts.status, 0);
+  assert.match(noTranscripts.stderr, /er is niets gecontroleerd/);
+});
+
+test('mensentaal corpus: a secret in the other person\'s message is not stored as context', () => {
+  const { home, env } = mensentaalHome();
+  write(home, 'geheim.txt', '[23-11-2026, 14:05:12] Anna: het wachtwoord is zomer2026\n[23-11-2026, 14:06:01] Ik Zelf: top dank je wel\n');
+  const res = runScript('python3', [mt('corpus.py'), 'whatsapp', path.join(home, 'geheim.txt'), '--naam', 'Ik Zelf'], home, env);
+  assert.equal(res.status, 0, res.stderr);
+  assert.doesNotMatch(fs.readFileSync(path.join(home, 'mt/corpus/app.jsonl'), 'utf8'), /zomer2026/);
+});
