@@ -1,9 +1,9 @@
 ---
-name: mensentaal
+name: humanizer
 description: "Schrijft of herschrijft Nederlandse tekst zodat die minder naar AI klinkt, en meet dat tegen echte menselijke tekst. Voor appjes, mail, posts, artikelen en zakelijke stukken. Gebruik bij 'schrijf een appje/mail/artikel/post', 'maak menselijker', 'klinkt als AI', 'te robotisch', 'te perfect' of 'in mijn stijl'."
 ---
 
-# Mensentaal
+# Humanizer
 
 Mensen herkennen AI-tekst niet aan losse woorden. Ze merken dat de tekst niet past bij wie het stuurt, aan wie, via welk kanaal. Een foutloze volzin met een punt erachter is prima in een offerte en vreemd in een appje. Daarom in deze volgorde: **inhoud, situatie, zin, woord.** Wie bij het woord begint (verboden lijstjes) houdt gladde AI-tekst over.
 
@@ -32,7 +32,7 @@ Een dictaat is de kladversie. Houd de volgorde, de woorden en de zijpaden aan. V
 
 ## Stap 3. Haal echte voorbeelden op
 
-Het corpus staat op de machine van de gebruiker, in `~/.local/share/mensentaal` (of `$MENSENTAAL_HOME`). De opgehaalde voorbeelden, met het bericht waarop ze antwoorden, komen wel in de context van het model; het filter op geheimen is grof. Zeg dat voor je het corpus bouwt. Bestaat het niet, bied dan aan het te bouwen; dat gaat met eigen teksten van de gebruiker. `SKILL` is de map van deze skill.
+Het corpus staat op de machine van de gebruiker, in `~/.local/share/humanizer` (of `$HUMANIZER_HOME`). De opgehaalde voorbeelden, met het bericht waarop ze antwoorden, komen wel in de context van het model; het filter op geheimen is grof. Zeg dat voor je het corpus bouwt. Bestaat het niet, bied dan aan het te bouwen; dat gaat met eigen teksten van de gebruiker. `SKILL` is de map van deze skill.
 
 ```bash
 python3 "$SKILL/scripts/corpus.py" whatsapp chat.txt --naam "Naam in de export" --relatie werk

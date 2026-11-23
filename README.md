@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.13.0-5B50E6" alt="versie 1.13.0">
+<img src="https://img.shields.io/badge/versie-1.14.0-5B50E6" alt="versie 1.14.0">
 <img src="https://img.shields.io/badge/skills-52-111827" alt="52 skills">
 <img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">
@@ -191,7 +191,7 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 
 | Skill | Waarvoor |
 |---|---|
-| `mensentaal` | Nederlandse tekst die minder naar AI klinkt, gemeten tegen echte menselijke tekst en je eigen lokale corpus |
+| `humanizer` | Nederlandse tekst die minder naar AI klinkt, gemeten tegen echte menselijke tekst en je eigen lokale corpus |
 
 ### PolpoHire en The Staffing Society
 
@@ -290,7 +290,7 @@ Context-gebruik, actieve tools, agents en voortgang in je statusbalk: [claude-hu
 | `emil-design-eng` en de motion-skills | Emil Kowalski | MIT |
 | `batch-grill-me` | gebaseerd op grilling uit [mattpocock/skills](https://github.com/mattpocock/skills) | MIT |
 | `code-audit` | gebaseerd op open-code-review-delegate uit [alibaba/open-code-review](https://github.com/alibaba/open-code-review), aangepast (zie `NOTICE`) | Apache-2.0 |
-| `mensentaal` | eigen skill; ideeën uit onder meer [quiron](https://github.com/ilien-dev/quiron), [humanizer-stack](https://github.com/JensHeitmann/humanizer-stack) en [no-ai-slop](https://github.com/petergyang/no-ai-slop), zonder overgenomen code of tekst (zie `references/bronnen.md`) | MIT |
+| `humanizer` | eigen skill; ideeën uit onder meer [quiron](https://github.com/ilien-dev/quiron), [humanizer-stack](https://github.com/JensHeitmann/humanizer-stack) en [no-ai-slop](https://github.com/petergyang/no-ai-slop), zonder overgenomen code of tekst (zie `references/bronnen.md`) | MIT |
 | `rea` | eigen skill rond [morluto/rea](https://github.com/morluto/rea) 6.4.0, met de upstream-instructies in `references/upstream/` | MIT |
 | `readme` | eigen skill; de verhaallijn (probleem, bewijs dat het werkt, trade-off) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
 | `tools/poort/` | Reforge Recruitment | Niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
