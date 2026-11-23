@@ -67,7 +67,7 @@ RISK = {
 # One hit is enough where a single line can open a door.
 ONE_HIT = {"auth", "route", "sink", "upload"}
 RISK_RX = {name: re.compile(rx, re.I if name not in ("data", "route") else 0) for name, rx in RISK.items()}
-SECRET = re.compile(
+LEAK = re.compile(
     r"(AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9_-]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|"
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----|eyJ[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{20,})"
 )
@@ -210,7 +210,7 @@ def kind_of(path: str) -> str:
 
 
 def classify(files: list[dict], added: dict, removed: dict, declared: set[str], exclude: list[str]) -> list[dict]:
-    secrets = []
+    leak_files = []
     for f in files:
         f["kind"] = kind_of(f["path"])
         lines = added.get(f["path"], [])
@@ -229,10 +229,10 @@ def classify(files: list[dict], added: dict, removed: dict, declared: set[str], 
         elif f["kind"] == "lock":
             f["risk"] = ["deps"]
         # Location only: the value itself never enters a plan, prompt or report.
-        hits = sum(bool(SECRET.search(line)) for line in lines)
+        hits = sum(bool(LEAK.search(line)) for line in lines)
         if hits:
-            secrets.append({"path": f["path"], "hits": hits, "kind": f["kind"]})
-    return secrets
+            leak_files.append({"path": f["path"], "hits": hits, "kind": f["kind"]})
+    return leak_files
 
 
 def weight(f: dict) -> float:
@@ -424,7 +424,7 @@ def main() -> int:
         sides[sign][name].append(text)
     added, removed = sides["+"], sides["-"]
     files.sort(key=lambda f: f["path"])
-    secrets = classify(files, added, removed, declared_generated(tree, files), args.exclude)
+    leak_files = classify(files, added, removed, declared_generated(tree, files), args.exclude)
     code_lines = sum(f["added"] + f["deleted"] for f in files if f["kind"] not in ("generated", "lock", "doc"))
     tier = "XS" if code_lines <= SMALL else "S" if code_lines <= MEDIUM else "M" if code_lines <= LARGE else "L"
     areas = make_areas(files, 1 if args.fast or tier in ("XS", "S") else args.max_readers)
@@ -437,7 +437,7 @@ def main() -> int:
         "tier": tier, "reviewed_lines": code_lines, "kinds": dict(Counter(f["kind"] for f in files)),
         "added": sum(f["added"] for f in files), "deleted": sum(f["deleted"] for f in files),
         "commits": len(git(repo, "rev-list", f"{merge_base}..{t['head']}").split()) if merge_base != EMPTY_TREE else 0,
-        "areas": areas, "specialists": [] if args.fast else specialists(files, tier, Path(tree), warnings), "fast": args.fast, "secret_hits": secrets,
+        "areas": areas, "specialists": [] if args.fast else specialists(files, tier, Path(tree), warnings), "fast": args.fast, "leak_files": leak_files,
         "not_covered_untracked": untracked, "warnings": warnings, "files": files,
     }
     save(run / "plan.json", plan)
@@ -467,8 +467,8 @@ def main() -> int:
         print(f"SKIPPED    {len(skipped)} text files: {', '.join(skipped[:8])}{' ...' if len(skipped) > 8 else ''}")
     if carry:
         print(f"CARRIED    {len(carry)} open findings of the earlier run")
-    if secrets:
-        print(f"SECRETS?   {len(secrets)} files match a key pattern: {', '.join(s['path'] for s in secrets[:8])}")
+    if leak_files:
+        print(f"SECRETS?   {len(leak_files)} files match a key pattern: {', '.join(s['path'] for s in leak_files[:8])}")
     if untracked:
         print(f"NOT COVERED {len(untracked)} untracked code files: {', '.join(untracked[:6])}")
     print(growth.summary(grown))
