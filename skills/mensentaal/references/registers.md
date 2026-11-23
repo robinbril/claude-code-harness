@@ -13,7 +13,7 @@ Een eigen corpus of stemprofiel wint van deze kaarten. Voorbeelden zijn verzonne
 
 Wat blinde keurders nog als machine aanwezen, ook bij losse berichten:
 
-- **Te compleet.** Elke zin loopt af. Mensen laten een onderwerp, `het`, `om` of een lidwoord vallen (`Was best leuke dag`, `Denk vrijdag wel`).
+- **Te compleet.** Elke zin loopt af. Mensen laten een onderwerp, `het`, `om` of een lidwoord vallen (`Is goed plan`, `Denk vrijdag wel`).
 - **Te goed geordend.** Reactie, kern, vraag. Mensen tikken in de volgorde waarin het binnenkomt, met een nagekomen stukje op een eigen regel.
 - **Te goed verbonden.** `zodra`, `anders`, `als je dan`. Mensen plakken met een komma of zetten het los onder elkaar.
 - **Te standaard.** Het gewone woord waar de schrijver een eigen woord heeft. Gebruik alleen eigen woorden die in het corpus of dictaat staan.

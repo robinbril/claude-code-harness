@@ -1,6 +1,6 @@
 ---
 name: mensentaal
-description: "Schrijft of herschrijft Nederlandse tekst zodat die leest alsof een mens hem tikte, en meet dat tegen echte menselijke tekst. Voor appjes, mail, posts, artikelen en zakelijke stukken. Gebruik bij 'schrijf een appje/mail/artikel/post', 'maak menselijker', 'klinkt als AI', 'te robotisch', 'te perfect' of 'in mijn stijl'."
+description: "Schrijft of herschrijft Nederlandse tekst zodat die minder naar AI klinkt, en meet dat tegen echte menselijke tekst. Voor appjes, mail, posts, artikelen en zakelijke stukken. Gebruik bij 'schrijf een appje/mail/artikel/post', 'maak menselijker', 'klinkt als AI', 'te robotisch', 'te perfect' of 'in mijn stijl'."
 ---
 
 # Mensentaal
@@ -32,7 +32,7 @@ Een dictaat is de kladversie. Houd de volgorde, de woorden en de zijpaden aan. V
 
 ## Stap 3. Haal echte voorbeelden op
 
-Het corpus staat alleen op de machine van de gebruiker, in `~/.local/share/mensentaal` (of `$MENSENTAAL_HOME`). Bestaat het niet, bied dan aan het te bouwen; dat gaat met eigen teksten van de gebruiker. `SKILL` is de map van deze skill.
+Het corpus staat op de machine van de gebruiker, in `~/.local/share/mensentaal` (of `$MENSENTAAL_HOME`). De opgehaalde voorbeelden, met het bericht waarop ze antwoorden, komen wel in de context van het model; het filter op geheimen is grof. Zeg dat voor je het corpus bouwt. Bestaat het niet, bied dan aan het te bouwen; dat gaat met eigen teksten van de gebruiker. `SKILL` is de map van deze skill.
 
 ```bash
 python3 "$SKILL/scripts/corpus.py" whatsapp chat.txt --naam "Naam in de export" --relatie werk
@@ -41,7 +41,7 @@ python3 "$SKILL/scripts/corpus.py" schoon
 python3 "$SKILL/scripts/corpus.py" banden
 ```
 
-`schoon` haalt teksten weg die een assistent opstelde: zeven woorden op rij die ook in de eigen transcripts van Claude Code of Codex staan, over minstens 30% van de tekst. Een eigen tekst die een assistent later letterlijk citeerde valt ook weg; tekst uit een webchat vindt het niet. Sla het nooit over. Wie met een assistent mailt, heeft een verzonden map vol machinetekst.
+Mailbestanden heten `JJJJ-MM-DD-iets.txt`. `schoon` zet teksten die een assistent opstelde apart in `corpus/weg/`: zeven woorden op rij die op of vóór die dag al in de eigen transcripts van Claude Code of Codex stonden, over minstens 30% van de tekst. Tekst uit een webchat vindt het niet. Sla het nooit over. Wie met een assistent mailt, heeft een verzonden map vol machinetekst.
 
 ```bash
 python3 "$SKILL/scripts/voorbeelden.py" --register app --relatie werk --soort vraag --over "kern van het bericht" --woorden 25 -n 5
@@ -70,7 +70,7 @@ Vanaf 40 woorden. Een bestand of stdin.
 python3 "$SKILL/scripts/meet.py" --register artikel tekst.txt
 ```
 
-`artikel`, `essay` en `vakblog` worden meegeleverd; `app-<relatie>` en `mail` komen uit het eigen corpus. De band is p10 tot p90 van echte mensen.
+`artikel`, `essay` en `vakblog` worden meegeleverd (een post meet je met `essay`, voor `zakelijk` is er geen band); `app-<relatie>` en `mail` komen uit het eigen corpus. De band is p10 tot p90 van echte mensen, met 15% marge.
 
 - `MACHINE`: kijk of het klopt en herstel het waar het ontstaat. Een te laag aantal namen los je op met materiaal, niet met versiering.
 - `doorschot`: je hebt het te menselijk gemaakt. Terug.

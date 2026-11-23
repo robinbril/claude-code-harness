@@ -34,10 +34,16 @@ PER_REGISTER_NEGEREN = {
 }
 
 
+# tellen mee in de band, maar zijn los te gewoon om aan te wijzen
+MEERDUIDIG = {"reis", "stil", "stille", "stilletjes", "inzicht", "inzichten", "uitdaging", "uitdagingen", "de kern", "spil"}
+
+
 def vondsten(t):
     for naam, rx in (("contrastformule", K.CONTRAST), ("drieslag", K.DRIESLAG), ("aanhangzin", K.AANHANG),
                      ("AI-woord", K.AI_WOORD), ("uitsmijter", K.PUNCHLINE)):
         for m in rx.finditer(t):
+            if m.group(0).lower() in MEERDUIDIG:
+                continue
             yield naam, re.sub(r"\s+", " ", m.group(0))[:90]
 
 

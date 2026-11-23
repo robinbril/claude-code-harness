@@ -47,6 +47,6 @@ Blinde toets van november 2026 met één Nederlandse schrijver. Keurder en schri
 | Mail (12 per soort) | 50% | 44% | 18% |
 | Artikel (1 tekst per versie) | 74% | 48 tot 62% | 1 tot 4% |
 
-De verschillen bij appje en mail zijn net niet significant. Naast het echte bericht werd de skill in 23 van 24 paren herkend. Post, zakelijk en schrijven vanuit dictaat zijn niet getoetst.
+De verschillen bij appje en mail zijn net niet significant. In een eerdere ronde met 24 andere appjes werd het echte bericht naast dat van de skill in 23 van 24 paren herkend. Post, zakelijk en schrijven vanuit dictaat zijn niet getoetst.
 
 **Plafond:** een skill zonder training haalt "minder herkenbaar", niet "niet te onderscheiden". Toets zelf met `scripts/toets.py`.

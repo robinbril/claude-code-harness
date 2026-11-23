@@ -2,8 +2,8 @@
 """Bouwt een lokaal corpus van eigen teksten. Blijft op deze machine, buiten elke repo.
 
   corpus.py whatsapp export.txt [...] --naam "Naam in de export" --relatie werk
-  corpus.py map <map met .txt> --register mail [--relatie collega]
-  corpus.py schoon            haalt teksten weg die een assistent opstelde
+  corpus.py map <map met JJJJ-MM-DD*.txt> --register mail [--relatie collega]
+  corpus.py schoon            zet teksten die een assistent eerder opstelde apart in corpus/weg/
   corpus.py banden            p10-p90 per register
 """
 import argparse
@@ -21,11 +21,16 @@ from kenmerken import meet, woorden
 
 THUIS = os.path.expanduser(os.environ.get("MENSENTAAL_HOME", "~/.local/share/mensentaal"))
 BEURT_SECONDEN = 150
+ANTWOORD_SECONDEN = 24 * 3600
 REEKS = 7
 MAX_OVERLAP = 0.3
-GEVOELIG = re.compile(r"\b(kanker|ziekenhuis|chemo|uitzaai\w*|diagnose|wachtwoord|password|iban|bsn)\b|\bNL\d{2}[A-Z]{4}\d{6,}|sk-[a-z0-9]{8,}", re.I)
+GEVOELIG = re.compile(r"\b(kanker|ziekenhuis|chemo|uitzaai\w*|diagnose|wachtwoord\w*|password\w*|iban|bsn)\b|\b[a-z]{2}\d{2}(?: ?[a-z0-9]{4}){3,}|\b(?:sk|ghp|gho|xox[bp])[-_][\w-]{8,}", re.I)
 ENGELS = re.compile(r"\b(the|and|you|are|this|that|with|for|have|your|will|just|what|not|can|they)\b", re.I)
 WA_REGEL = re.compile(r"^‎?\[?(\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}),? (\d{1,2}:\d{2})(?::\d{2})?\]?(?: -)? ([^:]{1,60}): (.*)$")
+WA_KOP = re.compile(r"^‎?\[?\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4},? \d{1,2}:\d{2}")
+CITAAT = re.compile(r"^(?:>|(?:Van|From|Verzonden|Sent):\s|-{2,} ?(?:Oorspronkelijk|Original|Doorgestuurd|Forwarded)|_{8,}|Begin doorgestuurd|Begin forwarded)", re.I)
+CITAATKOP = re.compile(r"^(?:Op|On)\b.{4,}", re.I)
+GESCHREVEN = re.compile(r"\b(?:schreef|geschreven|wrote)\b", re.I)
 WA_RUIS = re.compile(r"‎|weggelaten|omitted|<Media|https?://|bericht is verwijderd|message was deleted", re.I)
 
 
@@ -46,7 +51,7 @@ def soort(t):
 
 def record(register, relatie, bron, datum, tekst, vorige="", berichten=1):
     engels = len(ENGELS.findall(tekst)) > 0.14 * max(1, len(woorden(tekst)))
-    return dict(id=hashlib.sha1(f"{register}|{tekst}".encode()).hexdigest()[:12], relatie=relatie, bron=bron, datum=datum,
+    return dict(id=hashlib.sha1(f"{register}|{relatie}|{tekst}".encode()).hexdigest()[:12], relatie=relatie, bron=bron, datum=datum,
                 taal="en" if engels else "nl", soort=soort(tekst), berichten=berichten, vorige=vorige[:300], tekst=tekst)
 
 
@@ -58,10 +63,29 @@ def lees(register):
     return [json.loads(x) for x in open(pad(register), encoding="utf-8")] if os.path.exists(pad(register)) else []
 
 
-def schrijf(register, rs):
-    os.makedirs(f"{THUIS}/corpus", mode=0o700, exist_ok=True)
-    with open(os.open(pad(register), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as f:
+def schrijf_bestand(doel, rs):
+    """Eerst naast het doel, dan in één keer omwisselen: een onderbreking kost nooit het corpus."""
+    os.makedirs(os.path.dirname(doel), mode=0o700, exist_ok=True)
+    tijdelijk = doel + ".nieuw"
+    with open(os.open(tijdelijk, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as f:
         f.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in rs)
+    os.replace(tijdelijk, doel)
+
+
+def schrijf(register, rs):
+    schrijf_bestand(pad(register), rs)
+
+
+def tekst_van(bestand):
+    ruw = open(bestand, "rb").read()
+    try:
+        return ruw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return ruw.decode("cp1252", errors="replace")
+
+
+def bron(bestand):
+    return hashlib.sha1(os.path.abspath(bestand).encode()).hexdigest()[:8]
 
 
 def voeg_toe(register, nieuw):
@@ -75,7 +99,7 @@ def whatsapp(bestanden, naam, relatie):
     nieuw = []
     for bestand in bestanden:
         berichten = []
-        for regel in open(bestand, encoding="utf-8"):
+        for regel in tekst_van(bestand).splitlines():
             m = WA_REGEL.match(regel.rstrip("\n"))
             if m:
                 d, u, wie, tekst = m.groups()
@@ -83,14 +107,16 @@ def whatsapp(bestanden, naam, relatie):
                 if int(maand) > 12:
                     sys.exit(f"{bestand}: datum {d} is geen dag-maand-jaar")
                 berichten.append([datetime(int(jaar) + (2000 if len(jaar) == 2 else 0), int(maand), int(dag), *map(int, u.split(":"))), wie.strip(), tekst])
+            elif WA_KOP.match(regel):
+                continue
             elif berichten:
                 berichten[-1][2] += "\n" + regel.rstrip("\n")
-        beurt, laatste, ander = [], None, ""
+        beurt, laatste, ander, ander_tijd, context = [], None, "", None, ""
 
         def sluit():
             t = "\n".join(beurt).strip()
             if len(woorden(t)) >= 2 and not GEVOELIG.search(t):
-                nieuw.append(record("app", relatie, os.path.basename(bestand), laatste.strftime("%Y-%m-%d"), t, ander, len(beurt)))
+                nieuw.append(record("app", relatie, bron(bestand), laatste.strftime("%Y-%m-%d"), t, context, len(beurt)))
 
         for tijd, wie, tekst in berichten:
             eigen = wie == naam
@@ -99,10 +125,13 @@ def whatsapp(bestanden, naam, relatie):
                 beurt = []
             if eigen:
                 if not WA_RUIS.search(tekst):
+                    if not beurt:
+                        vers = ander_tijd and (tijd - ander_tijd).total_seconds() <= ANTWOORD_SECONDEN
+                        context = ander if vers else ""
                     beurt.append(tekst)
                     laatste = tijd
             else:
-                ander = "" if GEVOELIG.search(tekst) else tekst
+                ander, ander_tijd = ("" if GEVOELIG.search(tekst) else tekst), tijd
         if beurt:
             sluit()
     if not nieuw:
@@ -110,14 +139,28 @@ def whatsapp(bestanden, naam, relatie):
     voeg_toe("app", nieuw)
 
 
+def zonder_citaat(t):
+    regels = t.splitlines()
+    for i, r in enumerate(regels):
+        if CITAAT.match(r.strip()) or (CITAATKOP.match(r.strip()) and GESCHREVEN.search(" ".join(regels[i:i + 3]))):
+            return "\n".join(regels[:i]).strip()
+    return t.strip()
+
+
 def map_(dir_, register, relatie):
-    nieuw = []
+    nieuw, zonder_datum = [], 0
     for f in sorted(glob.glob(os.path.join(os.path.expanduser(dir_), "**", "*.txt"), recursive=True)):
-        t = re.split(r"\n(?:>|Op .{5,60} schreef|On .{5,60} wrote|-{3,}Orig)", open(f, encoding="utf-8").read())[0].strip()
+        datum = re.match(r"\d{4}-\d{2}-\d{2}", os.path.basename(f))
+        if not datum:
+            zonder_datum += 1
+            continue
+        t = zonder_citaat(tekst_van(f))
         if len(woorden(t)) >= 12 and not GEVOELIG.search(t):
-            nieuw.append(record(register, relatie, os.path.basename(f), datetime.fromtimestamp(os.path.getmtime(f)).strftime("%Y-%m-%d"), t))
+            nieuw.append(record(register, relatie, bron(f), datum.group(0), t))
+    if zonder_datum:
+        print(f"{zonder_datum} bestanden overgeslagen: de naam begint niet met JJJJ-MM-DD", file=sys.stderr)
     if not nieuw:
-        sys.exit(f"geen .txt met 12 woorden of meer in {dir_}")
+        sys.exit(f"geen JJJJ-MM-DD*.txt met 12 woorden of meer in {dir_}")
     voeg_toe(register, nieuw)
 
 
@@ -137,14 +180,11 @@ def reeksen(t):
     return [tuple(w[i:i + REEKS]) for i in range(len(w) - REEKS + 1)]
 
 
-def schoon():
-    registers = [os.path.basename(p)[:-6] for p in glob.glob(f"{THUIS}/corpus/*.jsonl")]
-    alles = {(reg, r["id"]): reeksen(r["tekst"]) for reg in registers for r in lees(reg)}
-    gezocht = {s for rs in alles.values() for s in rs}
-    gevonden, bestanden = set(), 0
+def assistent_teksten(gezocht):
+    """Per gezochte reeks de vroegste dag waarop een assistent hem schreef."""
+    eerste, regels = {}, 0
     for wortel in ("~/.claude/projects", "~/.codex/sessions", "~/.codex/archived_sessions"):
         for f in glob.iglob(os.path.expanduser(wortel) + "/**/*.jsonl", recursive=True):
-            bestanden += 1
             for regel in open(f, encoding="utf-8", errors="replace"):
                 if '"assistant"' not in regel:
                     continue
@@ -152,21 +192,44 @@ def schoon():
                     d = json.loads(regel)
                 except ValueError:
                     continue
-                m = d.get("message") or d.get("payload") or {}
-                if not isinstance(m, dict) or m.get("role") != "assistant":
+                m = (d.get("message") or d.get("payload")) if isinstance(d, dict) else None
+                dag = str(d.get("timestamp") or "")[:10] if isinstance(d, dict) else ""
+                if not isinstance(m, dict) or m.get("role") != "assistant" or not dag:
                     continue
+                regels += 1
                 inhoud = m.get("content") if isinstance(m.get("content"), list) else [m.get("content")]
                 for b in inhoud:
-                    bron = b if isinstance(b, str) else (b.get("text") or b.get("input")) if isinstance(b, dict) else None
-                    for s in strings(bron or ""):
-                        gevonden.update(x for x in reeksen(s) if x in gezocht)
-    if not bestanden:
+                    stuk = b if isinstance(b, str) else (b.get("text") or b.get("input")) if isinstance(b, dict) else None
+                    for s in strings(stuk or ""):
+                        for x in reeksen(s):
+                            if x in gezocht and dag < eerste.get(x, "9999"):
+                                eerste[x] = dag
+    return eerste, regels
+
+
+def schoon():
+    registers = [os.path.basename(p)[:-6] for p in glob.glob(f"{THUIS}/corpus/*.jsonl")]
+    alles = {(reg, r["id"]): reeksen(r["tekst"]) for reg in registers for r in lees(reg)}
+    if not alles:
+        sys.exit("geen corpus gevonden; er is niets gecontroleerd")
+    eerste, regels = assistent_teksten({s for rs in alles.values() for s in rs})
+    if not regels:
         sys.exit("geen transcripts van Claude Code of Codex gevonden; er is niets gecontroleerd")
+
+    def opgesteld(reg, r):
+        # alleen wat een assistent schreef vóór of op de dag van de tekst; later citeren telt niet
+        x = alles[(reg, r["id"])]
+        return bool(x) and sum(eerste.get(s, "9999") <= r["datum"] for s in x) / len(x) >= MAX_OVERLAP
+
     for reg in registers:
         rs = lees(reg)
-        houd = [r for r in rs if not (x := alles[(reg, r["id"])]) or sum(s in gevonden for s in x) / len(x) < MAX_OVERLAP]
-        schrijf(reg, houd)
-        print(f"{reg}: {len(rs) - len(houd)} door een assistent opgesteld, {len(houd)} over ({bestanden} transcripts doorzocht)")
+        weg = [r for r in rs if opgesteld(reg, r)]
+        if weg:
+            apart = f"{THUIS}/corpus/weg/{reg}.jsonl"
+            eerder = [json.loads(x) for x in open(apart, encoding="utf-8")] if os.path.exists(apart) else []
+            schrijf_bestand(apart, {r["id"]: r for r in eerder + weg}.values())
+            schrijf(reg, [r for r in rs if not opgesteld(reg, r)])
+        print(f"{reg}: {len(weg)} door een assistent opgesteld, {len(rs) - len(weg)} over ({regels} assistentregels doorzocht)")
 
 
 def band(teksten):
@@ -189,6 +252,8 @@ def banden():
             b[naam] = dict(teksten=len(ts), kenmerken=band(ts))
         else:
             print(f"{naam}: {len(ts)} teksten, minstens 12 nodig")
+    if not b:
+        sys.exit("te weinig teksten; bestaande banden blijven staan")
     os.makedirs(THUIS, mode=0o700, exist_ok=True)
     with open(f"{THUIS}/banden.json", "w", encoding="utf-8") as f:
         json.dump(b, f, indent=1)

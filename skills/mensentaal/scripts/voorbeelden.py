@@ -36,6 +36,12 @@ def main():
     rs = [r for r in lees(o.register) if r["id"] not in weg and r["taal"] == o.taal]
     if not rs:
         sys.exit(f"geen corpus voor {o.register}; bouw het met corpus.py")
+    if o.relatie:
+        relaties = sorted({r["relatie"] for r in rs})
+        rs = [r for r in rs if r["relatie"] == o.relatie]
+        if not rs:
+            sys.exit(f"geen teksten met relatie {o.relatie}; keuze: {', '.join(relaties)}")
+    bronnen = len({r["bron"] for r in rs})
     q = tok(o.over)
     df = collections.Counter(w for r in rs for w in set(tok(r["tekst"])))
     random.seed(len(o.over))
@@ -44,7 +50,7 @@ def main():
         w = collections.Counter(tok(r["tekst"]))
         # klank telt zwaarder dan onderwerp
         s = sum(math.log(1 + len(rs) / (1 + df[x])) * w[x] / (w[x] + 1) for x in q) / (3 + 2 * len(q) ** 0.5)
-        s += 1.6 * (r["relatie"] == o.relatie) + 1.6 * (r["soort"] == o.soort)
+        s += 1.6 * (r["soort"] == o.soort)
         n = len(r["tekst"].split())
         if o.woorden:
             s -= 1.2 * abs(math.log((n + 3) / (o.woorden + 3)))
@@ -54,7 +60,7 @@ def main():
 
     per_bron, getoond = collections.Counter(), 0
     for r in sorted(rs, key=score, reverse=True):
-        if o.register == "app" and per_bron[r["bron"]] >= max(2, o.n // 2):
+        if bronnen >= 3 and per_bron[r["bron"]] >= max(2, o.n // 2):
             continue
         per_bron[r["bron"]] += 1
         getoond += 1
