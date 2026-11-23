@@ -1,0 +1,2 @@
+when: risk:llm duty:security
+Each tool checks the rights of the calling user. Approval bound to user, conversation and exact arguments, single use. Untrusted text (mail, CV, page, attachment, tool result, the model's own words) that can trigger a write, a paid call or data leaving, or that is counted as the user's words. Logs and memory visible to others. Personal data to a model that may not have it.

@@ -1,0 +1,4 @@
+when: kind:migration
+A fresh database (built from models or provision) and an old one must end the same: delete rules, names, types, nullability, defaults. Does the value survive the next normal save? A row with an unexpected value: say it per row, not in a total. NOT VALID left behind, TRUNCATE and other rights, lock on a parent table until COMMIT.
+On real rows: nulls for a new not-null, duplicates for a new unique, rows that break a check, lock time, index without concurrently. Idempotent? Rollback? Number taken by an open PR? Does the runner pick it up? Old code on the new schema and new code on the old schema during deploy: add nullable, backfill, then tighten; drop one release later. Backfill that copies a business rule. Unmentioned alters in a generated migration.
+A green suite proves little when tests build the schema from models.

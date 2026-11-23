@@ -37,3 +37,5 @@ jobs:
         run: node --test --test-concurrency=1 test/*.test.mjs
       - name: repo-hygiene e2e
         run: bash skills/repo-hygiene/tests/e2e.sh
+      - name: superaudit-tests
+        run: python3 -B skills/superaudit/scripts/test_superaudit.py
