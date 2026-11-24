@@ -1,14 +1,14 @@
 ---
-name: bi-dashboards
-description: Power BI-stijl rapporten en dashboards in eigen web-apps (Vue + ECharts), zonder Power BI te embedden; finance, ATS-analytics (Polpo) en de assistent naast de cijfers. Gebruik bij "Power BI-stijl", "ms-visuals" of "meer visuals", KPI-kaarten, brug of IBCS-afwijking, matrix met databalken, slicers en rapportmenu, ECharts custom series in Vue, doorklikken naar de opbouw achter een getal, aanpasopties per visual, de keuze of herkomst van een chartbibliotheek, rust in lijsten en panelen (herhaalde knoppen, kleur, knopplaatsing), en demo-data voor dashboards. Niet voor een losse vormvraag zonder huisstijl (dataviz) en niet voor Power BI-licenties, DAX of .pbix.
+name: powerbi
+description: Power BI-stijl rapporten en dashboards in eigen web-apps (Vue + ECharts, of pure SVG met een visual builder engine), zonder Power BI te embedden; finance, ATS-analytics (Polpo) en de assistent naast de cijfers. Gebruik bij "Power BI-stijl", "ms-visuals" of "meer visuals", "visual builder", tegelbord, widgetcatalogus of dashboardbouwer, funnel- of pipeline-visuals, een React-ontwerp (easyui, magicui) naar Vue porten, KPI-kaarten, brug of IBCS-afwijking, matrix met databalken, slicers en rapportmenu, ECharts custom series in Vue, doorklikken naar de opbouw achter een getal, aanpasopties per visual, de keuze of herkomst van een chartbibliotheek, rust in lijsten en panelen (herhaalde knoppen, kleur, knopplaatsing), en demo-data voor dashboards. Niet voor een losse vormvraag zonder huisstijl (dataviz) en niet voor Power BI-licenties, DAX of .pbix.
 user-invocable: true
 ---
 
-# /bi-dashboards: rapporten die lezen als een goed Power BI-rapport
+# /powerbi: rapporten die lezen als een goed Power BI-rapport
 
 De look van een goed Power BI-rapport in 2026 is geen visualgalerij maar discipline: Fluent 2-neutralen, een vast datapalet, 3-30-300-indeling, IBCS-notatie voor scenario's en afwijkingen, en per visual één vraag. Robin koos die look voor alle financiële dashboarding, gebouwd als eigen Vue 3-app met ECharts 6 custom series op de SVG-renderer: geen Power BI-embed, geen Power BI custom visuals. Deze skill is de huisstijl- en systeemlaag. Kleurvalidatie en basis-vormkeuze komen uit de skill `dataviz` (draai `validate_palette.js`, niet op het oog).
 
-De skillnaam is bewust merkvrij. In de producten zelf: geen Power BI- of Microsoft-merk, geen Copilot-logo, -naam, -gradiënt of #464FEB. De assistent draagt het eigen merk van de app (in Reforge-apps de "/"), nooit een orb, sterretje of toverstaf.
+De naam "powerbi" is alleen de naam van deze skill. In de producten zelf: geen Power BI- of Microsoft-merk, geen Copilot-logo, -naam, -gradiënt of #464FEB. De assistent draagt het eigen merk van de app (in Reforge-apps de "/"), nooit een orb, sterretje of toverstaf.
 
 Vier woorden sturen alles hieronder:
 - **Verbeteren, nooit slopen.** Bestaande pagina's, nav-items, routes en features blijven; je maakt ze beter.
@@ -22,7 +22,7 @@ Volledig onderzoek met 171 bronnen: `~/Desktop/Analytics ontwerp Power BI-stijl/
 
 1. **Vraag en data per pagina.** Schrijf de 3-5 vragen op die de lezer met deze pagina beantwoordt, en per vraag welke scenario's de API levert (realisatie AC, plan PL, prognose FC, vorig jaar PY) en of de periode open of afgesloten is. Klaar als: elke geplande visual een vraag in één zin heeft en een ontbrekende vergelijking ontworpen is als "geen vergelijking, met reden", nooit als 0. Een visual zonder vraag gaat er niet op.
 2. **Indeling 3-30-300** (SQLBI): linksboven in 3 seconden de KPI-rij, midden in 30 seconden de verkennende visuals, rechtsonder in 300 seconden detail (matrix, tabel). Slicers in één vaste rij bovenaan, nooit in de KPI-zone. Huisregel: zes tot acht datavisuals per pagina.
-3. **KPI-rij, maximaal 5 kaarten** (KpiStrip in de backoffice: 4). Per kaart: label, waarde, vergelijking (vorige periode, vorig jaar, forecast of plan), afwijking met teken en pijl, optioneel een trendlijn onder de waarde. Alleen de afwijking krijgt kleur, nooit de waarde zelf. Geen lege kaarten: ontbreekt een bron, dan de reden in een ⓘ, niet "Nog geen data".
+3. **KPI-rij, standaard 4-5 kaarten** (KpiStrip in de backoffice: 4; meer mag als elke kaart een eigen vraag heeft). Per kaart: label, waarde, vergelijking (vorige periode, vorig jaar, forecast of plan), afwijking met teken en pijl, optioneel een trendlijn onder de waarde. Alleen de afwijking krijgt kleur, nooit de waarde zelf. Geen lege kaarten: ontbreekt een bron, dan de reden in een ⓘ, niet "Nog geen data".
 4. **Vorm per vraag** (tabel hieronder). Eén y-as. Tijd horizontaal, structuur (klanten, P&L-regels) verticaal.
 5. **Ruilen, niet stapelen.** Tel kaarten voor en na; nooit meer dan één erbij zonder reden. Klaar als: bij elke nieuwe visual staat welke oude hij vervangt.
 6. **Kleur en tokens.** Categorieën in vaste volgorde uit de kleurset, kleur volgt de entiteit (klant-ID, reeks), nooit de rang. Sequentieel = één tint licht naar donker. Afwijking naar business-impact (hogere kosten = ongunstig). Nieuw palet of nieuw oppervlak? Eerst de `dataviz`-validator, licht en donker, uitvoer in de kopcomment van de code.
@@ -34,7 +34,9 @@ Volledig onderzoek met 171 bronnen: `~/Desktop/Analytics ontwerp Power BI-stijl/
 
 ## Vorm per vraag
 
-| Vraag | Visual | Niet |
+De kolom "Liever niet" is een standaard, geen verbod: kies het toch als de vraag of Robin erom vraagt, en zet de reden in één regel in de kopcomment van de component. Meer vormen per vraag staan onder de tabel.
+
+| Vraag | Visual | Liever niet |
 |---|---|---|
 | Liggen we op koers? | KPI-kaart met ΔPL/ΔPY, teken en pijl | gauge, snelheidsmeter |
 | Hoe ontwikkelt het zich per maand? | dunne kolommen (AC massief, lopende maand lichter, FC gearceerd, PL omlijnd) | 3D, dubbele as |
@@ -48,15 +50,33 @@ Volledig onderzoek met 171 bronnen: `~/Desktop/Analytics ontwerp Power BI-stijl/
 | Wat valt er weg als contracten stoppen? | trap van resterende run-rate, gearceerd, label "contractueel, vóór verlengingen" | prognose zonder voorbehoud |
 | Van forecast naar netto (winstgevendheid) | brug: forecast, top-afwijkingen +/-, actual, commissie en bonus, netto | scatter uren × marge/uur (afgekeurd) |
 | Capaciteit tegen doel | bullet (balk, doelstreep, grijze banden) | gauge |
-| ATS: waar verliezen we kandidaten? | stage-conversiebalken op aanmelddatum met aantallen en % | funnel-trechter, Sankey |
+| ATS: waar verliezen we kandidaten? | gecentreerde funnel met verliesbruggen en "−n%"-chip per overgang (easyui-port, Robin 2026-11-09) of stage-conversiebalken met aantallen en % | Sankey bij meer dan 2 stromen |
 | ATS: waar blijven ze hangen? | time-in-stage: mediaan, p90, doelstreep per fase | gemiddelde alleen |
 | ATS: welke vacatures stallen? | vacatureveroudering gesorteerd met doelstreep en actieve kandidaten | leaderboard per recruiter |
 
-Donut alleen bij 2-3 delen zonder negatieve waarden. Geen leaderboards of ranglijsten van mensen; recruiter- en teamvergelijkingen neutraal benoemen (op naam of alfabetisch).
+Donut standaard bij 2-3 delen zonder negatieve waarden. Ranglijsten van mensen: standaard neutraal (op naam of alfabetisch); een gesorteerde ranglijst alleen op uitdrukkelijk verzoek en nooit met kandidaatgegevens.
 
-## Harde regels
+### Varianten per vraag (kies wat de data en de ruimte dragen)
 
-Doen:
+| Vraag | Varianten |
+|---|---|
+| Op koers? | KPI-kaart met delta · KPI met sparklijn · KPI met mini-bullet (doelstreep) · KPI met 2 vergelijkingen (PL en PY) · hero-getal met uitsplitsing eronder · stat-card met trend-chip (easyui `stat-card`, `money-card`) |
+| Per maand / week | dunne kolommen · gestapelde kolommen (max 3 reeksen) · area met band tussen forecast en realisatie (gesplitst waar ze kruisen) · lijn met run-rate-referentie · small multiples per entiteit · kalender-heatmap per dag (easyui `activity-heatmap`) · live lijn voor realtime (Liveline, easyui `live-line-chart`) |
+| Verschil verklaren | brug staand of liggend · gestapelde brug per categorie · afwijkingsbalk met %-pin · dumbbell · bar-in-bar (overlay, plan als host, realisatie erin) |
+| Verdeling / aandeel | 100%-staaf · gesorteerde balken + Overig · treemap bij veel posten met hiërarchie · donut 2-3 delen (easyui `donut-chart`) · waffle 10×10 voor één aandeel |
+| Doorstroom / conversie | gecentreerde funnel met bruggen · conversiebalken links uitgelijnd met ghost van de vorige fase · stage-tijden (mediaan + p90) · Sankey alleen bij 2 duidelijke stromen (bron naar fase) · cohort-matrix per instroommaand |
+| Capaciteit / doel | bullet · voortgangsbalk met doelstreep · vulgraad-raster (cellen) · gauge alleen als Robin erom vraagt, dan halve boog met één doelstreep |
+| Detail | matrix met databalken · tabel met inline sparklijn · tabel met heatmap-cellen · uitklapbare groepen |
+
+Combineer gerust twee vormen in één visual (KPI + sparklijn, balk + ghost, kolom + referentielijn) zolang er één vraag blijft.
+
+## Regels: een harde kern, de rest standaard
+
+Hard (geen uitzondering): het taalmodel rekent geen getallen; geen kandidaat- of diversiteitsdata in een AI-payload; null toont een reden, nooit 0; bestaande pagina's, nav-items en features niet weghalen; tekstcontrast minstens 4,5:1 en lijnen 3:1.
+
+Al het andere hieronder is de standaard. Wijk af als de vraag, de data of Robin erom vraagt, en zet de reden in één regel in de kopcomment. Twijfel je: bouw de standaard en noem de variant in de oplevering.
+
+Standaard:
 - Eén periodebasis per pagina, met "data t/m" en open of afgesloten periode zichtbaar.
 - Afwijking altijd met +/- en ▲/▼ (kleurenblind: rood en groen vallen samen bij deuteranopie, ΔE 117,7 naar 10,4).
 - Bedragen `font-variant-numeric: tabular-nums`, rechts uitgelijnd, Nederlandse notatie (€ 1,23 mln, 35,8%, +1,3 pp).
@@ -69,13 +89,13 @@ Doen:
 - Brug met afwijkingen als stappen (forecast naar netto, IBCS): bij en af als vulling in `--ok` en `--danger` (de `-ink`-tinten ogen bruin als balk). Een kosten/omzetbrug houdt de reekskleuren. Een vaste aftrek (commissie en bonus) is neutraal grijs met een eigen legendaregel.
 - Rust in lijsten en panelen: de rij is de ingang; acties van een rij bij hover of focus (op touch altijd), een actie voor alle rijen als één bulkactie. Kleur alleen voor de uitzondering. Paneelkop = titel + sluiten; acties in de voet rechts, primair uiterst rechts, navigatie links. Details en bronnen: `references/mooi-ontwerpen.md`.
 
-Nooit:
-- Gauges, donuts met meer dan 3 delen, 3D, zware schaduwen, dubbele y-as.
-- Tegelrasters, lege tegels, "100 knoppen", afgekapte zoekvelden, bookmark-achtige paginatoggles, dezelfde knop of pil op elke rij, twee getallen die elkaar tegenspreken.
-- Bestaande pagina's, nav-items of features weghalen om "op te ruimen". Verbeter wat er is.
+Vermijd tenzij met reden:
+- Gauges, donuts met meer dan 3 delen, 3D, zware schaduwen, dubbele y-as (liever twee grafieken of een geïndexeerde as).
+- Lege tegels, "100 knoppen", afgekapte zoekvelden, bookmark-achtige paginatoggles, dezelfde knop of pil op elke rij, twee getallen die elkaar tegenspreken. Een tegelbord mag (zie de visual builder engine), zolang elke tegel een vraag heeft.
 - #D9B300 of #1AAB40 als lijn of tekst (contrast onder 3:1); pastelstatuskleuren alleen als celvulling.
-- Het taalmodel laten rekenen of getallen tonen die niet in de payload staan.
-- Kandidaatgegevens of diversiteitsdata in een AI-payload (`references/ats-analytics.md`).
+- Animatie die data verbergt tot ze klaar is (groeien vanaf nul): rust in de standaardstand op volle breedte, animeer alleen wijzigingen.
+
+Zie `references/ats-analytics.md` voor privacy in recruitment-cijfers.
 
 ## Robins oordeel (2026-10-08, Reforge backoffice)
 
@@ -132,6 +152,15 @@ Repo `reforge-backoffice`, PR #445 (branch `feat/finance-visuals`, worktree `ref
 - Lint (Robins hooks): geen `as` zonder `// SAFETY:`, geen "shape" in namen, geen anonieme objecttypes als parameter of return, geen `vi.mock`, geen em-dashes.
 - Scoped CSS: schrijf `html[data-theme-mode="dark"] .x`, nooit `:global(html[...]) .x` (dat compileert tot kaal `html[...]` en kleurt de pagina).
 
+## Visual builder engine (Vue 3, pure SVG, zonder chartbibliotheek)
+
+Volledig in `references/visual-builder-engine.md`.
+- Chart kit: canvas met assen en grid, kleur live uit tokens (elk thema), pure geometrie-helpers, dunne visuals, gedeelde tooltip en legenda, detailvenster met ruwe data en CSV.
+- Layout: vormfactoren in plaats van pixels (breedte compact/standard/wide/full, hoogte short/standard/tall/grand, `measured` of `banded`, contract met `preferred` en `min`).
+- Catalogus: één definitie per widget, gedeelde databron, één opgeloste reeks per tegel.
+- Borden: configureerbaar (secties, slepen, resize) of vast (een view = lijst widget-id's).
+- Externe ontwerpen (easyui, magicui, aceternity): geometrie porten, tokens in plaats van Tailwind, CSS in plaats van framer-motion, licentie in de kop.
+
 ## Verificatie vóór "klaar"
 
 - [ ] Elke visual beantwoordt een opgeschreven vraag; kaarten voor en na geteld.
@@ -158,6 +187,7 @@ Lees het bestand dat bij je taak hoort voordat je bouwt:
 - Kleur, palet, donker, letters, CSS om te plakken, delen met Polpo: `references/tokens-en-typografie.md`.
 - ATS of Polpo-analytics, privacy in recruitment-cijfers: `references/ats-analytics.md`.
 - Een grafiekcomponent bouwen of testen, renders, demo-stack, e2e: `references/echarts-vue-implementatie.md`.
+- Een tegelbord, widgetcatalogus of SVG-visual zonder chartbibliotheek, of een React-ontwerp (easyui) naar Vue porten: `references/visual-builder-engine.md`.
 - Vóór je iets aan Robin laat zien of een pagina herontwerpt: `references/oordeel-robin-2026-10-08.md`.
 - Seeds en fixtures voor een dashboard: `references/demo-data.md`.
 - Een bewering natrekken: `references/bronnen.md` (171 bronnen, gegroepeerd).

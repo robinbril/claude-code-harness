@@ -57,7 +57,7 @@ Advies van een council met drie stemmen, door Robin overgenomen:
 
 - Nooit het Copilot-logo, de naam, de gradiënt of #464FEB. De app gebruikt haar eigen assistentmerk met tekstlabel: in Reforge-apps de "/" (`AssistentMerk.vue`; in rondje `AssistentMerkRond.vue`), ook voor "Leg deze grafiek uit" per visual. Nooit een orb, sterretje of toverstaf.
 - De Fluent-sparkle (MIT) blijft in het onderzoek staan als optie voor andere producten, niet in Reforge-apps.
-- De skillnaam (eerder "powerbi", nu "bi-dashboards") geeft geen toestemming voor Power BI- of Microsoft-branding in de UI.
+- De skillnaam "powerbi" geeft geen toestemming voor Power BI- of Microsoft-branding in de UI.
 
 ## 6b. Twee lessen uit de bouw van 2026-10-08
 

@@ -9,7 +9,7 @@
     {
       "name": "dev-harness",
       "description": "53 skills, the poort quality gate, plus commit-guard and verified-claim-guard hooks for Claude Code.",
-      "version": "1.15.0",
+      "version": "1.16.0",
       "source": "./"
     }
   ]

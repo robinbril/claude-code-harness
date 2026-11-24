@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.15.0-5B50E6" alt="versie 1.15.0">
+<img src="https://img.shields.io/badge/versie-1.16.0-5B50E6" alt="versie 1.16.0">
 <img src="https://img.shields.io/badge/skills-53-111827" alt="53 skills">
 <img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">
@@ -199,7 +199,7 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 | Skill | Waarvoor |
 |---|---|
 | `polpohire-design` | PolpoHire-schermen in de actuele designtaal: tokens, componenten, motion |
-| `bi-dashboards` | Power BI-niveau rapportage in een eigen Vue-app met ECharts |
+| `powerbi` | Power BI-stijl rapporten en dashboards in een eigen Vue-app, met ECharts of pure SVG |
 | `theme-selector` | De PolpoHire/TSS-themakiezer: presets, eigen kleuren, typografie, dichtheid |
 | `pre-pr-gates` | Harde PR-gates: ghost versions, geslikte DB-fouten, ontbrekende org_id-tests, verouderde PR-tekst |
 
@@ -298,4 +298,4 @@ Context-gebruik, actieve tools, agents en voortgang in je statusbalk: [claude-hu
 | `readme` | eigen skill; de verhaallijn (probleem, bewijs dat het werkt, trade-off) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
 | `tools/poort/` | Reforge Recruitment | Niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
 
-Overgenomen skills hebben hun licentie in hun eigen map. `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gebouwd voor PolpoHire en The Staffing Society; de rest is generiek.
+Overgenomen skills hebben hun licentie in hun eigen map. `polpohire-design`, `powerbi`, `theme-selector` en `pre-pr-gates` zijn gebouwd voor PolpoHire en The Staffing Society; de rest is generiek.
