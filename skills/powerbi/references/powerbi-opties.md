@@ -1,6 +1,6 @@
 # Power BI-visuals: herkomst en opties, naast wat wij hebben
 
-Wanneer lezen: als je wilt weten waar een visual-idee vandaan komt, waarom we Power BI-visuals niet hergebruiken, of welke optie van Power BI we (nog) niet spiegelen. Onderzoek van 2026-10-09; bij Microsoft Learn staat de `ms.date` tussen haakjes. "Wij" = de Reforge-backoffice, stand PR #445 (details in `aanpassingen-per-visual.md`).
+Wanneer lezen: als je wilt weten waar een visual-idee vandaan komt, waarom we Power BI-visuals niet hergebruiken, of welke optie van Power BI we (nog) niet spiegelen. Onderzoek van 2026-10-09; bij Microsoft Learn staat de `ms.date` tussen haakjes. "Wij" = een eigen Vue-app met deze skill (details in `aanpassingen-per-visual.md`).
 
 ## 1. Waarom geen Power BI-visuals in onze app
 
@@ -16,11 +16,11 @@ Wanneer lezen: als je wilt weten waar een visual-idee vandaan komt, waarom we Po
 
 | Repo | Idee | Bij ons |
 |---|---|---|
-| [bulletchart](https://github.com/microsoft/powerbi-visuals-bulletchart) | actual tegen doel met grijze banden | bullet op Commissie en Mijn beloning |
+| [bulletchart](https://github.com/microsoft/powerbi-visuals-bulletchart) | actual tegen doel met grijze banden | bullet voor commissie en doelen |
 | [Tornado](https://github.com/microsoft/PowerBI-visuals-Tornado) | twee measures gespiegeld (dit jaar / vorig jaar) | nog niet |
-| [PowerKPI](https://github.com/microsoft/PowerBI-visuals-PowerKPI), [PowerKPIMatrix](https://github.com/microsoft/PowerBI-visuals-PowerKPIMatrix), [MultiKPI](https://github.com/microsoft/PowerBI-visuals-MultiKPI) | KPI met variance, status en sparkline; scorecard-matrix | KpiStrip met vergelijking en trendlijn |
+| [PowerKPI](https://github.com/microsoft/PowerBI-visuals-PowerKPI), [PowerKPIMatrix](https://github.com/microsoft/PowerBI-visuals-PowerKPIMatrix), [MultiKPI](https://github.com/microsoft/PowerBI-visuals-MultiKPI) | KPI met variance, status en sparkline; scorecard-matrix | KPI-strook met vergelijking en trendlijn |
 | [mekkochart](https://github.com/microsoft/powerbi-visuals-mekkochart), [sankey](https://github.com/microsoft/powerbi-visuals-sankey), [heatmap](https://github.com/microsoft/powerbi-visuals-heatmap) | Marimekko, geldstromen, heatmap | nog niet (sankey alleen bij een echte stroom) |
-| [ChicletSlicer](https://github.com/microsoft/PowerBI-visuals-ChicletSlicer), [timeline](https://github.com/microsoft/powerbi-visuals-timeline) | knoppenslicer, periodeslicer | SlicerTegels, FilterRij |
+| [ChicletSlicer](https://github.com/microsoft/PowerBI-visuals-ChicletSlicer), [timeline](https://github.com/microsoft/powerbi-visuals-timeline) | knoppenslicer, periodeslicer | slicertegels, filterrij |
 
 Er is geen Microsoft-repo voor een waterfall- of variance-visual: de brug is een core visual, de IBCS-variantes komen van de marktplaats.
 
@@ -70,10 +70,10 @@ Status: **heeft** = bestaat bij ons; **gat** = nog niet, wel zinvol; **bewust ni
 | Sort in een visual | matrix sorteert; tabeltweeling niet | gat (klein) |
 | Spotlight | niet | bewust niet: focusmodus volstaat |
 | Drill up/down in een hiërarchie ([link](https://learn.microsoft.com/en-us/power-bi/explore-reports/end-user-drill)) | matrix-groepen open/dicht | heeft (vereenvoudigd) |
-| Drillthrough met Back ([link](https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-drillthrough), 2026-03-02) | opbouwpaneel achter elk getal, staat in de URL | heeft (Overzicht); gat op de andere finance-pagina's |
+| Drillthrough met Back ([link](https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-drillthrough), 2026-03-02) | opbouwpaneel achter elk getal, staat in de URL | heeft |
 | Report page tooltip ([link](https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-tooltips)) | HTML-tooltip op hover en focus | bewust niet als mini-pagina: zwaar en niet leesbaar voor schermlezers |
 | Personalize visuals: type, velden, aggregatie, legenda ([lezer](https://learn.microsoft.com/en-us/power-bi/explore-reports/end-user-personalize-visuals)) | "Meer opties": type en reeksen uit een toegestane set, kleuren, arcering, "Standaard herstellen" | heeft (vereenvoudigd); velden en aggregatie bewust niet |
-| Field parameters ([link](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-field-parameters), 2026-06-09) | "Maat" (Omzet/Brutomarge) op Winstgevendheid, "Niveau" | heeft (deels) |
+| Field parameters ([link](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-field-parameters), 2026-06-09) | "Maat" (omzet/brutomarge) en "Niveau" als keuze | heeft (deels) |
 | Slicers: button, list met zoeken, relatieve datum, sync ([link](https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualization-slicers), 2026-08-24) | periodetegels, vergelijking, entiteit; één filterbalk per pagina in de URL | heeft (vereenvoudigd) |
 | Persistent filters, Reset to default | filters in de URL; weergave in localStorage met "Standaard herstellen" | heeft |
 | Report en personal bookmarks ([link](https://learn.microsoft.com/en-us/power-bi/explore-reports/end-user-bookmarks), 2026-08-05; max 20 per rapport, verlopen na 6 maanden) | de URL is de bookmark: delen = link kopiëren | heeft (vereenvoudigd); benoemde weergaven bewust niet |
@@ -85,7 +85,7 @@ Status: **heeft** = bestaat bij ons; **gat** = nog niet, wel zinvol; **bewust ni
 
 ## 4. Volgorde voor de gaten
 
-1. Doorklikken op Winstgevendheid, Commissie, Uren, Betalingen, Partnerfacturen en Mijn beloning (zelfde patroon: nieuwe `soort`, `@kies`, `?opbouw=`).
+1. Doorklikken op elke pagina met hetzelfde patroon (nieuwe soort, `?opbouw=`).
 2. Small multiples voor marge per entiteit of team (gedeelde schaal, hooguit 6).
-3. Sorteren in de tabeltweeling, en de vluchtige keuzes (Uren, weekmarge, groeperen) in de URL.
-4. Annotaties per periode, als Robin ze vraagt.
+3. Sorteren in de tabeltweeling, en de vluchtige keuzes in de URL.
+4. Annotaties per periode, op verzoek.

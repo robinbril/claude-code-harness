@@ -1,14 +1,14 @@
 <p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.15.0-5B50E6" alt="versie 1.15.0">
-<img src="https://img.shields.io/badge/skills-53-111827" alt="53 skills">
+<img src="https://img.shields.io/badge/versie-1.17.0-5B50E6" alt="versie 1.17.0">
+<img src="https://img.shields.io/badge/skills-51-111827" alt="51 skills">
 <img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">
 <a href="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml"><img src="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
-<p align="center"><b>Van prompt tot bewezen resultaat.</b><br>Werkregels die altijd geladen zijn, 53 skills die zichzelf inzetten, hooks die afdwingen wat regels alleen vragen, en een quality gate die elk resultaat aan bewijs koppelt.</p>
+<p align="center"><b>Van prompt tot bewezen resultaat.</b><br>Werkregels die altijd geladen zijn, 51 skills die zichzelf inzetten, hooks die afdwingen wat regels alleen vragen, en een quality gate die elk resultaat aan bewijs koppelt.</p>
 
 ## Het probleem
 
@@ -26,7 +26,7 @@ AI-coding agents falen voorspelbaar, en altijd op dezelfde vier manieren:
 | Laag | Wat het afdwingt |
 |---|---|
 | **Werkregels** | Tien regels in `guidelines/CLAUDE.md`, bij elke sessie geladen: denken voor bouwen, minimale diffs, verplicht bewijs, modelrouting |
-| **53 skills** | Beproefde methodes per type werk, van root-cause debugging tot autonome build-loops. Claude kiest zelf, of jij roept aan met `/naam` |
+| **51 skills** | Beproefde methodes per type werk, van root-cause debugging tot autonome build-loops. Claude kiest zelf, of jij roept aan met `/naam` |
 | **3 hooks** | Deterministische bewaking buiten het model om: secrets uit commits, geen klaar-claim zonder bewijs |
 | **poort** | Quality gate voor je eigen repo's: checks per commit en push, en een PR-gate die bewijs aan de exacte commit bindt |
 
@@ -122,6 +122,7 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 | `commit-discipline` | Geen commit-spam: werk verzamelen, op signaal drie tot zeven thematische commits |
 | `repo-hygiene` | Read-only audit: branch-drift, dode branches, merge-conflicten, open PR's, falende Actions |
 | `render-proof` | Headless render naar PNG om een UI-claim visueel te bewijzen |
+| `pre-pr-gates` | Harde PR-gates: ghost versions, geslikte DB-fouten, ontbrekende tenant-isolatietests, verouderde PR-tekst |
 
 ### Autonome loops
 
@@ -185,6 +186,7 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 | `office-docs` | PowerPoint, Excel en Word programmatisch genereren |
 | `brandkit` | Merkidentiteit en brand-guidelines-boards |
 | `data-visualization` | Het juiste charttype vanuit de relatie in je data |
+| `powerbi` | Power BI-stijl rapporten en dashboards in een eigen Vue-app, met ECharts of pure SVG |
 | `diagram-design` | Architectuur-, flow- en procesdiagrammen als HTML/SVG |
 | `readme` | README en repo-omschrijving die in tien seconden overtuigen: verhaallijn, eigen SVG-visuals voor licht en donker, gerenderd met GitHub's eigen engine. Deze pagina is ermee gebouwd |
 
@@ -193,15 +195,6 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 | Skill | Waarvoor |
 |---|---|
 | `humanizer` | Nederlandse tekst die minder naar AI klinkt, gemeten tegen echte menselijke tekst en je eigen lokale corpus |
-
-### PolpoHire en The Staffing Society
-
-| Skill | Waarvoor |
-|---|---|
-| `polpohire-design` | PolpoHire-schermen in de actuele designtaal: tokens, componenten, motion |
-| `bi-dashboards` | Power BI-niveau rapportage in een eigen Vue-app met ECharts |
-| `theme-selector` | De PolpoHire/TSS-themakiezer: presets, eigen kleuren, typografie, dichtheid |
-| `pre-pr-gates` | Harde PR-gates: ghost versions, geslikte DB-fouten, ontbrekende org_id-tests, verouderde PR-tekst |
 
 ## Commando's
 
@@ -298,4 +291,4 @@ Context-gebruik, actieve tools, agents en voortgang in je statusbalk: [claude-hu
 | `readme` | eigen skill; de verhaallijn (probleem, bewijs dat het werkt, trade-off) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
 | `tools/poort/` | Reforge Recruitment | Niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
 
-Overgenomen skills hebben hun licentie in hun eigen map. `polpohire-design`, `bi-dashboards`, `theme-selector` en `pre-pr-gates` zijn gebouwd voor PolpoHire en The Staffing Society; de rest is generiek.
+Overgenomen skills hebben hun licentie in hun eigen map.

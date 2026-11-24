@@ -1,6 +1,6 @@
 # De assistent naast de cijfers
 
-Wanneer lezen: bij elke AI-assistent, chat of "leg uit"-functie naast dashboardcijfers: de knop, het paneel, de context die meegaat, bronverwijzingen en de getallencontrole. Het patroon leent van Copilot in Power BI; het merk niet. Externe claims met bron; ontwerpkeuzes als zodanig gemarkeerd. Backoffice-delen zijn **in ontwikkeling (2026-10-08)**.
+Wanneer lezen: bij elke AI-assistent, chat of "leg uit"-functie naast dashboardcijfers: de knop, het paneel, de context die meegaat, bronverwijzingen en de getallencontrole. Het patroon leent van Copilot in Power BI; het merk niet. Externe claims met bron; ontwerpkeuzes als zodanig gemarkeerd.
 
 ## 1. De kernregel: verteller, geen rekenmachine
 
@@ -16,16 +16,13 @@ De backend berekent elk getal. De UI rendert getallen uit de payload. Het taalmo
 
 ## 3. Merk: patroon ja, logo, naam en kleur nee
 
-- Microsofts logo's, iconen en ontwerpen "can never be used without an express license", en Microsoft-merken mogen niet in de naam van je eigen product of feature: "Contoso OneDrive software" is verboden, dus "Reforge Copilot" ook ([Microsoft Trademark Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general)).
+- Microsofts logo's, iconen en ontwerpen "can never be used without an express license", en Microsoft-merken mogen niet in de naam van je eigen product of feature: "Contoso OneDrive software" is verboden, dus "[Eigen merk] Copilot" ook ([Microsoft Trademark Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general)).
 - De FY27-merkrichtlijnen noemen Copilot onder de app-iconen waarvoor een licentie vereist is en leggen de in-product merkkleur vast op **#464FEB** ([FY27 Microsoft 365 trademark guidelines](https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/mscle/documents/presentations/FY27_Microsoft_365_trademark_guidelines.pdf)).
-- Juridisch vrij: de Fluent UI System Icons onder MIT (`sparkle`, `chat_sparkle`, `bot_sparkle`, `data_usage_sparkle`) ([LICENSE](https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE); [iconenlijst](https://github.com/microsoft/fluentui-system-icons/blob/main/icons_regular.md)). MIT dekt auteursrecht, geen merkrecht: nooit combineren met Copilot-kleuren of een regenbooggradiënt. Een optie voor andere producten, **niet in Reforge-apps** (zie hieronder).
+- Juridisch vrij: de Fluent UI System Icons onder MIT (`sparkle`, `chat_sparkle`, `bot_sparkle`, `data_usage_sparkle`) ([LICENSE](https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE); [iconenlijst](https://github.com/microsoft/fluentui-system-icons/blob/main/icons_regular.md)). MIT dekt auteursrecht, geen merkrecht: nooit combineren met Copilot-kleuren of een regenbooggradiënt. Een optie voor andere producten.
 - De MIT-componenten `@fluentui-copilot/*` zijn React en pre-1.0: referentie voor gedrag en toegankelijkheid, geen dependency in Vue ([npm](https://www.npmjs.com/package/@fluentui-copilot/react-copilot-chat)).
 - Dit is geen juridisch advies.
 
-**Robins invulling (2026-10-08):** de assistent draagt het eigen merk van de app, in Reforge-apps de **"/"** (`src/components/ui/AssistentMerk.vue`), met het label "Assistent". Nooit een orb, sterretje, toverstaf of Copilot-merk.
-- Robins eigen PR #443 (`feat/start-overzicht`) verving de SiriOrb app-breed door die platte "/": "geen draaiende gradient-orb meer: die las als een betekenisloze vlek". Hij noemde de orb ook een "lomp logo".
-- De "/" betekent in de app "begin een opdracht" en staat overal waar de assistent iets doet (een antwoord, een herschrijving), "nooit een sterretje of toverstaf" (kopcomment `AssistentMerk.vue`). Dezelfde "/" staat rechtsboven in de topbar en als toets in de vraagbalk op Start.
-- In de worktree `reforge-backoffice-dataviz` toont `AppTopbar.vue` op 2026-10-08 nog de SiriOrb tot #443 erin zit; de finance-assistent volgt de "/" al.
+**Invulling:** de assistent draagt het eigen merk van de app, plat en herkenbaar, met een tekstlabel ("Assistent"). Nooit een orb, sterretje, toverstaf of Copilot-merk. Gebruik hetzelfde merk overal waar de assistent iets doet.
 
 ## 4. Microsoft-richtlijnen voor de vorm
 
@@ -37,39 +34,34 @@ De backend berekent elk getal. De UI rendert getallen uit de payload. Het taalmo
 
 | Onderdeel | Regel |
 |---|---|
-| Merk | Het eigen assistentmerk van de app, in Reforge-apps de "/". Nooit orb, sterretje, toverstaf of Copilot-merk. |
+| Merk | Het eigen assistentmerk van de app. Nooit orb, sterretje, toverstaf of Copilot-merk. |
 | Ingang | Knop met het merk in een getint rondje (28px) en het label "Assistent", zachte pil rechts op de titelregel; `aria-expanded`, ingedrukte staat als het paneel open is. Plus per visual "Leg deze grafiek uit" met het kale merk (14px) in de hover-header. |
 | Plek | Rechter zijpaneel dat het canvas opzij schuift (nooit eroverheen); telefoon: blad van onderen met greep, hooguit 85% van de schermhoogte. Opent nooit vanzelf; Esc sluit; focus terug op de knop. |
 | Kop | Merk in rondje (28px), "Assistent", scopechip: pagina · periode · entiteit. Knoppen "Nieuw gesprek" en "Assistent sluiten". |
-| Bezig | Het merk in zijn live-stand (`<AssistentMerk live />`), geen spinner met sterretje. |
+| Bezig | Het merk in een live-stand, geen spinner met sterretje. |
 | Leeg | Welkom met het merk in rondje (44px): "Waar wil je meer over weten?", "Ik gebruik alleen de cijfers op dit scherm.", en hooguit vier startvragen als kaarten, afgeleid uit de cijfers ("Vat deze periode samen voor het MT", "Wat verklaart het verschil met vorig jaar?"). Elke startvraag draagt een Lucide-betekenisicoon (doc, trendUp, chart), nooit een sterretje of toverstaf. Na het eerste bericht verdwijnen ze en staan ze achter "Voorbeeldvragen" bij de invoer. |
 | Wat de assistent ontvangt | Een rustige inklapbare rij ("n visuals, n filters") die openklapt tot pagina, visuals met nummer, periode, filters, vergelijking, status en tijdstip. Uit hetzelfde model als de verstuurde tekst: wat je ziet is wat er meegaat. |
 | Antwoord | Elke bewering met een bronnummer [n]; [n] wordt een knopje dat naar de visual scrollt en hem 1,8 s laat oplichten. Getal niet in de context: een regel "Bevat een getal dat niet in de cijfers staat; controleer het" met de getallen achter een ⓘ. |
 | Voet | Invoer en een vaste regel: "AI-antwoorden kunnen fouten bevatten. Controleer cijfers via de bronverwijzing." |
 | Weigeren | Vragen buiten de payload, prognoses en ongedefinieerde periodes: weigeren of doorvragen (HAX G10). Open periode: eerst een waarschuwing "Deze cijfers zijn nog niet afgesloten" met "Toon antwoord toch" (naar Power BI's "View answer"). "Waarom"-vragen worden ontleding over beschikbare data, geen causale claim. |
 | Rechten | De payload wordt aan de serverkant opgebouwd met de rechten van de gebruiker. |
-| Stem | Machine-taal: "Ik heb 6 grafieken geanalyseerd", niet "ik denk"; nooit "wij" namens Reforge; generieke naam, geen persona. |
+| Stem | Machine-taal: "Ik heb 6 grafieken geanalyseerd", niet "ik denk"; nooit "wij" namens het bedrijf; generieke naam, geen persona. |
 
-Breedte: het onderzoek noemt 360 tot 420 px als eigen keuze (Microsoft publiceert geen maat); `RapportPagina` geeft het zijpaneel een kolom van 340px.
+Breedte: het onderzoek noemt 360 tot 420 px als eigen keuze (Microsoft publiceert geen maat); 340px werkt ook in een smalle kolom.
 
-## 6. Backoffice-implementatie (`components/analytics/`, in ontwikkeling 2026-10-08)
+## 6. Bouwstenen
 
-- `components/ui/AssistentMerk.vue`: de "/" als icoon (`size` in px, standaard 14, zodat hij op één lijn staat met Lucide-glyphs), `aria-hidden`, prop `live` voor de bezig-stand.
-- `components/analytics/AssistentMerkRond.vue`: de "/" in een rond vlak (`maat` 28 of 44, het merk op 54% daarvan). Licht: `color-mix(in srgb, var(--brand) 13%, transparent)` met een inset-ring van 1px op 18%; donker: 24%, het merk in een lichtere merktint. De ouder kan de tint op hover verdiepen via `--amr-vlak`.
-- `AssistentKnop.vue`: `AssistentMerkRond` (28px) plus "Assistent", pil van 36px hoog in een merktint van 7% met een rand van 22%; geen grijs kader, geen sparkle. `FinanceView.vue` toont op 2026-10-08 nog de oude knop "Vraag het de assistent" met sparkle (Robin: 2/10); die wordt vervangen.
-- `DashboardKaart.vue`: "Leg deze grafiek uit" is `<AssistentMerk :size="14" />` in de hover-header, geen sparkle.
-- `AssistentPaneel.vue`: modus `dok` (sticky rechterkolom) of `blad` (telefoon, `max-height: min(85dvh, 760px)`, greep 36x4px, scrim, focus blijft in het blad). Het gesprek is het ene gedeelde gesprek van de backoffice.
-- `assistentGesprek.ts`: het gesprek als interface via provide/inject (`ASSISTENT_GESPREK`); een test of story geeft een eigen gesprek mee.
-- `assistentAanvraag.ts`: de ingang per visual. `DashboardKaart` toont het merk alleen als de pagina een aanvraag levert én de kaart een `visualId` heeft; `koppelAssistentAanvraag(open, paneel)` opent het paneel en stelt "Leg de grafiek '<titel>' uit" met context van alleen die visual.
-- `analyticsContext.ts`: `contextModel()` levert zowel de verstuurde tekst als het blok "Wat de assistent ontvangt". Kop "Context van het analytics-scherm (gebruik alleen deze cijfers):" en de instructie "Gebruik alleen getallen die hieronder staan en reken niet zelf. Zet achter elke bewering het nummer van de visual als bron, zoals [2]." Visuals hebben vaste ids (`fin-kpi`, `fin-trend`, `fin-brug`, `fin-klanten`) die als `data-visual-id` op de kaart staan. Hooguit 5 klanten; niets persoonlijks dat niet al in de grafiek staat.
-- `getalControle.ts`: haalt bedragen (€, euro, k, mln) en percentages (%, procent, pp) uit het antwoord en zoekt ze in de context, met de afronding die de schrijfwijze toelaat ("€ 1,23 mln" past op "€ 1.234.567", "36%" op "35,8%"). Jaartallen, aantallen en [n] tellen niet.
-- `bronnen.ts`: vervangt [n] in de gerenderde markdown door bronknoppen (niet in code, links of knoppen) die naar de visual springen.
+- **Merkcomponent**: icoon in px, `aria-hidden`, met een live-stand voor bezig; een variant in een rond vlak (28 of 44px) met een merktint van ongeveer 13% (donker 24%).
+- **Paneel**: modus dok (sticky rechterkolom) of blad (telefoon, `max-height: min(85dvh, 760px)`, greep, scrim, focus blijft binnen).
+- **Gesprek en aanvraag**: interfaces via provide/inject, zodat een test een eigen gesprek meegeeft. De ingang per visual verschijnt alleen als de pagina een aanvraag levert en de kaart een id heeft.
+- **Contextmodel**: levert zowel de verstuurde tekst als het blok "Wat de assistent ontvangt". Instructie: "Gebruik alleen getallen die hieronder staan en reken niet zelf. Zet achter elke bewering het nummer van de visual als bron, zoals [2]." Hooguit 5 klanten; niets persoonlijks dat niet al in de grafiek staat.
+- **Getallencontrole**: haalt bedragen (€, euro, k, mln) en percentages uit het antwoord en zoekt ze in de context, met de afronding die de schrijfwijze toelaat ("€ 1,23 mln" past op "€ 1.234.567", "36%" op "35,8%"). Jaartallen, aantallen en [n] tellen niet.
+- **Bronnen**: vervangt [n] in de gerenderde tekst door knoppen die naar de visual springen, niet in code, links of knoppen.
 
-## 7. Robins oordeel over de eerste versie (2026-10-08)
+## 7. Veelgemaakte fouten
 
-- **Paneel op telefoon: 3/10.** Lege witte vlakte, suggesties als kale tekstrijen, een ruwe ▶-toggle voor details, een zware paarse rand om de invoer, geen logo. Dus: welkom met inhoud, startvragen als kaarten, "Wat de assistent ontvangt" als rustige rij met eigen icoon, een lichte invoerrand, het merk in de kop.
-- **Knop "Vraag het de assistent" met sparkle in een grijze doos: 2/10.** Dus: het eigen merk met het label "Assistent" als zachte pil.
-- **De SiriOrb als merk: "lomp logo", "betekenisloze vlek".** Dus: de platte "/" (PR #443), in de finance-assistent als `AssistentMerkRond`.
+- Paneel op telefoon met witte leegte, kale tekstrijen, een ruwe toggle en een zware rand om de invoer. Beter: welkom met inhoud, startvragen als kaarten, rustige rij voor de context, lichte invoerrand, merk in de kop.
+- Een knop met een sparkle in een grijze doos. Beter: het eigen merk met een tekstlabel als zachte pil.
 
 ## 8. In een ATS
 

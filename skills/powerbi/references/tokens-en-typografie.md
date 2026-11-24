@@ -1,6 +1,6 @@
 # Tokens, kleur en typografie
 
-Wanneer lezen: bij elke kleur-, letter- of maatkeuze, bij een nieuw palet, bij donker thema, en bij het overzetten naar een ander product (Polpo). De Power BI-look van 2026 is grotendeels Fluent 2-neutralen plus het klassieke Power BI-datapalet en discipline. Contrastwaarden: WCAG-luminantie ([W3C](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)), nagerekend in het onderzoek. **[eigen keuze]** = geen Microsoft-waarde.
+Wanneer lezen: bij elke kleur-, letter- of maatkeuze, bij een nieuw palet, bij donker thema, en bij het overzetten naar een ander product. De Power BI-look van 2026 is grotendeels Fluent 2-neutralen plus het klassieke Power BI-datapalet en discipline. Contrastwaarden: WCAG-luminantie ([W3C](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)), nagerekend in het onderzoek. **[eigen keuze]** = geen Microsoft-waarde.
 
 Kleurvalidatie zelf gebeurt met de skill `dataviz` (`scripts/validate_palette.js` in die skill, licht en donker, tegen het echte oppervlak). Nooit op het oog.
 
@@ -8,14 +8,13 @@ Kleurvalidatie zelf gebeurt met de skill `dataviz` (`scripts/validate_palette.js
 
 1. Fluent 2-basisthema van Power BI
 2. Het datapalet en drie correcties
-3. Het gevalideerde webpalet (backoffice)
+3. Het gevalideerde webpalet
 4. Statuskleuren, afwijkingen en scenario's
 5. Donker
 6. Typografie
 7. Radii, spacing, schaduw, layout
 8. Plakbare CSS
-9. Wat de backoffice werkelijk gebruikt
-10. Delen met andere producten
+9. Delen met andere producten
 
 ## 1. Fluent 2-basisthema van Power BI
 
@@ -46,9 +45,9 @@ Datakleuren in beide thema's: **#118DFF, #12239E, #E66C37, #6B007B, #E044A7, #74
 2. **Kleurenblindheid.** Het verschil tussen #1AAB40 en #D64554 daalt van ΔE 117,7 bij normaal zicht naar **10,4 bij deuteranopie** (simulatie [Machado et al. 2009](https://www.inf.ufrgs.br/~oliveira/pubs_files/CVD_Simulation/CVD_Simulation.html)). Microsoft noemt rood/groen als eerste te vermijden paar en eist markers in plaats van kleur als enig signaal ([Microsoft Learn](https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-accessibility-creating-reports)). Een afwijking krijgt dus altijd ook +/−, ▲/▼ of een balkrichting. Blauw/oranje is het kleurenblind-veilige alternatief ([Tabular Editor](https://tabulareditor.com/blog/kpi-card-best-practices-dashboard-design)).
 3. **Pastel is vulling.** De Fluent 2-sentimentkleuren #9FD89F / #FDCFB4 / #EEACB2 halen 1,64 / 1,42 / 1,88:1 op wit: alleen als celvulling met #242424 erop (9,46 / 10,91 / 8,26:1). Ook #B3B0AD (2,16:1) en #BDBDBD zijn te licht voor tekst; neem #616161 of #707070.
 
-## 3. Het gevalideerde webpalet (backoffice)
+## 3. Het gevalideerde webpalet
 
-Het originele Power BI-palet faalt de lichtheidsband van de validator: slot 2 #12239E (OKLab L 0,354) en slot 4 #6B007B (L 0,382) vallen onder de lichte band L 0,43-0,77 (nagerekend 2026-10-08). Daarom gebruikt de backoffice een webvariant met een **vaste rol per reeks** (`components/finance/charts/kleursets.ts`, set `powerbi`, de standaard):
+Het originele Power BI-palet faalt de lichtheidsband van de validator: slot 2 #12239E (OKLab L 0,354) en slot 4 #6B007B (L 0,382) vallen onder de lichte band L 0,43-0,77 (nagerekend 2026-10-08). Daarom een webvariant met een **vaste rol per reeks**:
 
 | Reeks | Hex | Op #FFFFFF | Op #FAFAFA | Op #1F1F1F | Op #292929 |
 |---|---|---|---|---|---|
@@ -57,7 +56,7 @@ Het originele Power BI-palet faalt de lichtheidsband van de validator: slot 2 #1
 | Brutomarge | #E66C37 | 3,20 | 3,06 | 5,15 | 4,55 |
 | Nettoresultaat | #9B3FB0 (paars) | 5,63 | 5,39 | **2,93** | **2,59** |
 
-Validatoruitvoer uit de kopcomment van `kleursets.ts` (`--pairs all`, volgorde marge, kosten, omzet, netto; donkerregels ingekort tot de afwijkende checks):
+Validatoruitvoer (`--pairs all`, volgorde marge, kosten, omzet, netto; donkerregels ingekort tot de afwijkende checks):
 
 ```
 $ node validate_palette.js "#E66C37,#3B4FD8,#118DFF,#9B3FB0" --mode light --surface "#ffffff" --pairs all
@@ -78,9 +77,9 @@ Buren (standaard-paarlijst): CVD worst #118DFF↔#3B4FD8 ΔE 12.2 (deutan), PASS
 
 Gevolgen:
 - Licht: alles door op #ffffff.
-- Donker: indigo haalt op de backoffice-oppervlakken geen 3:1 (validator); op de Fluent-donkerstand (#1F1F1F, #292929) halen indigo én paars geen 3:1 (nagerekend). Regel: **zichtbare labels of een tabelweergave op elke kaart** (de relief-regel).
+- Donker: indigo haalt op #16141f en #161c2b geen 3:1 (validator); op de Fluent-donkerstand (#1F1F1F, #292929) halen indigo én paars geen 3:1 (nagerekend). Regel: **zichtbare labels of een tabelweergave op elke kaart** (de relief-regel).
 - Het zwakste paar is indigo met paars (ΔE 6,4 protan): kosten en netto. Die staan alleen samen in de resultaatbrug, waar elke staaf naam en bedrag draagt. Nergens naast elkaar zonder labels.
-- Een nieuwe set of een nieuw oppervlak: validator opnieuw, licht en donker, uitvoer in de kopcomment. De andere sets in `kleursets.ts` (Backoffice, Contrastrijk, Ingetogen) halen ALL CHECKS PASS zonder WARN.
+- Een nieuwe set of een nieuw oppervlak: validator opnieuw, licht en donker, uitvoer in de kopcomment. Alternatieve sets die zonder WARN slagen: contrastrijk (licht #2063b0 #a87600 #176325 #c51f5d, donker #4682cc #bb881a #047745 #cd4787) en ingetogen (licht #505ba7 #aa7d25 #1e6321 #c467a4, donker #6673c1 #b48630 #297623 #c24976), volgorde marge, kosten, omzet, netto.
 
 ## 4. Statuskleuren, afwijkingen en scenario's
 
@@ -88,15 +87,15 @@ Gevolgen:
 |---|---|---|---|
 | Afwijking als tekst/icoon gunstig, let op, ongunstig | #0E700E / #BC4B09 / #B10E1C (6,28 / 5,06 / 7,12) | #9FD89F / #FDCFB4 / #EEACB2 | Fluent Status Foreground1 |
 | Statusvulling | #9FD89F / #FDCFB4 / #EEACB2 met #242424 | rgba-tint 35% van #107C10 / #BC4B09 / #C50F1F | nooit als tekst |
-| Afwijking als balk of pin | #107C10 (5,37) / #C50F1F (6,07) | #9FD89F / #EEACB2 | altijd met teken of richting; de backoffice gebruikt voor afwijkingsbruggen `--ok` en `--danger` als vulling (tokens `goed`/`slecht`), niet de `-ink`-tinten, die als balk bruin ogen |
+| Afwijking als balk of pin | #107C10 (5,37) / #C50F1F (6,07) | #9FD89F / #EEACB2 | altijd met teken of richting; gebruik voor afwijkingsbruggen een verzadigde vulling, niet de tekstinkt-tinten, die als balk bruin ogen |
 | Neutrale afwijking | #707070 [eigen keuze, IBCS "medium grey"] | #999999 | |
 | AC / PY / PL / FC | #424242 massief / #8A8A8A massief / 1,5px rand / arcering | #D6D6D6 / #7A7A7A / rand / arcering | tinten eigen keuze, notatie IBCS |
 
-Bronnen: [Fluent colors.ts](https://github.com/microsoft/fluentui/blob/master/packages/tokens/src/global/colors.ts), [Fluent darkColor.ts](https://github.com/microsoft/fluentui/blob/master/packages/tokens/src/alias/darkColor.ts). Sequentieel (ouderdom, hoe laat): één warme tint, later = donkerder in licht en lichter in donker (backoffice `--chart-verval-1` tot `-4`).
+Bronnen: [Fluent colors.ts](https://github.com/microsoft/fluentui/blob/master/packages/tokens/src/global/colors.ts), [Fluent darkColor.ts](https://github.com/microsoft/fluentui/blob/master/packages/tokens/src/alias/darkColor.ts). Sequentieel (ouderdom, hoe laat): één warme tint, later = donkerder in licht en lichter in donker (bijvoorbeeld licht #ec8f93 → #861d23, donker #b3343a → #f0a3a6).
 
 ## 5. Donker
 
-Power BI publiceert geen hexwaarden voor zijn eigen Dark-thema; afgeleid uit Fluent webDarkTheme: wallpaper #141414, pagina #1F1F1F, kaart #292929, rand #3D3D3D, tekst #FFFFFF / #D6D6D6, aslabels #ADADAD (6,48:1), lichtste tekst #999999, schaduwalfa .24 / .28 ([Fluent darkColor.ts](https://github.com/microsoft/fluentui/blob/master/packages/tokens/src/alias/darkColor.ts)). Donker is een **gekozen** set stappen, gevalideerd op het donkere oppervlak, nooit een automatische omkering (dataviz; `useChartTokens` leest licht en donker uit `theme.css`).
+Power BI publiceert geen hexwaarden voor zijn eigen Dark-thema; afgeleid uit Fluent webDarkTheme: wallpaper #141414, pagina #1F1F1F, kaart #292929, rand #3D3D3D, tekst #FFFFFF / #D6D6D6, aslabels #ADADAD (6,48:1), lichtste tekst #999999, schaduwalfa .24 / .28 ([Fluent darkColor.ts](https://github.com/microsoft/fluentui/blob/master/packages/tokens/src/alias/darkColor.ts)). Donker is een **gekozen** set stappen, gevalideerd op het donkere oppervlak, nooit een automatische omkering (dataviz).
 
 ## 6. Typografie
 
@@ -110,7 +109,7 @@ Power BI-thema's rekenen in punten; 1 pt = 1,333 px ([W3C CSS Values](https://ww
 | Card-categorielabel | 12 pt #605E5C | 12 pt #616161 | 16 | base400 |
 | Card-callout | DIN 45 pt | Segoe UI Semibold 21 pt | 28 | hero700 (28/36) |
 
-Fontstack: `'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif` (valt op een Mac terug op San Francisco). Segoe UI-webfonts zelf hosten: niet doen, de licentie voor derden is niet onderzocht. `font-variant-numeric: tabular-nums` op financiële kolommen [eigen keuze]; KpiStrip gebruikt voor grote losse getallen juist proportionele cijfers (dataviz: tabular-nums alleen in kolommen).
+Fontstack: `'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif` (valt op een Mac terug op San Francisco). Segoe UI-webfonts zelf hosten: niet doen, de licentie voor derden is niet onderzocht. `font-variant-numeric: tabular-nums` op financiële kolommen [eigen keuze]; gebruik voor grote losse getallen juist proportionele cijfers (dataviz: tabular-nums alleen in kolommen).
 
 Toegankelijkheid: tekst minstens 4,5:1; alt text tot 250 tekens die het inzicht noemt; tab-volgorde = leesvolgorde; dezelfde lettergrootte voor titels, data labels en assen op alle visuals; squint-test ([Microsoft Learn](https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-accessibility-creating-reports)).
 
@@ -164,23 +163,14 @@ Voor een nieuw project zonder eigen designsysteem. Herkomst per waarde in de sec
 
 ECharts leest geen CSS-variabelen: los ze op via het proefelement (`echarts-vue-implementatie.md`, sectie 4) en bouw de optie opnieuw bij een themawissel.
 
-## 9. Wat de backoffice werkelijk gebruikt
-
-De backoffice heeft een eigen designsysteem (Reforge-thema's, accent instelbaar) en neemt daaruit wat Power BI-achtig moet zijn:
-
-- Canvas-tokens in `RapportPagina.vue`, alleen binnen een rapport: `--rp-canvas: color-mix(in srgb, var(--surface) 94%, #3a3a3a)` (donker 45% met zwart), `--rp-rand`, `--rp-hoek: 4px`, `--rp-schaduw: 0 1px 2px` op 5% zwart (donker geen). De visuals hebben dus **4px hoeken, niet de 8px van Fluent 2**: houd binnen één product één hoekmaat.
-- Grafiektokens in `styles/theme.css`, vast per betekenis en niet per accent: `--chart-marge` #5b50e6 (donker #7a70f0), `--chart-kosten` #2aa7a3, `--chart-neutraal` (color-mix van tekst), `--chart-verval-1` tot `-4` (licht #ec8f93 → #861d23, donker #b3343a → #f0a3a6), `--chart-grid`. De Power BI-reeksen komen uit `kleursets.ts`, niet uit `theme.css`.
-- Tekst `--text`, `--text-2`, `--text-3`; delta's `--ok-ink` en `--danger-ink`; merk `--brand`, `--brand-soft`, `--brand-text`; focus `--focus`.
-- Maten: visualtitel 14px/600 (focusmodus 18px), subtitel `--fs-xs` in `--text-3`, KPI-waarde 28px/600, paginatitel 22px/650, kaartpadding 14px 16px 16px.
-
-## 10. Delen met andere producten
+## 9. Delen met andere producten
 
 | Altijd delen (product-agnostisch) | Per product |
 |---|---|
 | Neutralen en tekstkleuren, licht en donker | Merk-accent (`--brand`) |
 | Status-tekst en -vulling, afwijkingskleuren | Toewijzing van reekskleuren aan rollen (finance: omzet/kosten/marge/netto; ATS: fasen of bronnen) |
-| Scenariovullingen AC/PY/PL/FC | Oppervlaktetint als het product geen Fluent-neutralen gebruikt (Polpo) |
-| Typografieschaal, tabular-nums | Fontfamilie als het merk er een voorschrijft (Polpo: Inter, zie `polpohire-design`) |
+| Scenariovullingen AC/PY/PL/FC | Oppervlaktetint als het product geen Fluent-neutralen gebruikt |
+| Typografieschaal, tabular-nums | Fontfamilie als het merk er een voorschrijft |
 | Radii, spacing, schaduw, layoutconstanten | |
 
-Wijkt een oppervlak af van #FFFFFF (licht) of de geteste donkere tinten, valideer de reekskleuren opnieuw. `kleursets.ts` is gevalideerd op #ffffff, #16141f en #161c2b, niet op de donkere Polpo-thema's.
+Wijkt een oppervlak af van #FFFFFF (licht) of de geteste donkere tinten, valideer de reekskleuren opnieuw. Het palet is gevalideerd op #ffffff, #16141f en #161c2b.

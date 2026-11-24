@@ -120,11 +120,9 @@ Bron: [vue-echarts README](https://github.com/ecomfe/vue-echarts) (versie 8.3.2,
 - **SSR**: VChart rendert server-side alleen de container; `ssr` in `init-options` zet geen server-rendering aan binnen VChart.
 - **CSP**: base-styles worden geïnjecteerd; bij strikte CSP zonder `CSSStyleSheet()`-support `vue-echarts/style.css` laden.
 
-### 1.7 ECharts 6-features die het team (waarschijnlijk) nog niet gebruikt
+### 1.7 ECharts 6-features die vaak onbenut blijven
 
-Op basis van de beschrijving in de opdracht; de code zelf heb ik niet ingezien.
-
-1. **`registerCustomSeries` / installer-pakketjes**: de eigen `renderItem`-functies (waterfall, IBCS-bridge, dumbbell, bullet, run-off-step) als benoemde series registreren, zodat opties `renderItem: 'ibcsBridge'` worden. Maakt opties serialiseerbaar en herbruikbaar in Polpo (ook Vue + ECharts). Patroon: [barRange README](https://github.com/apache/echarts-custom-series/tree/main/custom-series/barRange).
+1. **`registerCustomSeries` / installer-pakketjes**: de eigen `renderItem`-functies (waterfall, IBCS-bridge, dumbbell, bullet, run-off-step) als benoemde series registreren, zodat opties `renderItem: 'ibcsBridge'` worden. Maakt opties serialiseerbaar en herbruikbaar in een tweede Vue-app. Patroon: [barRange README](https://github.com/apache/echarts-custom-series/tree/main/custom-series/barRange).
 2. **`@echarts-x/custom-bar-range` / `custom-line-range`** als startpunt voor dumbbell (bereik tussen forecast en actual) of een bandbreedte rond forecast.
 3. **`aria.decal`** voor arcering (forecast) in plaats van handgemaakte patterns, plus automatisch patroon per serie voor kleurenblinden.
 4. **`setTheme` + `darkMode: 'auto'`** voor dark mode zonder re-init (let op de rebuild-waarschuwing van vue-echarts).
@@ -158,7 +156,7 @@ Afkortingen: WF = waterfall, BU = bullet, DB = dumbbell/range, BR = bridge met v
 | **D3** | 7.9.0 | ISC ([npm](https://www.npmjs.com/package/d3)) | Als fundament: Vue rendert SVG, D3 levert scales/shapes | Alles zelf | Volledig zelf | SVG/canvas | Alles 95 kB; scale + shape 20 kB | Stabiel/rustig: 7.9.0 uit maart 2024 |
 | **visx** | 4.0.0 | MIT ([repo](https://github.com/airbnb/visx)) | **React-only** (peer react 18/19) | Bouwstenen, alles zelf | Zelf | SVG | niet gemeten | Actief (4.0.0 jun 2026) |
 | **Nivo** | 0.99.0 | MIT ([repo](https://github.com/plouc/nivo)) | **React-only** | Bar, heatmap, calendar, sankey, bullet (**UNVERIFIED** per type in 0.99) | Deels (**UNVERIFIED**) | SVG/canvas/HTML | niet gemeten | Laatste npm-publicatie mei 2025; repo-push jul 2026 |
-| **Recharts** | 3.10.1 | MIT ([npm](https://www.npmjs.com/package/recharts)) | **React-only** (gebruikt door securo) | WF/BU/DB zelf (bar met range-data); Sankey en Treemap native | `accessibilityLayer` standaard aan in 3.x: ARIA, één tabstop, pijltjestoetsen ([wiki](https://github.com/recharts/recharts/wiki/Recharts-and-accessibility)) | SVG | niet gemeten | Zeer actief; 57 mln/week |
+| **Recharts** | 3.10.1 | MIT ([npm](https://www.npmjs.com/package/recharts)) | **React-only** | WF/BU/DB zelf (bar met range-data); Sankey en Treemap native | `accessibilityLayer` standaard aan in 3.x: ARIA, één tabstop, pijltjestoetsen ([wiki](https://github.com/recharts/recharts/wiki/Recharts-and-accessibility)) | SVG | niet gemeten | Zeer actief; 57 mln/week |
 | **Tremor** | @tremor/react 3.18.7 | Apache-2.0; Tremor Blocks na Vercel-overname (22 jan 2025) MIT ([Vercel](https://vercel.com/blog/vercel-acquires-tremor)) | **React-only**, gebouwd op Recharts ^2 ([npm](https://www.npmjs.com/package/@tremor/react)) | Wat Recharts kan | Via Recharts 2.x | SVG | niet gemeten | npm-pakket stil sinds jan 2025 |
 | **Unovis** | 1.7.1 | Apache-2.0, F5 ([repo](https://github.com/f5/unovis)) | **Officieel `@unovis/vue`** (peer vue ^3) ([npm](https://www.npmjs.com/package/@unovis/vue)) | StackedBar, GroupedBar, Line, Area, Donut, Sankey, Timeline; WF/BU/DB zelf (exact aanbod **UNVERIFIED**) | **UNVERIFIED** | Voornamelijk SVG; SSR-pakket `@unovis/ssr` | XY-subset 65 kB | Actief (1.7.1 okt 2026) |
 | **LayerChart** | 2.6.0 | MIT ([repo](https://github.com/techniq/layerchart)) | **Svelte-only** (peer svelte ^5) | Breed (composable) | **UNVERIFIED** | SVG/canvas/HTML | niet gemeten | Actief |
@@ -183,10 +181,10 @@ Highcharts Dashboards: framework met componenten (KPI, Highcharts, Grid, HTML, c
 
 | Situatie | Beste keuze | Waarom |
 |---|---|---|
-| Vue-app, geen licentiebudget, veel maatwerkvisuals (IBCS-bridge, run-off, gearceerde forecast), één engine voor Backoffice en Polpo | **ECharts** (huidige keuze) | Apache-2.0; `renderItem` + v6-registry maakt maatwerk herbruikbaar; SVG + SSR; sterke Vue-wrapper met tooltip-slots; dataset/transform; connect. Nadeel: keyboard en per-punt-a11y moet je zelf bouwen (gebeurt al) |
+| Vue-app, geen licentiebudget, veel maatwerkvisuals (IBCS-bridge, run-off, gearceerde forecast), één engine voor meerdere apps | **ECharts** (huidige keuze) | Apache-2.0; `renderItem` + v6-registry maakt maatwerk herbruikbaar; SVG + SSR; sterke Vue-wrapper met tooltip-slots; dataset/transform; connect. Nadeel: keyboard en per-punt-a11y moet je zelf bouwen (gebeurt al) |
 | Toegankelijkheid is harde eis (WCAG-audit, overheidsklant) en je wilt dat niet zelf bouwen | **Highcharts** | Accessibility-module in elke licentie (keyboard, screenreader, sonification); native waterfall, bullet, dumbbell; officiële Vue-wrapper. Kost ca. 366 USD per developer per jaar (Core) |
 | AG Grid Enterprise is al in gebruik of nodig (pivot, grouping, Excel-export) | **AG Charts Enterprise** (via Enterprise Bundle) | Waterfall, range-bar, heatmap, sankey; keyboard-navigatie; integrated charts in de grid. Nadeel: canvas, grote bundel (406 kB gzip al voor Community), geen bullet-series |
-| React-zusterapp (securo) | **Recharts** houden | Al in gebruik, `accessibilityLayer` standaard aan; consolidatie met ECharts over frameworkgrenzen levert weinig op |
+| React-zusterapp | **Recharts** houden | Al in gebruik, `accessibilityLayer` standaard aan; consolidatie met ECharts over frameworkgrenzen levert weinig op |
 | Data bars in tabelcellen, bullet bars in KPI-cards, sparklines, 100%-aging-bar | **Plain HTML/CSS of inline SVG** in Vue | Geen chart-engine nodig (een `div` met `width: x%` of één `svg`-element), echte tekst en tabelcellen voor screenreaders, nul runtime, correct bij print en zoom, geen 165 kB+ kern. Waarde en target in tekst of `aria-label` |
 | Matrix/tabel met data bars en variance-kolommen | **HTML-tabel** (eventueel met @tanstack/vue-table) | Sorteren, sticky headers, kopiëren en screenreaders werken alleen goed met een echte `table`; de ECharts-matrix is voor gepositioneerde charts, niet voor datatabellen |
 | Snel prototypen, analisten schrijven specs, of Deneb-specs uit Power BI hergebruiken | **Vega-Lite** | Declaratieve JSON, `aria` standaard aan, specs overdraagbaar naar Deneb |

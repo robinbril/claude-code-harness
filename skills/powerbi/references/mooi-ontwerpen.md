@@ -1,16 +1,16 @@
 # Mooi ontwerpen: skill-stapel, huisregels en wat de bronnen zeggen
 
-Wanneer lezen: vóór je een pagina, lijst, paneel of visual ontwerpt of opknapt, en vóór je iets aan Robin laat zien. Rustig is hier de leidende eigenschap: een scherm is rustig als het oog in één blik ziet wat normaal is en wat aandacht vraagt. Bijna elke afkeuring van Robin (2026-10-08 en -09) ging over onrust: herhaling, kleur op elke regel, knoppen op wisselende plekken, notities en tegels. Zie `oordeel-robin-2026-10-08.md`, secties 2 en 9b.
+Wanneer lezen: vóór je een pagina, lijst, paneel of visual ontwerpt of opknapt, en vóór je iets laat zien. Rustig is hier de leidende eigenschap: een scherm is rustig als het oog in één blik ziet wat normaal is en wat aandacht vraagt. Bijna elke afkeuring gaat over onrust: herhaling, kleur op elke regel, knoppen op wisselende plekken, notities en tegels. Zie `lessen-uit-feedback.md`.
 
 ## 1. Welke skill wanneer
 
-Laad ze in deze volgorde; geef een frontend-designer-subagent deze lijst expliciet mee (zo deed de specialist van 2026-10-08 het; zonder lijst laadt hij ze niet).
+Laad ze in deze volgorde, voor zover geïnstalleerd; geef een subagent deze lijst expliciet mee. Ontbreekt een skill, volg dan de regel in de derde kolom.
 
 | Moment | Skill | Waarvoor |
 |---|---|---|
 | Vorm en kleur van elke grafiek | `dataviz` (meegeleverd, `scripts/validate_palette.js`) | vorm per vraag, kleur per taak, validator licht én donker, markmaten, hover, toegankelijkheid |
 | Welk grafiektype bij welke datarelatie | `data-visualization` | keuzegids (trend, samenstelling, rang, stroom, verschil) en anti-patronen |
-| Een bestaande pagina mooier maken | `redesign-existing-projects` | audit eerst, niets slopen; dit is de ingang voor de backoffice en Polpo |
+| Een bestaande pagina mooier maken | `redesign-existing-projects` | audit eerst, niets slopen |
 | Een nieuw scherm of nieuwe richting | `design-taste-frontend` | anti-slop richting, echte designsystemen, pre-flight check |
 | Details: randen, schaduw, typografie, hover | `make-interfaces-feel-better` | surfaces, typography, animations, performance |
 | Componentpolish en animatiebeslissingen | `emil-design-eng` | wanneer wel/niet animeren, onzichtbare details; draai hem op elke diff met `transition`/`animation` |
@@ -18,18 +18,16 @@ Laad ze in deze volgorde; geef een frontend-designer-subagent deze lijst explici
 | Bestaande beweging afstellen | `emil-design-eng` | duur, afstand, easing, open/dicht-asymmetrie |
 | Bruikbaarheid toetsen | `ux-heuristics` | Nielsen, Krug, cognitive walkthrough |
 | Toegankelijkheid | `fixing-accessibility` | ARIA, toetsenbord, focus, contrast |
-| Merk Reforge (kleur, logo, UI-thema) | `brandbook` | de canonieke huisstijl; niet `reforgedesign`, dat is de slides-stijl |
-| Polpo-schermen | `polpohire-design` | frontend-v4-taal van PolpoHire |
 | Een bibliotheek kiezen | `references/bibliotheken-en-herkomst.md` | herkomst, licentie en keuze per bibliotheek |
-| Vite, proxy, CSS-overrides, hangende previews | `frontend-gotchas` | bewezen valkuilen op deze machine |
+| Vite, proxy, CSS-overrides, hangende previews | `frontend-gotchas` | bewezen valkuilen |
 
 Externe gidsen om naast te leggen (bestaan, gecontroleerd 2026-10-09; inhoud deels niet gelezen): Anthropic `frontend-design` ([github.com/anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/frontend-design)), Vercel Web Interface Guidelines ([vercel-labs/web-interface-guidelines](https://github.com/vercel-labs/web-interface-guidelines): "URL as state", "Deep-link everything", "Confirm destructive actions"), Rauno Freiberg ([raunofreiberg/interfaces](https://github.com/raunofreiberg/interfaces)), Emil Kowalski ([emilkowalski/skills](https://github.com/emilkowalski/skills)), Taste-Skill ([Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill)), Impeccable ([pbakaus/impeccable](https://github.com/pbakaus/impeccable)).
 
-## 2. Huisregels voor rust (Robin, bevestigd door de bronnen hieronder)
+## 2. Huisregels voor rust
 
 **Lijsten**
 - De rij is de ingang: klik op de rij (of een echte link in de eerste cel) opent het detail. In rust toont een rij naam en status als tekst.
-- Nooit dezelfde knop, pil, stip of plekhouder op elke rij. Acties van één rij verschijnen bij hover of `:focus-within` (backoffice: `.rij-houder` + `.rij-acties` in `styles/lijst.css`, sinds PR #448; op touch altijd zichtbaar) of na openklappen; een actie voor alle rijen is één bulkactie in de kop.
+- Nooit dezelfde knop, pil, stip of plekhouder op elke rij. Acties van één rij verschijnen bij hover of `:focus-within` (op touch altijd zichtbaar) of na openklappen; een actie voor alle rijen is één bulkactie in de kop.
 - Hooguit één statusindicator per rij, en alleen als de status afwijkt. Groepeer gelijke uitzonderingen onder één kop ("Te laat") en zet per rij alleen het variabele deel ("11 dagen").
 - Een plekhouder ("Niet opgegeven", "Geen datum") is een lege cel met sr-only tekst.
 - Begin met 5 rijen en "Toon meer".
@@ -44,7 +42,7 @@ Externe gidsen om naast te leggen (bestaan, gecontroleerd 2026-10-09; inhoud dee
 - Kop: context en titel links, sluiten rechts. Geen actieknoppen in de kop.
 - Acties in de vaste voet, rechts uitgelijnd, secundair eerst en primair uiterst rechts; DOM-volgorde = zichtbare volgorde. Navigatie ("Open dossier", "Betaaltaken") links in de voet.
 - Eén primaire knop per paneel, met een werkwoordlabel. Destructief nooit als default of primair rechts: gevaar-variant, apart, met bevestiging of undo.
-- Detail en bewerken in een niet-modaal zijpaneel (InspectorPanel); een modal alleen voor onomkeerbare bevestiging.
+- Detail en bewerken in een niet-modaal zijpaneel; een modal alleen voor onomkeerbare bevestiging.
 
 **Pagina**
 - 3-5 KPI's met vergelijking in plaats van een tegelraster; uitleg achter één ⓘ, nooit gestapelde notities.
@@ -86,12 +84,12 @@ Geverifieerd = pagina zelf gelezen; UNVERIFIED = via zoekindex of mirror.
 **Doorklikken**
 - Microsoft, *Use report page drillthrough* ([link](https://learn.microsoft.com/en-us/power-bi/guidance/report-drillthrough), geverifieerd): bekijken, kiezen, doorklikken, analyseren, terug; detail in hetzelfde thema, geen lege visuals, een terugweg, vindbaar via een hint.
 - NN/g, *Breadcrumbs* (herzien 2026-09-01, [link](https://www.nngroup.com/articles/breadcrumbs/), geverifieerd): toont de hiërarchie, niet de sessiegeschiedenis. Een aparte detailpagina krijgt een breadcrumb; het zijpaneel niet.
-- Keuze in de backoffice: tooltip voor de exacte waarde, zijpaneel voor de regels achter het getal, aparte pagina alleen voor een volledige analyse.
+- Keuze: tooltip voor de exacte waarde, zijpaneel voor de regels achter het getal, aparte pagina alleen voor een volledige analyse.
 
 **Getallen (nl-NL)**
 - Tabellen: exacte bedragen, rechts uitgelijnd, `tabular-nums`, gelijke decimalen, eenheid in de kop (UK Analysis Function [tabellen](https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-tables/), geverifieerd).
-- KPI's en assen compact: `€ 1,1 mln`, `€ 399k`. Pas op met `Intl.NumberFormat("nl-NL", {notation:"compact"})`: die geeft `€ 1,2K` en zet het minteken vóór het euroteken (`-€ 1,1 mln.`), terwijl de standaardnotatie `€ -1.234.567,89` geeft (lokaal getest, Node 24.21). Gebruik één eigen formatter met een eigen suffix.
-- Bekend gat in de backoffice: compacte labels tonen `-€ 714k`, `Money` toont `€ -198.699`. Het minteken hoort overal op dezelfde plek; kies één notatie als je eraan werkt.
+- KPI's en assen compact: `€ 1,1 mln`, `€ 250k`. Pas op met `Intl.NumberFormat("nl-NL", {notation:"compact"})`: die geeft `€ 1,2K` en zet het minteken vóór het euroteken (`-€ 1,1 mln.`), terwijl de standaardnotatie `€ -1.234.567,89` geeft (lokaal getest, Node 24.21). Gebruik één eigen formatter met een eigen suffix.
+- Het minteken hoort overal op dezelfde plek, in compacte labels en in tabellen; kies één notatie.
 - Truncatie: eerst wrappen of herformuleren; als het moet hooguit afkappen met minimaal 4 tekens en een tooltip, nooit in kolomkoppen of navigatie (Carbon data table, geverifieerd; PatternFly [truncation](https://www.patternfly.org/ux-writing/truncation), UNVERIFIED).
 
 Niet gevonden: een dataviz-richtlijn van Material 3 of Fluent 2, een primaire NL-bron voor de notatie van negatieve bedragen, en een NN/g-artikel over hover-acties in tabellen.
@@ -107,4 +105,4 @@ Loop dit af op de render (licht 1440, donker 1440, 390), niet op de code:
 6. **Labels**: niets afgekapt dat je moet lezen om te beslissen.
 7. **Toetsenbord**: alles wat hover laat zien, laat focus ook zien.
 
-Robin beoordeelt op screenshots met een cijfer; laat de render zien en vraag geen "ziet er goed uit?".
+Vraag bij de render om een cijfer, niet om "ziet er goed uit?".

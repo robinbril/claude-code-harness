@@ -1,13 +1,13 @@
 ---
 name: pre-pr-gates
 description: >
-  Review kill-gates before opening or updating a PolpoHire PR. Use before
+  Review kill-gates before opening or updating a PR. Use before
   every `gh pr create`, `gh pr ready`, "open een pr", "klaar voor review", or
   when reporting a feature branch as review-ready. Catches the recurring
   review classes that tests and typecheck do not: ghost versions, cancelled
   gestures that commit, swallowed DB errors, unwired production paths,
-  oracle/predicate drift, sibling-page inconsistency, missing org_id tests,
-  and stale PR descriptions. After the checklist, emit a `PRE-PR CHECK:`
+  oracle/predicate drift, sibling-page inconsistency, missing tenant-isolation
+  tests, and stale PR descriptions. After the checklist, emit a `PRE-PR CHECK:`
   artefact before `gh pr create` (poort's PR gate in `tools/poort` checks it).
 ---
 
@@ -35,7 +35,7 @@ Do **not** run `gh pr create` until every applicable gate is `ok` or `n/a`.
 
 ---
 
-## Gate 1 — Ghost version (`feedback_no_ghost_version`)
+## Gate 1 — Ghost version
 
 Error, empty, loading, and zero must not look the same.
 
@@ -45,8 +45,8 @@ For every async fetch this diff adds or touches:
 - [ ] Failed fetch does **not** render as "0 items" / empty state / "—".
 - [ ] Loading is distinct from empty.
 
-Pattern: siblings already using `EmptyState v-if="xAsync.error.value"` are
-the template. A new `?? []` on a failed fetch is a ghost.
+Pattern: copy a sibling that already renders its error state. A new `?? []`
+on a failed fetch is a ghost.
 
 ## Gate 2 — Cancelled gesture must not commit
 
@@ -57,8 +57,8 @@ If the diff binds `@pointercancel` or a drag/resize `pointerup`:
 - [ ] Escape (if a keyboard cancel exists) takes the same revert path.
 - [ ] A test exists that cancel does not call persist/onDrop.
 
-Known incident: card-drag had a dedicated cancel; tile-resize rebound
-`@pointercancel` to `onResizeUp` which always `persistDraft()`.
+Typical miss: drag has a dedicated cancel, but resize binds `@pointercancel`
+to the pointer-up handler, which always saves.
 
 ## Gate 3 — `except` + live SQLAlchemy session
 
@@ -77,48 +77,49 @@ request.
 If the diff adds a column, flag, or helper:
 
 - [ ] Search every writer of that model (`ModelName(` and `db.add`).
-- [ ] The path users actually hit (board confirm, workflow node, public
-      API, not only the new settings endpoint) **writes the field**.
+- [ ] The path users actually hit (the main UI action, a background job, the
+      public API, not only the new settings endpoint) **writes the field**.
 - [ ] A test hits that production path, not only the helper in isolation.
 
-Known incident: `expected_start_date` existed on create/update in revenue
-and never on `confirm_placement` / workflow deal nodes — the feature
-never fired for board placements.
+Typical miss: a new date field is set in one create/update endpoint and
+never by the confirm action or the workflow step, so the feature never
+fires for most records.
 
 ## Gate 5 — Test oracle = production predicate
 
 If the diff adds a filter, realized-check, or date ladder:
 
 - [ ] Python helper, SQL helper, and TS port use the **same** predicate.
-- [ ] Frozen oracles (`scripts/gen_*.py`, `*oracle*.json`) call that
+- [ ] Frozen oracles (generator scripts, golden JSON files) call that
       helper, they do not reimplement a weaker filter.
 - [ ] Regenerating the oracle is a conscious step, not a silent skip.
 
 ## Gate 6 — All sibling consumers
 
 If the diff changes a pattern used on more than one page (activity feed,
-empty state, contact-moment body, summary tile):
+empty state, message body, summary tile):
 
 ```
-rg "<component-or-pattern>" frontend-v4/src/views/
+rg "<component-or-pattern>" <views-dir>/
 ```
 
 - [ ] Every sibling page got the same change, or an explicit reason why
       one stayed different is in the PR body.
 - [ ] "I migrated 3 of 4" is a blocking finding.
 
-## Gate 7 — Cross-org isolation test (RLS is dormant)
+## Gate 7 — Cross-tenant isolation test
 
-If the diff adds a table or an org-scoped endpoint:
+If the diff adds a table or a tenant-scoped endpoint:
 
-- [ ] A test creates a row in org A and asserts org B reads the default
+- [ ] A test creates a row in tenant A and asserts tenant B reads the default
       / 404 / empty, **not** A's data.
-- [ ] The query filters `org_id` (the only in-process isolation).
+- [ ] The query filters on the tenant key (`org_id`, `tenant_id`), also when
+      the database enforces row-level security.
 
 ## Gate 8 — PR description matches the code
 
-- [ ] Routes claimed in the body exist in `tests/e2e/00-smoke.spec.ts`
-      if they are new top-level routes.
+- [ ] Routes claimed in the body exist in the e2e smoke test if they are new
+      top-level routes.
 - [ ] Invariants in the body match the code (e.g. "never below actual"
       vs "strictly greater").
 - [ ] Behaviour delta section lists intended changes; anything else in
@@ -137,17 +138,14 @@ return:
       refresh that fails). A source-text test (`?raw` import plus regex or
       `toContain` on the source) pins text, not behaviour, and does not count.
 
-Known incident: 2eb7c32c patched one of three `onLogout()` triggers; the
-demo-reset guard and the header-only rejection shipped with no test that hit
-their condition (#657 review).
+Typical miss: a fix patches one of three logout triggers, or a new guard
+ships with no test that hits its condition.
 
-If the diff adds `CREATE INDEX` in `db/migrations/`:
+If the diff adds `CREATE INDEX` in a Postgres migration:
 
-- [ ] The table is created in the same migration, or the index is declared
-      on the ORM model instead (`ensure_additive_indexes()` builds it
-      CONCURRENTLY). A plain `CREATE INDEX` on an existing table SHARE-locks
-      it for the whole build during deploy. `polpo-guard` blocks this on
-      write and on commit.
+- [ ] The table is created in the same migration, or the index is
+      built with `CREATE INDEX CONCURRENTLY`. A plain `CREATE INDEX` on an
+      existing table SHARE-locks it for the whole build during deploy.
 
 ## Gate 10 — Frontend render proof
 
