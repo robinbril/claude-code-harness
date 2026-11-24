@@ -22,8 +22,16 @@ export function git(cwd, ...args) {
   return execFileSync('git', args, { cwd, env: GIT_ENV, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
+// A test run leaves nothing behind.
+const made = [];
+process.on('exit', () => {
+  for (const dir of made) fs.rmSync(dir, { recursive: true, force: true });
+});
+
 export function tempDir(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  made.push(dir);
+  return dir;
 }
 
 // A repo with one committed file, `app.txt`.
