@@ -1,8 +1,6 @@
-# ATS- en recruitment-analytics (Polpo en andere ATS'en)
+# ATS- en recruitment-analytics
 
-Wanneer lezen: bij analytics in een applicant tracking system of recruitment-CRM (Polpo, een bureau-ATS): pipeline, conversie per fase, time to hire, bronnen, vacature-ouderdom, aanbiedingen, kandidaatervaring, recruiter-activiteit, diversiteit, of een assistent naast die cijfers. Gedistilleerd uit het ATS-onderzoek van 2026-10-08 (`~/Desktop/Analytics ontwerp Power BI-stijl/ats-analytics.md`). Claims gemarkeerd **snippet** komen alleen uit een zoekresultaat; **[eigen keuze]** is een ontwerpbeslissing van het onderzoek.
-
-Volgorde (Robin, 2026-10-08): eerst de backoffice-versie excellent maken, dan uitbreiden naar Polpo.
+Wanneer lezen: bij analytics in een applicant tracking system of recruitment-CRM (ook een bureau-ATS): pipeline, conversie per fase, time to hire, bronnen, vacature-ouderdom, aanbiedingen, kandidaatervaring, recruiter-activiteit, diversiteit, of een assistent naast die cijfers. Onderzoek van 2026-10-08. Claims gemarkeerd **snippet** komen alleen uit een zoekresultaat; **[eigen keuze]** is een ontwerpbeslissing van het onderzoek.
 
 ## 1. Wat de beste ATS'en tonen
 
@@ -75,13 +73,13 @@ Verborgen child-routes: /analytics/vacature/:id, /analytics/bron/:id
 
 Slicerrij (vast, op elke pagina dezelfde plek): periode met "data t/m [datum]"; **telbasis** als segmented control ("Aanmelddatum (cohort)" of "Gebeurtenisdatum (activiteit)"); afdeling of, voor een bureau, klant (opdrachtgever); vacature(familie). Filter pane: bron, locatie, dienstverband, senioriteit, recruiter (als filter, niet als ranglijst).
 
-Bureau-ATS (Polpo, Reforge): voeg de klantdimensie toe en koppel hires aan plaatsingsfees, zodat "Bronnen & kosten" en de finance-pagina Winstgevendheid dezelfde plaatsing tonen.
+Bureau-ATS: voeg de klantdimensie toe en koppel hires aan plaatsingsfees, zodat "Bronnen & kosten" en de finance-pagina Winstgevendheid dezelfde plaatsing tonen.
 
-## 5. Polpo-plan (uit `voor-andere-projecten.md`)
+## 5. Aanpak
 
-- Begin met Overzicht en Pipeline (top-10 1 tot 5, 7 en 8); de assistent als laatste, na een AVG-privacytoets.
-- Polpo heeft een eigen designtaal (indigo/violet, Inter; skill `polpohire-design`). Deel de **semantische** tokens (status, afwijking, scenario's, typografieschaal, radii, spacing), houd de **merk**-tokens van Polpo en valideer de reekskleuren opnieuw op de Polpo-oppervlakken.
-- Nieuwe componenten bovenop de gedeelde set: **StageConversionBars**, **DistributionStrip** (box/strip met mediaan en p90), **CohortTable**.
+- Begin met Overzicht en Pipeline (top-10 1 tot 5, 7 en 8); de assistent als laatste, na een privacytoets.
+- Deel de **semantische** tokens (status, afwijking, scenario's, typografieschaal, radii, spacing) tussen producten, houd de **merk**-tokens per product en valideer de reekskleuren opnieuw op elk oppervlak.
+- Nieuwe componenten: stage-conversiebalken, verdelingsstrip (box/strip met mediaan en p90), cohorttabel.
 - Trek tokens en componenten pas naar een gedeeld pakket als minstens twee pagina's of twee producten ze gebruiken.
 
 ## 6. De assistent in een ATS
@@ -99,7 +97,7 @@ Startprompts: "Vat de pipeline van deze week samen voor het teamoverleg.", "In w
 
 | Niet doen | Wel doen |
 |---|---|
-| Trechter van trapezia, Sankey als werkvisual | Stage-conversiebalken plus afwijzingsredenen per fase |
+| Trechter van trapezia, Sankey als werkvisual | Stage-conversiebalken, of een gecentreerde funnel met verliesbruggen en aantallen per fase, plus afwijzingsredenen |
 | Snapshot-tellingen als conversie; cohort en activiteit mengen | Telbasis in slicer én subtitel |
 | Gemiddelde time to hire als enige getal | Mediaan plus p90, en de verdeling |
 | Lopende cohorten tonen alsof ze klaar zijn | Arceren als "nog niet afgerond", "n nog open" |

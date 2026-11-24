@@ -185,6 +185,7 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 | `office-docs` | PowerPoint, Excel en Word programmatisch genereren |
 | `brandkit` | Merkidentiteit en brand-guidelines-boards |
 | `data-visualization` | Het juiste charttype vanuit de relatie in je data |
+| `powerbi` | Power BI-stijl rapporten en dashboards in een eigen Vue-app, met ECharts of pure SVG |
 | `diagram-design` | Architectuur-, flow- en procesdiagrammen als HTML/SVG |
 | `readme` | README en repo-omschrijving die in tien seconden overtuigen: verhaallijn, eigen SVG-visuals voor licht en donker, gerenderd met GitHub's eigen engine. Deze pagina is ermee gebouwd |
 
@@ -199,7 +200,6 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 | Skill | Waarvoor |
 |---|---|
 | `polpohire-design` | PolpoHire-schermen in de actuele designtaal: tokens, componenten, motion |
-| `powerbi` | Power BI-stijl rapporten en dashboards in een eigen Vue-app, met ECharts of pure SVG |
 | `theme-selector` | De PolpoHire/TSS-themakiezer: presets, eigen kleuren, typografie, dichtheid |
 | `pre-pr-gates` | Harde PR-gates: ghost versions, geslikte DB-fouten, ontbrekende org_id-tests, verouderde PR-tekst |
 
@@ -298,4 +298,4 @@ Context-gebruik, actieve tools, agents en voortgang in je statusbalk: [claude-hu
 | `readme` | eigen skill; de verhaallijn (probleem, bewijs dat het werkt, trade-off) volgt [andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) | MIT |
 | `tools/poort/` | Reforge Recruitment | Niet MIT: `UNLICENSED`, alle rechten voorbehouden; inzien mag, hergebruik alleen met toestemming |
 
-Overgenomen skills hebben hun licentie in hun eigen map. `polpohire-design`, `powerbi`, `theme-selector` en `pre-pr-gates` zijn gebouwd voor PolpoHire en The Staffing Society; de rest is generiek.
+Overgenomen skills hebben hun licentie in hun eigen map. `polpohire-design`, `theme-selector` en `pre-pr-gates` zijn gebouwd voor PolpoHire en The Staffing Society; de rest is generiek.

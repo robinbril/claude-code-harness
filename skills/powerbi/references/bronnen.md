@@ -1,12 +1,12 @@
 # Bronnen
 
-Wanneer lezen: als je een bewering moet onderbouwen, de leeftijd of betrouwbaarheid van een bron wilt weten, of een claim in deze skill wilt natrekken. Kopie van `~/Desktop/Analytics ontwerp Power BI-stijl/bronnen.md` (onderzoek van 2026-10-08), ongewijzigd onder deze alinea. De bestanden waarnaar hij verwijst (het rapport, de bronnotities en `ats-analytics.md`) staan in die map; hun inhoud is in deze skill verwerkt in `patronen-finance.md`, `navigatie-en-slicers.md`, `assistent-patroon.md`, `tokens-en-typografie.md` en `ats-analytics.md`.
+Wanneer lezen: als je een bewering moet onderbouwen, de leeftijd of betrouwbaarheid van een bron wilt weten, of een claim in deze skill wilt natrekken. Onderzoek van 2026-10-08 en 2026-10-09.
 
-Alle bron-URL's uit het rapport (`Power BI finance rapportontwerp.md`) en de vier bronnotities, ontdubbeld en per onderwerp gegroepeerd. Groep 6 bevat de nieuwe bronnen uit `ats-analytics.md`. Er zijn geen URL's toegevoegd die niet in die bestanden staan.
+Bron-URL's, ontdubbeld en per onderwerp gegroepeerd.
 
 Legenda: een datum is de paginadatum (`ms.date` bij Microsoft Learn) of publicatiedatum zoals de notities hem geven. **ouder** = de notities markeren de bron als ouder dan de onderzoeksperiode. **snippet** = alleen via een zoekresultaat gezien, pagina niet (volledig) opgehaald. **secundair** = geen primaire bron, lagere betrouwbaarheid. Geen datum = de notities geven er geen.
 
-Aantallen: 150 unieke URL's uit rapport en notities (groep 1 t/m 5), plus 21 nieuwe ATS-bronnen (groep 6). Groep 7 t/m 9 komen uit het onderzoek van 2026-10-09 (rust en design, Power BI-ecosysteem, bibliotheken) en staan niet in de Desktop-map.
+Groep 1 tot en met 5: finance, navigatie, assistent, thema en staffing. Groep 6: ATS. Groep 7 tot en met 9: rust en design, Power BI-ecosysteem, bibliotheken.
 
 ## 1. Finance-visuals, IBCS en KPI-cards (41)
 
