@@ -8,7 +8,7 @@
 //   - receipts gesleuteld op de inhoud die getest is: zelfde inhoud = cached groen;
 //   - stack-checks draaien alleen tegen een stack uit déze worktree (provenance);
 //   - output: één regel per check, bij falen de staart plus een logpad.
-export const VERSION = '0.4.0';
+export const VERSION = '0.4.1';
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 // Gevendord naast poort.mjs (init kopieert integrations/ mee): doctor gebruikt
 // precies dezelfde env en token-lookup als de e2e-opname zelf.
 import { seatEnv, seatCwd, authStatusArgs, judgeSeatAuth, managedPolicyProblems, managedPolicyMessage, SERVER_POLICY_CAVEAT } from './integrations/e2e-claude-seat.mjs';
+import { decideE2E, e2eLimits, e2eText, fileKind, readMachine } from './checks/_e2e.mjs';
 
 const TAIL_LINES = Number(process.env.POORT_TAIL || 30);
 const TIERS = ['commit', 'push'];
@@ -938,6 +939,45 @@ async function pool(items, limit, fn) {
 }
 
 // Plant welke checks draaien. Pure functie, los testbaar.
+// ---------- e2e: draaien, adviseren of overslaan ----------
+
+// De gewijzigde regels van de hele branch, want daar gaat de PR over: een tweede push
+// van één regel maakt een grote PR niet klein. In de commit-hook telt wat gestaged is.
+function branchLines(top, { base, baseRef, staged }, wanted) {
+  const from = base || (baseRef && git(['merge-base', 'HEAD', baseRef], { cwd: top, allowFail: true }).trim()) || (refExists(top, 'HEAD') ? 'HEAD' : EMPTY_TREE);
+  const stat = nul(git(['diff', ...(staged ? ['--cached'] : []), '--numstat', '-z', '--no-renames', from], { cwd: top })).map((l) => {
+    const [added, deleted, ...file] = l.split('\t');
+    return { path: file.join('\t'), lines: (Number(added) || 0) + (Number(deleted) || 0) };
+  });
+  // Nog niet in git: zelf tellen. Een bestand dat intussen weg is of niet te lezen, telt 0 regels.
+  const count = (f) => {
+    try {
+      return lines(fs.readFileSync(path.join(top, f), 'utf8')).length;
+    } catch {
+      return 0;
+    }
+  };
+  const fresh = staged ? [] : nul(git(['ls-files', '-o', '--exclude-standard', '-z'], { cwd: top })).filter((f) => wanted(f) && fileKind(f) !== 'other');
+  return [...stat.filter((f) => wanted(f.path)), ...fresh.map((f) => ({ path: f, lines: count(f) }))];
+}
+
+// Per e2e-check die zou draaien. In CI en met --all beslist de config, niet de drukte.
+function e2eDecisions(top, cfg, todo, opts) {
+  if (!todo.length || isCI() || opts.all) return new Map();
+  const changed = branchLines(top, opts, (f) => todo.some((c) => matches(c, f)));
+  const machine = readMachine();
+  const limits = e2eLimits();
+  const shared = (cfg.pr?.sections || []).filter((s) => s.when).map((s) => new RegExp(s.when));
+  return new Map(todo.map((c) => [c.id, decideE2E({ files: changed.filter((f) => matches(c, f.path)), machine, limits, shared })]));
+}
+
+// verify beslist niet opnieuw: de drukte is dan anders. Hij leest wat er bij deze inhoud
+// besloten is. Rood uit een run die telde, staat los daarvan in de receipt van de check
+// zelf en blijft staan tot een groene run, ook als de machine intussen vol is.
+const decisionId = (c) => `${c.id}.e2e`;
+const WAS_RED = 'rood bij de laatste run van deze inhoud';
+const readDecision = (store, c, key) => (c.type === 'e2e' ? readReceipt(store, decisionId(c), key) : null);
+
 export function plan(cfg, { tier, changed, all, skip = [] }) {
   return cfg.checks
     .filter((c) => c.tier === tier)
@@ -965,6 +1005,13 @@ export async function runTier(top, cfg, opts) {
   fs.mkdirSync(logDir, { recursive: true });
   const width = Math.max(...planned.map((p) => p.check.id.length));
   const limit = Math.max(2, Math.floor(os.cpus().length / 2));
+  const receiptOf = (c) => {
+    const key = checkKey(c, blobs, opts.base, keyContext(top, c));
+    const prev = readReceipt(store, c.id, key);
+    return { key, prev, cached: Boolean(prev?.ok && !opts.noCache && c.cache !== false) };
+  };
+  const todo = planned.filter((p) => p.action === 'run' && p.check.type === 'e2e').map((p) => p.check);
+  const decisions = e2eDecisions(top, cfg, todo.filter((c) => e2eUrlStatus(c).ok && !receiptOf(c).cached), opts);
 
   const results = await pool(planned, limit, async (p) => {
     const c = p.check;
@@ -973,13 +1020,16 @@ export async function runTier(top, cfg, opts) {
     // groen bewijs niet.
     const url = e2eUrlStatus(c);
     if (!url.ok) return { c, status: 'skip', reason: url.reason };
-    const key = checkKey(c, blobs, opts.base, keyContext(top, c));
-    const prev = readReceipt(store, c.id, key);
-    if (prev?.ok && !opts.noCache && c.cache !== false) return { c, status: 'cached', key };
+    const { key, prev, cached } = receiptOf(c);
+    if (cached) return { c, status: 'cached', key };
     if (c.if) {
       const pre = sh(c.if, path.join(top, c.cwd));
       if (pre.status !== 0) return { c, status: 'skip', reason: c.ifHint ? `voorwaarde niet voldaan: ${c.ifHint}` : `voorwaarde niet voldaan: ${c.if}` };
     }
+    const decision = decisions.get(c.id);
+    const advisory = decision?.mode === 'advisory';
+    if (decision) writeReceipt(store, decisionId(c), key, decision);
+    if (decision?.mode === 'skip') return { c, status: 'skip', reason: e2eText(decision) + (prev?.ok === false ? '; deze inhoud was eerder rood, de PR-poort vraagt een groene run' : '') };
     // `if` zegt of de check hier hoort; `needs` zegt wat hij nodig heeft om te draaien.
     // Een ontbrekende tool is rood, nooit "overgeslagen": anders lijkt een check die
     // niet kon draaien groen.
@@ -987,7 +1037,7 @@ export async function runTier(top, cfg, opts) {
       const logFile = path.join(logDir, `${c.id}.log`);
       const msg = `tool ontbreekt (${c.needs})${c.needsHint ? `; installeer: ${c.needsHint}` : ''}`;
       fs.writeFileSync(logFile, msg + '\n');
-      return { c, status: 'fail', code: 127, ms: 0, tail: [msg], logFile, cmd: c.needs, warns: [] };
+      return { c, status: advisory ? 'warn' : 'fail', code: 127, ms: 0, tail: [msg], logFile, cmd: c.needs, warns: [] };
     }
     if (c.stack.length && opts.noStack) return { c, status: 'skip', reason: '--no-stack' };
     if (c.stack.length) {
@@ -1027,7 +1077,9 @@ export async function runTier(top, cfg, opts) {
     }
     r.waitMs = slot?.waitMs || 0;
     if (r.code === 0) writeReceipt(store, c.id, key, { ok: true, ms: r.ms, tier, warns: r.warns });
-    return { c, status: r.code === 0 ? 'pass' : 'fail', ...r, logFile, cmd, fullBy };
+    else if (advisory) writeReceipt(store, decisionId(c), key, { ...decision, red: true });
+    else if (c.type === 'e2e' && !r.timedOut && !stopping) writeReceipt(store, c.id, key, { ok: false, ms: r.ms, tier, code: r.code });
+    return { c, status: r.code === 0 ? 'pass' : advisory ? 'warn' : 'fail', ...r, logFile, cmd, fullBy };
   });
 
   // Afgebroken (Ctrl-C, SIGTERM): de checks zijn gestopt, niet gefaald. Geen
@@ -1035,9 +1087,9 @@ export async function runTier(top, cfg, opts) {
   if (stopping) return 1;
   const secs = (ms) => `${(ms / 1000).toFixed(1)}s`;
   const waited = (r) => (r.waitMs > 250 ? ` (wachtte ${secs(r.waitMs)} op een slot)` : '') + (r.fullBy ? ` · alle bestanden (${r.fullBy} gewijzigd)` : '');
-  const counts = { pass: 0, cached: 0, fail: 0, skip: 0 };
+  const counts = { pass: 0, cached: 0, fail: 0, warn: 0, skip: 0 };
   for (const r of results) {
-    if (r.status !== 'skip') recordTiming(store, { id: r.c.id, tier, status: r.status, ms: r.ms || 0, waitMs: r.waitMs || 0, wt: path.basename(top) });
+    if (r.status !== 'skip') recordTiming(store, { id: r.c.id, tier, status: r.status === 'warn' ? 'fail' : r.status, ms: r.ms || 0, waitMs: r.waitMs || 0, wt: path.basename(top) });
   }
   out(`poort ${tier}`);
   for (const r of results) {
@@ -1052,14 +1104,17 @@ export async function runTier(top, cfg, opts) {
     }
     else if (r.status === 'skip') out(`  ↷ ${id}  overgeslagen: ${r.reason}`);
     else {
-      out(`  ✗ ${id}  ${r.timedOut ? `timeout na ${r.c.timeout}s` : `exit ${r.code}`} · ${secs(r.ms)}${waited(r)}`);
+      const soft = r.status === 'warn';
+      out(`  ${soft ? '!' : '✗'} ${id}  ${soft ? 'adviserend, blokkeert niet: ' : ''}${r.timedOut ? `timeout na ${r.c.timeout}s` : `exit ${r.code}`} · ${secs(r.ms)}${waited(r)}`);
       for (const l of r.tail) out(`    │ ${l}`);
       out(`    log:  ${path.relative(top, r.logFile).startsWith('..') ? r.logFile : path.relative(top, r.logFile)}`);
       if (r.c.hint) out(`    tip:  ${r.c.hint}`);
       if (process.env.GITHUB_ACTIONS) out(`::error title=poort ${r.c.id}::${r.c.id} faalde (exit ${r.code})`);
     }
+    const decision = decisions.get(r.c.id);
+    if (decision && !['cached', 'skip'].includes(r.status)) out(`    · ${e2eText(decision)}`);
   }
-  const sum = [`${counts.pass + counts.cached} ✓`, counts.cached && `(${counts.cached} cached)`, counts.fail && `${counts.fail} ✗`, counts.skip && `${counts.skip} ↷`]
+  const sum = [`${counts.pass + counts.cached} ✓`, counts.cached && `(${counts.cached} cached)`, counts.fail && `${counts.fail} ✗`, counts.warn && `${counts.warn} !`, counts.skip && `${counts.skip} ↷`]
     .filter(Boolean)
     .join(' ');
   out(`poort ${tier}: ${sum}${counts.fail ? ' · geblokkeerd' : ''}`);
@@ -1146,16 +1201,27 @@ export function verify(top, cfg, { tiers = TIERS, ref = 'HEAD', base = null } = 
     }
     const key = checkKey(c, blobs, base, keyContext(top, c));
     const r = readReceipt(store, c.id, key);
+    const decision = readDecision(store, c, key);
+    const ran = decision && decision.mode !== 'skip';
     if (r?.ok) {
-      rows.push({ id: c.id, ok: true });
+      rows.push({ id: c.id, ok: true, ...(ran && { reason: e2eText(decision) }) });
+      continue;
+    }
+    if (r?.ok === false) {
+      rows.push({ id: c.id, ok: false, reason: WAS_RED });
       continue;
     }
     if (c.if && sh(c.if, path.join(top, c.cwd)).status !== 0) {
       rows.push({ id: c.id, ok: null, reason: 'n.v.t. hier (voorwaarde)' });
       continue;
     }
-    if (c.needs && sh(c.needs, path.join(top, c.cwd)).status !== 0) {
-      rows.push({ id: c.id, ok: false, reason: `tool ontbreekt: ${c.needsHint || c.needs}` });
+    const missing = c.needs && sh(c.needs, path.join(top, c.cwd)).status !== 0 ? `tool ontbreekt: ${c.needsHint || c.needs}` : '';
+    if (decision && decision.mode !== 'run') {
+      rows.push({ id: c.id, ok: null, reason: e2eText(decision) + (ran ? `; ${missing || (decision.red ? WAS_RED : 'niet groen gedraaid')}` : '') });
+      continue;
+    }
+    if (missing) {
+      rows.push({ id: c.id, ok: false, reason: missing });
       continue;
     }
     // Een stack die niet draait, maakt een verplichte check niet overbodig: anders
@@ -1220,6 +1286,7 @@ export function agentBlock(cfg) {
     ...(e2e
       ? [
           '- UI-wijziging: bekijk de app eerst via de e2e-MCP (`open_session`, `observe`) en schrijf of update een test in `tests/*.e2e.ts` van de e2e-map: één `agent.act` per doel, dan een exacte `expect`.',
+          '- e2e is geen harde poort: poort beslist per run uit PR-grootte en drukte (`e2e run`, `advisory` of `skip`). Overgeslagen of adviserend rood: zet de reden en de rode tests in de PR.',
           '- e2e-replay rood na een bewuste UI-wijziging: `node .poort/poort.mjs e2e --record`, stage `.e2e/cache/`.',
         ]
       : []),

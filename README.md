@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.17.0-5B50E6" alt="versie 1.17.0">
+<img src="https://img.shields.io/badge/versie-1.18.0-5B50E6" alt="versie 1.18.0">
 <img src="https://img.shields.io/badge/skills-51-111827" alt="51 skills">
 <img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">
@@ -177,7 +177,7 @@ Elke skill activeert automatisch op zijn onderwerp, of roep hem aan met `/naam` 
 | Skill | Waarvoor |
 |---|---|
 | `e2e` | Agentische end-to-end-tests voor web en mobiel met [e2e](https://github.com/tester-army/e2e) |
-| `e2e-rules` | Huisregels: wanneer een test verplicht is, naamgeving, config, definition of done |
+| `e2e-rules` | Huisregels: wanneer e2e draait, adviseert of wordt overgeslagen (PR-grootte en drukte), naamgeving, config, definition of done |
 
 ### Documenten en visuals
 
@@ -242,7 +242,7 @@ Alle versies zijn gepind; updaten is een bewuste stap. Claude in Chrome (je inge
 
 ## poort
 
-`tools/poort/` is poort v0.4.0: een quality gate in één bestand, zonder dependencies.
+`tools/poort/` is poort v0.4.1: een quality gate in één bestand, zonder dependencies.
 
 <img src="assets/poort.svg" alt="Commit-checks, push-checks, PR-gate, CI" width="100%">
 

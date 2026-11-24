@@ -18,11 +18,14 @@
 //   Zonder --base: de merge-base met POORT_BASE_REF, "base" uit de config,
 //   origin/HEAD, origin/main of @{upstream} (de eerste die bestaat), anders HEAD~1,
 //   en bij één commit de lege tree.
+// POORT_E2E (gezet door de PR-poort): per e2e-check of hij draaide, met de reden. Komt
+// als advies in de uitvoer, blokkeert nooit.
 // Exit 1 met de redenen als de beschrijving niet klopt; exit 2 als er geen base is.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { warn } from './_lib.mjs';
 
 export function checkBody({ body, files, rules, exists }) {
   const errors = [];
@@ -50,6 +53,20 @@ export function checkBody({ body, files, rules, exists }) {
     if (!exists.file(p)) errors.push(`De beschrijving noemt \`${p}\`, maar dat bestand bestaat niet in deze branch.`);
   }
   return errors;
+}
+
+// Eén regel per e2e-check ("e2e-replay: e2e skip · reden"). Overgeslagen of adviserend
+// rood hoort in de PR: noemt de tekst het niet, dan komt de kant-en-klare regel erbij.
+export function e2eAdvice(body, notes) {
+  return notes
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => {
+      const skipped = l.match(/e2e skip · (.+)$/);
+      if (skipped && !/e2e.{0,40}overgeslagen/i.test(body)) return `${l}. Zet in de PR: UNVERIFIED: e2e overgeslagen: ${skipped[1]}`;
+      if (/e2e advisory · .*; rood /.test(l) && !/e2e.{0,40}rood/i.test(body)) return `${l}. Zet in de PR: UNVERIFIED: e2e rood: <de rode tests>`;
+      return l;
+    });
 }
 
 // ---------- CLI ----------
@@ -119,6 +136,7 @@ if (isMain) {
     },
   };
   const errors = checkBody({ body, files, rules, exists });
+  for (const l of e2eAdvice(body, process.env.POORT_E2E || '')) warn(l);
   for (const e of errors) console.log(`✗ ${e}`);
   process.exit(errors.length ? 1 : 0);
 }

@@ -68,5 +68,5 @@ Geen em-dashes (de guard blokkeert ze). Plak-lijsten met kale "- " streepjes in 
 
 Elke fase of gate die iets in een browser bewijst, gebruikt een echte render met een vooraf opgeschreven verwachting:
 - Statische render: skill `render-proof` (headless Playwright-render naar PNG), of `npx --no-install playwright screenshot` (lokaal geinstalleerd). Lees het vooraf opgeschreven feit af.
-- Flow of gedrag (klik, zoek, navigeer): een e2e-test met skill `e2e` (`npx --no-install e2e run`).
+- Flow of gedrag (klik, zoek, navigeer): een e2e-test met skill `e2e` (`npx --no-install e2e run`), zo hard als `e2e-rules` voor deze wijziging en drukte aangeeft.
 - Ingelogde of hover-state met echte data: de eigen browser van de gebruiker. Pagina's met klant- of persoonsgegevens nooit naar een extern model.
