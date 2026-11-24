@@ -188,13 +188,16 @@ test('a docker that runs without its program in PATH is no answer', () => {
   const old = { path: process.env.PATH, home: process.env.HOME };
   const bin = path.join(s.top, 'only');
   fs.mkdirSync(bin);
-  for (const p of ['git', 'ps', 'lsof']) fs.symlinkSync(spawnSync('sh', ['-c', `command -v ${p}`], { encoding: 'utf8' }).stdout.trim(), path.join(bin, p));
+  for (const p of ['git', 'ps', 'lsof']) {
+    const at = spawnSync('sh', ['-c', `command -v ${p}`], { encoding: 'utf8' }).stdout.trim();
+    if (at) fs.symlinkSync(at, path.join(bin, p));
+  }
   Object.assign(process.env, { PATH: bin, HOME: s.top, WORKTREE_CARE_DOCKER_SOCKET: path.join(s.top, 'docker.sock') });
   try {
     assert.throws(() => snapshot(), /niet in PATH/);
     process.env.WORKTREE_CARE_DOCKER_SOCKET = path.join(s.top, 'none');
     assert.ok(snapshot().paths.length);
-    fs.rmSync(path.join(bin, 'lsof'));
+    fs.rmSync(path.join(bin, 'lsof'), { force: true });
     if (!fs.existsSync('/proc/self/cwd')) assert.throws(() => snapshot(), /lsof ontbreekt/);
   } finally {
     Object.assign(process.env, { PATH: old.path, HOME: old.home });
