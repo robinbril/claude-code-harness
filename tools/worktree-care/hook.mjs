@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { configFile, loadConfig, stateDir } from './lib/config.mjs';
+import { loadConfig, stateDir } from './lib/config.mjs';
 import { freeGB, level } from './lib/disk.mjs';
 import { heavyTool, isImageBuild } from './lib/guard.mjs';
 import { worktreesOf } from './lib/repos.mjs';
@@ -39,6 +39,13 @@ function startSweep(cfg, cwd) {
   }
 }
 
+// The reader is an agent. What it could type to get past the floor is not for it to choose.
+const NEXT = {
+  started: 'Het opruimen is gestart; probeer het over een paar minuten opnieuw.',
+  waiting: 'Automatisch opruimen staat aan en begon nu niet opnieuw; probeer het over een kwartier opnieuw.',
+  off: 'Automatisch opruimen staat uit. De gebruiker beslist wat er weg mag: ruim niet zelf op, laat de proef zien en vraag het.',
+};
+
 function guard(event, cfg) {
   const cwd = event.cwd || process.cwd();
   const free = freeGB(cwd);
@@ -50,8 +57,8 @@ function guard(event, cfg) {
   if (now === 'low') return 0;
   process.stderr.write(
     `[worktree-care] Nog ${free.toFixed(1)} GB vrij, onder de vloer van ${cfg.minFreeGB} GB: ${what} start niet.\n` +
-      `${started ? 'Het opruimen is gestart; probeer het over een paar minuten opnieuw.' : `Ruim op met: node "${CARE}" sweep --apply`}\n` +
-      `Kijk wat er ligt: node "${CARE}" sweep. Grens aanpassen: minFreeGB in ${configFile()}. Eenmalig toch: WORKTREE_CARE_SKIP=<reden> voor het commando.\n`,
+      `${NEXT[!cfg.autoSweep ? 'off' : started ? 'started' : 'waiting']}\n` +
+      `Wat er weg zou gaan (proef, wijzigt niets): node "${CARE}" sweep\n`,
   );
   return 2;
 }

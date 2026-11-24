@@ -5,6 +5,7 @@ import path from 'node:path';
 import { run } from './run.mjs';
 
 export const LABEL = 'dev.worktree-care.sweep';
+const IN_PROGRESS = 36;
 const xml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // The sweep is in nobody's way: lowest CPU and disk priority.
@@ -29,11 +30,25 @@ export function plist(care, state, env = process.env) {
 `;
 }
 
-export function schedule(care, state, remove, out) {
-  if (process.platform !== 'darwin') return out(`Zet dit in je crontab (crontab -e):\n17 */3 * * * nice -n 15 "${process.execPath}" "${care}" sweep --apply`);
+const gone = (r) => /could not find service|no such process/i.test(r.err + r.out);
+
+// Only launchd itself says whether the task is off. Stopping one that runs takes a moment.
+function bootout(target) {
+  const r = run('launchctl', ['bootout', target], { timeout: 30000 });
+  for (let i = 0; i < 10; i++) {
+    const now = run('launchctl', ['print', target], { timeout: 30000 });
+    if (now.code !== 0 && gone(now)) return;
+    if (r.code !== 0 && r.code !== IN_PROGRESS) break;
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+  }
+  throw new Error(`de vaste taak staat nog aan, launchctl bootout faalde: ${r.err.trim() || (r.missing ? 'launchctl ontbreekt' : `exit ${r.code}`)}`);
+}
+
+export function schedule(care, state, remove, out, platform = process.platform) {
+  if (platform !== 'darwin') return out(`Zet dit in je crontab (crontab -e):\n17 */3 * * * nice -n 15 "${process.execPath}" "${care}" sweep --apply`);
   const file = path.join(os.homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
   const domain = `gui/${process.getuid()}`;
-  run('launchctl', ['bootout', `${domain}/${LABEL}`]);
+  bootout(`${domain}/${LABEL}`);
   if (remove) {
     fs.rmSync(file, { force: true });
     return out('vaste taak weg');
