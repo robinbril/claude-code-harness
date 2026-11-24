@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { configFile, loadConfig, stateDir } from './lib/config.mjs';
+import { loadConfig, stateDir } from './lib/config.mjs';
 import { freeGB, level } from './lib/disk.mjs';
 import { heavyTool, isImageBuild } from './lib/guard.mjs';
 import { worktreesOf } from './lib/repos.mjs';
@@ -30,14 +30,24 @@ function due(name) {
 
 // Writing the stamp can fail on a full disk; the answer may not depend on it.
 function startSweep(cfg, cwd) {
+  if (!cfg.autoSweep) return 'off';
   try {
-    if (!cfg.autoSweep || !due('sweep')) return false;
+    if (!due('sweep')) return 'waiting';
     background(['sweep', '--apply'], cwd);
-    return true;
+    return 'started';
   } catch {
-    return false;
+    return 'failed';
   }
 }
+
+// The reader is an agent. What it could type to get past the floor is not for it to choose.
+const NEXT = {
+  off: 'Automatisch opruimen staat uit.',
+  started: 'Het opruimen is gestart; probeer het over een paar minuten opnieuw.',
+  waiting: 'Het opruimen begon minder dan een kwartier geleden; probeer het straks opnieuw.',
+  failed: 'Automatisch opruimen staat aan maar kan niet starten.',
+};
+const ASK = 'De gebruiker beslist wat er weg mag: ruim niet zelf op, laat de proef zien en vraag het.';
 
 function guard(event, cfg) {
   const cwd = event.cwd || process.cwd();
@@ -46,12 +56,12 @@ function guard(event, cfg) {
   if (now === 'ok') return 0;
   const what = heavyTool(event.tool_name, event.tool_input);
   if (!what || /\bWORKTREE_CARE_SKIP=\S/.test(event.tool_input?.command ?? '')) return 0;
-  const started = startSweep(cfg, cwd);
+  const sweep = startSweep(cfg, cwd);
   if (now === 'low') return 0;
   process.stderr.write(
     `[worktree-care] Nog ${free.toFixed(1)} GB vrij, onder de vloer van ${cfg.minFreeGB} GB: ${what} start niet.\n` +
-      `${started ? 'Het opruimen is gestart; probeer het over een paar minuten opnieuw.' : `Ruim op met: node "${CARE}" sweep --apply`}\n` +
-      `Kijk wat er ligt: node "${CARE}" sweep. Grens aanpassen: minFreeGB in ${configFile()}. Eenmalig toch: WORKTREE_CARE_SKIP=<reden> voor het commando.\n`,
+      `${NEXT[sweep]}${['off', 'failed'].includes(sweep) ? '' : ' Blijft het vol:'} ${ASK}\n` +
+      `Wat er weg zou gaan (proef, wijzigt niets): node "${CARE}" sweep\n`,
   );
   return 2;
 }

@@ -12,7 +12,7 @@ import { takeLock } from '../tools/worktree-care/lib/lock.mjs';
 import { worktreesOf } from '../tools/worktree-care/lib/repos.mjs';
 import { heavyCommand, heavyTool } from '../tools/worktree-care/lib/guard.mjs';
 import { pruneBuildCache } from '../tools/worktree-care/lib/disk.mjs';
-import { plist } from '../tools/worktree-care/lib/schedule.mjs';
+import { plist, schedule } from '../tools/worktree-care/lib/schedule.mjs';
 
 // ---------- config ----------
 
@@ -66,11 +66,27 @@ test('guard: refuses heavy work below the floor, says what to do, and lets recov
   const r = hook('guard', bash('docker build .'), { free: '9' });
   assert.equal(r.status, 2);
   assert.match(r.stderr, /Nog 9\.0 GB vrij, onder de vloer van 15 GB: een image-build start niet/);
-  assert.match(r.stderr, /care\.mjs" sweep --apply/);
   assert.equal(hook('guard', bash('docker builder prune -f'), { free: '1' }).status, 0);
   assert.equal(hook('guard', bash('WORKTREE_CARE_SKIP=spoed docker build .'), { free: '9' }).status, 0);
   assert.equal(hook('guard', bash('docker build .'), { free: '30' }).status, 0);
   assert.equal(hook('guard', { tool_name: 'Agent', tool_input: { isolation: 'worktree' }, cwd: ROOT }, { free: '9' }).status, 2);
+});
+
+test('guard: the message leaves cleaning up and getting past the floor to the user', () => {
+  const off = hook('guard', bash('docker build .'), { free: '9' });
+  assert.match(off.stderr, /Automatisch opruimen staat uit\. De gebruiker/);
+  assert.match(off.stderr, /proef, wijzigt niets\): node ".*care\.mjs" sweep\n$/);
+  const on = hook('guard', bash('docker build .'), { free: '9', cfg: { autoSweep: true } });
+  assert.match(on.stderr, /Het opruimen is gestart/);
+  const again = hook('guard', bash('docker build .'), { free: '9', cfg: { autoSweep: true }, env: { STATE: on.dir } });
+  assert.match(again.stderr, /minder dan een kwartier geleden/);
+  const failed = hook('guard', bash('docker build .'), { free: '9', cfg: { autoSweep: true }, env: { WORKTREE_CARE_STATE: '/dev/null/x' } });
+  assert.match(failed.stderr, /staat aan maar kan niet starten\. De gebruiker/);
+  for (const r of [off, on, again, failed]) {
+    assert.match(r.stderr, /De gebruiker beslist wat er weg mag: ruim niet zelf op/);
+    assert.equal(r.status, 2);
+    assert.doesNotMatch(r.stderr.replace(/^spawn: .*$/m, ''), /--apply|WORKTREE_CARE_SKIP|minFreeGB|config\.json/);
+  }
 });
 
 test('guard: a low disk starts one sweep in the background, only when automatic sweeping is on', () => {
@@ -108,7 +124,7 @@ test('build cache: only the builder cache, with an upper limit', () => {
   withPath(fakeBin(top, 'docker', `echo "$@" >> "${calls}"; echo "Total: 4GB"`), () => {
     assert.match(pruneBuildCache(CFG), /boven 20 GB gesnoeid: 4GB/);
     pruneBuildCache(CFG, { lowDisk: true });
-    pruneBuildCache(CFG, { dryRun: true });
+    assert.equal(pruneBuildCache(CFG, { dryRun: true }), 'bouwcache zou tot 20 GB gesnoeid worden');
   });
   assert.equal(fs.readFileSync(calls, 'utf8'), 'builder prune --force --max-used-space 20GB\nbuilder prune --force --max-used-space 5GB\n');
 });
@@ -120,6 +136,96 @@ test('schedule: the task finds docker where this shell finds it and keeps the se
   assert.ok(text.includes(`${top}/bin`));
   assert.match(text, /CLAUDE_CONFIG_DIR<\/key><string>\/c</);
   assert.doesNotMatch(text, /SECRET/);
+});
+
+// launchctl that keeps its task in a file, and fails the way the test says.
+function launchctl(top, bootout) {
+  const task = path.join(top, 'task');
+  return fakeBin(top, 'launchctl', `case "$1" in
+    bootout) ${bootout} ;;
+    print) [ -f "${task}" ] && exit 0; echo 'Could not find service "x" in domain for user gui: 501' >&2; exit 113 ;;
+    bootstrap) [ -f "${task}" ] && exit 5; touch "${task}" ;;
+  esac`);
+}
+
+for (const [what, bootout, loaded, error] of [
+  ['stops it', 'rm -f "$TASK"', true, null],
+  ['finds nothing to stop', "echo 'Boot-out failed: 3: No such process' >&2; exit 3", false, null],
+  ['stops it a moment later', '(sleep 1; rm -f "$TASK") >/dev/null 2>&1 & exit 36', true, null],
+  ['is already stopping it', '(sleep 1; rm -f "$TASK") >/dev/null 2>&1 & exit 37', true, null],
+  ['fails', "echo 'Boot-out failed: 5: Input/output error' >&2; exit 5", true, /staat nog aan, launchctl bootout: Boot-out failed: 5/],
+  ['says it worked while the task stays', 'exit 0', true, /staat nog aan, launchctl bootout: exit 0/],
+]) {
+  test(`schedule --remove: launchctl ${what}`, () => {
+    const top = fs.realpathSync.native(tempDir('care-launch-'));
+    const task = path.join(top, 'task');
+    const file = path.join(top, 'Library/LaunchAgents/dev.worktree-care.sweep.plist');
+    write(top, 'Library/LaunchAgents/dev.worktree-care.sweep.plist', 'x');
+    if (loaded) fs.writeFileSync(task, '');
+    const said = [];
+    const old = process.env.HOME;
+    Object.assign(process.env, { HOME: top, TASK: task });
+    try {
+      withPath(launchctl(top, bootout), () => {
+        const go = () => schedule('/x/care.mjs', path.join(top, 'state'), true, (l) => said.push(l), { platform: 'darwin', wait: 4000 });
+        if (error) assert.throws(go, error);
+        else go();
+      });
+    } finally {
+      process.env.HOME = old;
+      delete process.env.TASK;
+    }
+    assert.deepEqual(said, error ? [] : ['vaste taak weg']);
+    assert.equal(fs.existsSync(file), Boolean(error));
+    assert.equal(fs.existsSync(task), Boolean(error));
+  });
+}
+
+// print: what launchctl says about the task after the bootout.
+for (const [what, print, error] of [
+  ['there is no session of this user', "echo 'Could not find domain for user gui: 501' >&2; exit 112", null],
+  ['root asks, whose domain holds no tasks', "echo 'Could not print domain: 125: Domain does not support specified action' >&2; exit 125", /niet te bepalen.*does not support/],
+  ['launchctl answers something else', "echo 'Input/output error' >&2; exit 5", /niet te bepalen of de vaste taak nog aan staat.*print: Input\/output error/],
+]) {
+  test(`schedule --remove: ${what}`, () => {
+    const top = fs.realpathSync.native(tempDir('care-launch-'));
+    write(top, 'Library/LaunchAgents/dev.worktree-care.sweep.plist', 'x');
+    const bin = fakeBin(top, 'launchctl', `case "$1" in bootout) exit 3 ;; print) ${print} ;; esac`);
+    const old = process.env.HOME;
+    process.env.HOME = top;
+    try {
+      const go = () => withPath(bin, () => schedule('/x/care.mjs', top, true, () => {}, { platform: 'darwin', wait: 500 }));
+      if (error) assert.throws(go, error);
+      else go();
+    } finally {
+      process.env.HOME = old;
+    }
+    assert.equal(fs.existsSync(path.join(top, 'Library/LaunchAgents/dev.worktree-care.sweep.plist')), Boolean(error));
+  });
+}
+
+test('schedule: a task that cannot be stopped is not replaced', () => {
+  const top = fs.realpathSync.native(tempDir('care-launch-'));
+  fs.writeFileSync(path.join(top, 'task'), '');
+  const old = process.env.HOME;
+  process.env.HOME = top;
+  try {
+    withPath(launchctl(top, 'exit 5'), () => assert.throws(() => schedule('/x/care.mjs', top, false, () => {}, { platform: 'darwin', wait: 500 }), /staat nog aan/));
+  } finally {
+    process.env.HOME = old;
+  }
+  assert.ok(!fs.existsSync(path.join(top, 'Library/LaunchAgents/dev.worktree-care.sweep.plist')));
+});
+
+test('cli: a failed bootout is a failure, not "vaste taak weg"', (t) => {
+  if (process.platform !== 'darwin') return t.skip('launchd is er alleen op macOS');
+  const top = fs.realpathSync.native(tempDir('care-launch-cli-'));
+  fs.writeFileSync(path.join(top, 'task'), '');
+  const bin = launchctl(top, 'echo nope >&2; exit 5');
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'tools/worktree-care/care.mjs'), 'schedule', '--remove'], { encoding: 'utf8', env: { ...GIT_ENV, HOME: top, PATH: `${bin}${path.delimiter}${process.env.PATH}` } });
+  assert.equal(r.status, 1);
+  assert.doesNotMatch(r.stdout, /weg/);
+  assert.match(r.stderr, /staat nog aan, launchctl bootout: nope/);
 });
 
 test('six starters on an orphaned lock: one wins', async () => {
