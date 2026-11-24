@@ -89,6 +89,9 @@ export function bodyFrom(command, words, cwd) {
   return null;
 }
 
+// Wat poort over e2e besloot, uit de regels van `poort verify`: draaide hij, en waarom (niet).
+export const e2eNotes = (verify) => [...verify.matchAll(/^\s*[✓↷] (\S+)\s{2}(e2e (?:run|advisory|skip) · .+)$/gm)].map(([, id, text]) => `${id}: ${text}`).join('\n');
+
 function main() {
   let input = {};
   try {
@@ -97,8 +100,11 @@ function main() {
   const cursor = typeof input.command === 'string';
   const cmd = cursor ? input.command : input.tool_input?.command || '';
 
-  const allow = () => {
-    if (cursor) process.stdout.write(JSON.stringify({ permission: 'allow' }));
+  // notes: advies voor de agent die de PR opent; blokkeert niets.
+  const allow = (notes = []) => {
+    const msg = notes.join('\n');
+    if (cursor) process.stdout.write(JSON.stringify({ permission: 'allow', ...(msg && { agentMessage: msg }) }));
+    else if (msg) process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: msg } }));
     process.exit(0);
   };
   const words = /\bgh\b/.test(cmd) ? prCommand(cmd) : null;
@@ -113,15 +119,17 @@ function main() {
   if (r.status !== 0) problems.push(`Niet elke verplichte check heeft bewijs voor deze commit.\n${r.stdout.trim()}`);
 
   // PR-beschrijving tegen de diff (checks/pr-body.mjs), als de body in het commando staat.
+  const notes = [];
   const body = bodyFrom(cmd, words, input.cwd || top);
   const prBody = path.join(top, '.poort', 'checks', 'pr-body.mjs');
   if (body !== null && fs.existsSync(prBody)) {
     const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'poort-pr-')), 'body.md');
     fs.writeFileSync(tmp, body);
-    const b = spawnSync('node', [prBody, '--body-file', tmp], { cwd: top, encoding: 'utf8' });
+    const b = spawnSync('node', [prBody, '--body-file', tmp], { cwd: top, encoding: 'utf8', env: { ...process.env, POORT_E2E: e2eNotes(r.stdout) } });
+    notes.push(...[...b.stdout.matchAll(/^poort:warn (.+)$/gm)].map((m) => m[1]));
     if (b.status !== 0) problems.push(`De PR-beschrijving klopt niet met de diff:\n${b.stdout.trim()}`);
   }
-  if (!problems.length) allow();
+  if (!problems.length) allow(notes);
 
   const msg = `PR geblokkeerd door poort.\n${problems.join('\n\n')}`;
   if (cursor) {

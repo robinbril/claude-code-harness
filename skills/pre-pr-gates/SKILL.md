@@ -31,7 +31,8 @@ artefact from a state file, write it there in its OWN Bash call, before the
 call that runs `gh pr create`: a write inside the same command is not seen.
 poort's PR gate (`tools/poort`) ties the evidence to the exact commit.
 
-Do **not** run `gh pr create` until every applicable gate is `ok` or `n/a`.
+Do **not** run `gh pr create` until every applicable gate is `ok` or `n/a`
+(only `behaviour` may be `unverified`, see gate 10).
 
 ---
 
@@ -162,13 +163,31 @@ Applies when the diff touches `.vue`, `.tsx`, `.jsx`, `.css`, `.scss` or
       mismatch is a code fix, not a note.
 - [ ] **Console clean.** Open each changed route in a browser (or an e2e run)
       and confirm zero console errors and zero failed requests.
-- [ ] **Behaviour.** A changed flow on a demo or non-PII page:
-      an e2e flow test passes (skill `e2e`, `npx --no-install e2e run`). Logged-in, hover or drag state: claude-in-chrome with the
+- [ ] **Behaviour.** A changed flow on a demo or non-PII page: an e2e flow
+      test (skill `e2e`, `npx --no-install e2e run`). Not a hard gate, see
+      "When e2e counts" below. Logged-in, hover or drag state: claude-in-chrome with the
       state visible in the screenshot, else `UNVERIFIED`.
 - [ ] **Motion.** If the diff adds or changes `transition`, `animation`,
       `@keyframes` or motion props: run skill `emil-design-eng`.
 
 ---
+
+### When e2e counts
+
+e2e is a nice-to-have and scales with the PR and the machine (table and
+thresholds: skill `e2e-rules`).
+
+- Large UI change on a calm machine: run it; red blocks (`behaviour=ok` only
+  when green).
+- Small UI change on a calm machine, or a large one on a busy machine: run it
+  as advice; red does not block.
+- No UI, a small UI change on a busy machine, or a full machine: skip it.
+- Typecheck, unit tests and smoke tests stay required, always.
+- Skipped on a UI diff, or advisory red: write `behaviour=unverified`, and put the reason and
+  the red tests in the PR body (`UNVERIFIED: e2e overgeslagen: <reason>`).
+  Never `ok` for a run that did not happen. This overrides "every gate `ok` or
+  `n/a`" for this gate only.
+- Red from a run that counted stays red until a green run.
 
 ## Auto-run order (do not skip or reorder)
 

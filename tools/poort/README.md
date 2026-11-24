@@ -109,6 +109,39 @@ poort push: 1 ✓ (1 cached) 1 ✗ · geblokkeerd
 - `↷`: niet gecontroleerd, met de reden; dit telt niet als groen
 - `!`: advies dat niet blokkeert
 
+### e2e draait als het loont
+
+e2e is traag en leunt op een rustige machine. Een check van `type: "e2e"` beslist daarom lokaal per run, uit de omvang van de hele branch en de drukte op dat moment:
+
+| | Machine rustig | Druk | Vol |
+| --- | --- | --- | --- |
+| Geen UI geraakt (alleen backend, docs) | `skip` | `skip` | `skip` |
+| Kleine UI-wijziging | `advisory` | `skip` | `skip` |
+| Grote UI-wijziging | `run` | `advisory` | `skip` |
+
+`run` draait en blokkeert, `advisory` draait maar rood blokkeert niet, `skip` draait niet. De uitvoer noemt de beslissing en de reden:
+
+```text
+  ↷ e2e-replay  overgeslagen: e2e skip · grote UI-wijziging (9 UI-bestanden, 412 regels, 2 gedeeld), machine vol (2 e2e-runs bezig, load 3.15 per core)
+```
+
+| Drempel | Standaard | Betekenis |
+| --- | --- | --- |
+| `POORT_E2E_LARGE_UI_LINES` | 200 | Vanaf zoveel gewijzigde UI-regels is de wijziging groot |
+| `POORT_E2E_LARGE_UI_FILES` | 8 | Of vanaf zoveel UI-bestanden |
+| `POORT_E2E_LARGE_SHARED_LINES` | 50 | Of vanaf zoveel regels op een gedeeld oppervlak (`components/ui`, `router`, `stores`, `App.vue`, en wat `pr.sections` noemt) |
+| `POORT_E2E_BUSY_LOAD`, `POORT_E2E_FULL_LOAD` | 0.8, 1.6 | Load per core: druk, vol |
+| `POORT_E2E_BUSY_FREE`, `POORT_E2E_FULL_FREE` | 0.25, 0.1 | Minder vrij geheugen dan dit deel: druk, vol |
+| `POORT_E2E_MAX_RUNS` | 1 | Vanaf zoveel lopende e2e-runs op deze machine: vol |
+
+Alleen een check van `type: "e2e"` beslist zo. Typecheck, unit-tests en smoke-tests zijn gewone checks en blijven verplicht.
+
+Een bestand telt alleen mee als het `when` van de check raakt. Opnames (`.e2e/cache/`) en unit-tests tellen niet.
+
+`verify` beslist niet opnieuw: hij leest wat er bij deze inhoud besloten is, en een `skip` of `advisory` houdt de PR niet tegen. Was deze inhoud al rood in een run die telde (`run`, `--all`), dan vraagt `verify` een groene run; een drukke machine maakt hem niet alsnog groen. De PR-poort noemt de beslissing als advies, met de regel voor je PR-tekst als e2e is overgeslagen of adviserend rood is. `POORT_SKIP=e2e-replay` blijft werken. In CI en met `--all` geldt alleen de config.
+
+Op Windows telt alleen het geheugen: daar is geen load.
+
 ### Neem e2e-stappen opnieuw op na een bewuste UI-wijziging
 
 De e2e-check speelt opgenomen stappen af zonder AI. Na een bewuste UI-wijziging past een opname soms niet meer en faalt de check met `REPLAY_STALE`. Neem de stappen dan opnieuw op en stage de opnames:
@@ -451,7 +484,7 @@ Velden per check:
 | `if`, `ifHint` | Hoort de check hier (bijvoorbeeld: bestaat `tsconfig.json`)? Zo niet, dan `↷` met de hint; telt in `verify` als niet van toepassing | geen |
 | `needs`, `needsHint` | Wat de check nodig heeft om te draaien (bijvoorbeeld: `command -v ruff`). Ontbreekt het, dan `✗` met de hint, ook in `verify`. Gebruik hiervoor nooit `if`: dan lijkt een check die niet kon draaien groen | geen |
 | `stack` | `{ "url", "start" }` of een lijst daarvan; `{worktree}` wordt de mapnaam van de worktree | geen |
-| `type` | `e2e`: TesterArmy e2e als replay met `--strict-cache` | geen |
+| `type` | `e2e`: TesterArmy e2e als replay met `--strict-cache`; beslist per run of hij draait, zie [e2e draait als het loont](#e2e-draait-als-het-loont) | geen |
 | `cache` | `false` voor checks die van externe staat afhangen | `true` |
 | `all` | `false` voor checks die bestanden zelf repareren (zoals pre-commit-fixers); die slaan `--all` over | `true` |
 | `required` | Telt mee in `verify`; een verplichte stack-check zonder eigen stack is daar rood | `true`, `false` als `cache` false is |
@@ -501,6 +534,8 @@ Omgevingsvariabelen:
 | `POORT_BASE_REF` | Target-branch, gaat voor `base` in de config. In CI: `origin/${{ github.base_ref }}` |
 | `POORT_TAIL` | Aantal logregels bij een fout, standaard 30 |
 | `POORT_OFFLINE` | `stale-branch` haalt de base niet op, en `git fetch` in een `ci-job`-stap wordt overgeslagen |
+| `POORT_E2E_<DREMPEL>` | Wanneer e2e draait, zie [e2e draait als het loont](#e2e-draait-als-het-loont) |
+| `POORT_LOAD`, `POORT_FREE_MEM`, `POORT_E2E_RUNS` | Vervangen de meting van load, vrij geheugen (0 tot 1) en lopende e2e-runs |
 | `POORT_NO_STASH` | Laat niet-gestagede wijzigingen staan tijdens de commit-hook |
 | `POORT_SLOTS` | Aantal zware checks tegelijk, gaat voor `slots` in de config |
 | `POORT_NO_PREPARE` | Slaat de `prepare`-stappen over |
