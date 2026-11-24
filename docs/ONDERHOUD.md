@@ -27,19 +27,18 @@ Lees docs/ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens se
    | # | Onderwerp | Uit deze repo |
    |---|---|---|
    | 1 | Methodiek | `skill-finder`, `systematic-debugging`, `council`, `batch-grill-me`, `projectstructuur`, `rea` |
-   | 2 | Kwaliteit en git | `superaudit`, `find-bugs`, `code-audit`, `commit-discipline`, `repo-hygiene`, `render-proof` |
+   | 2 | Kwaliteit en git | `superaudit`, `find-bugs`, `code-audit`, `commit-discipline`, `repo-hygiene`, `render-proof`, `pre-pr-gates` |
    | 3 | Loops en autonoom bouwen | `goal`, `supergoal`, `keten-loop`, `bouw-loop`, `polijst-loop`, `fix-loop`, `speur-loop`, `dicht-loop`, `waak-loop`, `createloopprompt` |
    | 4 | Frontend-design | `design-taste-frontend`, `redesign-existing-projects`, `emil-design-eng`, `make-interfaces-feel-better`, `ux-heuristics`, `frontend-gotchas`, `fixing-accessibility`, `transitions-dev` |
    | 5 | Animatie en beweging | `animate`, `animate-expo`, `animation-vocabulary`, `apple-design`, `ask-sonner`, `find-animation-opportunities`, `improve-animations`, `review-animations`, `mobile-native`, `pick-ui-library`, `prototype` |
    | 6 | E2E-tests | `e2e`, `e2e-rules` |
-   | 7 | PolpoHire en TSS | `polpohire-design`, `theme-selector`, `pre-pr-gates` |
-   | 8 | Kwaliteitspoort | `tools/poort`: per repo `node tools/poort/poort.mjs init` |
-   | 9 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `powerbi`, `diagram-design`, `readme`, `humanizer` |
-   | 10 | Hooks | `guidelines`, `commit-guard`, `verified-claim-guard` |
-   | 11 | MCP-servers | `examples/mcp.json`: per server kiezen, zie README |
-   | 12 | Werkregels in `guidelines/CLAUDE.md` | Per sectie kiezen |
-   | 13 | Externe repo's, optioneel | [mattpocock/skills](https://github.com/mattpocock/skills) (TDD, specs, tickets), [morluto/rea](https://github.com/morluto/rea) (de motor achter skill `rea`; eigen MCP-server optioneel), [robinbril/infinite-agent-memory](https://github.com/robinbril/infinite-agent-memory) (blijvend geheugen) |
-   | 14 | Je eigen bestaande harness uitdunnen | Per overlap, ongebruikte skill of migratierest een vraag, volgens deel 4 |
+   | 7 | Kwaliteitspoort | `tools/poort`: per repo `node tools/poort/poort.mjs init` |
+   | 8 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `powerbi`, `diagram-design`, `readme`, `humanizer` |
+   | 9 | Hooks | `guidelines`, `commit-guard`, `verified-claim-guard` |
+   | 10 | MCP-servers | `examples/mcp.json`: per server kiezen, zie README |
+   | 11 | Werkregels in `guidelines/CLAUDE.md` | Per sectie kiezen |
+   | 12 | Externe repo's, optioneel | [mattpocock/skills](https://github.com/mattpocock/skills) (TDD, specs, tickets), [morluto/rea](https://github.com/morluto/rea) (de motor achter skill `rea`; eigen MCP-server optioneel), [robinbril/infinite-agent-memory](https://github.com/robinbril/infinite-agent-memory) (blijvend geheugen) |
+   | 13 | Je eigen bestaande harness uitdunnen | Per overlap, ongebruikte skill of migratierest een vraag, volgens deel 4 |
 
 3. **Uitvoeren.** Alleen wat je bevestigde, een onderwerp tegelijk. Back-up voor elke wijziging; diff tonen voor `CLAUDE.md` en `settings.json`. Bestaat een skill al onder dezelfde naam: vergelijken en voorleggen, niet overschrijven.
 

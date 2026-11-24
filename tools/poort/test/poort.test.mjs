@@ -213,7 +213,7 @@ test('init: registreert de e2e-MCP vastgepind op de eigen e2e-versie, zonder bes
   assert.ok(cursor.mcpServers.e2e);
 });
 
-test('init: geen e2e-MCP als de e2e-check niet geldt; een ongepinde registratie wordt vastgepind (repro Polpo-review)', () => {
+test('init: geen e2e-MCP als de e2e-check niet geldt; een ongepinde registratie wordt vastgepind (regressie)', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'poort-mcp2-'));
   sh('git init -q -b main', dir);
   fs.writeFileSync(
@@ -516,29 +516,29 @@ test('init zonder profiel kiest fullstack en vult de webmap in', () => {
   assert.ok(!JSON.stringify(cfg).includes('{web'), 'geen placeholders over');
 });
 
-test('init fullstack met twee webapps: fout in plaats van stil de root; --web kiest de map (repro Polpo-review)', () => {
+test('init fullstack met twee webapps: fout in plaats van stil de root; --web kiest de map (regressie)', () => {
   const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'poort-tweeweb-')), 'repo');
-  for (const d of ['frontend-v4', 'tests']) fs.mkdirSync(path.join(dir, d), { recursive: true });
+  for (const d of ['frontend', 'tests']) fs.mkdirSync(path.join(dir, d), { recursive: true });
   sh('git init -q -b main', dir);
-  fs.writeFileSync(path.join(dir, 'frontend-v4/package.json'), '{}');
+  fs.writeFileSync(path.join(dir, 'frontend/package.json'), '{}');
   fs.writeFileSync(path.join(dir, 'tests/package.json'), '{}');
   const fout = sh(`node ${POORT} init fullstack --no-hooks`, dir);
   assert.equal(fout.status, 2, fout.stdout);
-  assert.match(fout.stdout, /meerdere mappen met een package\.json \(frontend-v4, tests\); kies de webapp met --web <map>/);
+  assert.match(fout.stdout, /meerdere mappen met een package\.json \(frontend, tests\); kies de webapp met --web <map>/);
   assert.ok(!fs.existsSync(path.join(dir, 'poort.config.json')), 'niets geschreven');
-  const goed = sh(`node ${POORT} init fullstack --web frontend-v4 --no-hooks`, dir);
+  const goed = sh(`node ${POORT} init fullstack --web frontend --no-hooks`, dir);
   assert.equal(goed.status, 0, goed.stdout);
   const cfg = JSON.parse(fs.readFileSync(path.join(dir, 'poort.config.json'), 'utf8'));
-  assert.equal(cfg.checks.find((c) => c.id === 'typecheck').cwd, 'frontend-v4');
+  assert.equal(cfg.checks.find((c) => c.id === 'typecheck').cwd, 'frontend');
   assert.match(sh(`node ${POORT} init fullstack --web bestaat-niet --force --no-hooks`, dir).stdout, /--web bestaat-niet: daar staat geen package\.json/);
   // Een profiel direct via POORT_CONFIG: zelfde regel, met POORT_WEB als keuze.
   const prof = path.resolve(path.dirname(POORT), 'profiles', 'fullstack.json');
   const viaEnv = sh(`node ${POORT} doctor`, dir, { POORT_CONFIG: prof });
-  assert.match(viaEnv.stdout, /meerdere \(frontend-v4, tests\): kies met POORT_WEB=<map>/);
-  assert.doesNotMatch(sh(`node ${POORT} doctor`, dir, { POORT_CONFIG: prof, POORT_WEB: 'frontend-v4' }).stdout, /POORT_WEB/);
+  assert.match(viaEnv.stdout, /meerdere \(frontend, tests\): kies met POORT_WEB=<map>/);
+  assert.doesNotMatch(sh(`node ${POORT} doctor`, dir, { POORT_CONFIG: prof, POORT_WEB: 'frontend' }).stdout, /POORT_WEB/);
 });
 
-test("init: base uit de laatste gemergde PR's, --base wint, doctor toont hem (repro Polpo-review)", () => {
+test("init: base uit de laatste gemergde PR's, --base wint, doctor toont hem (regressie)", () => {
   const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'poort-base-')), 'repo');
   fs.mkdirSync(dir);
   sh('git init -q -b main && git config user.email t@t.test && git config user.name t && git commit -q --allow-empty -m init', dir);
@@ -605,7 +605,7 @@ test('meegeleverde bestanden: geen hex-hash zonder pragma (detect-secrets blokke
   }
 });
 
-test('profielen: vitest draait de hele suite bij een lockfile- of configwijziging, anders "related" (repro Polpo-review)', () => {
+test('profielen: vitest draait de hele suite bij een lockfile- of configwijziging, anders "related" (regressie)', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'poort-vitest-'));
   fs.mkdirSync(path.join(dir, 'bin'));
   fs.writeFileSync(path.join(dir, 'bin/npx'), '#!/bin/sh\necho "NPX $*"\n', { mode: 0o755 });
@@ -901,7 +901,7 @@ test('doctor: herkent de e2e-provider uit de config; onbekend is "niet gecontrol
     assert.match(r.msg, re);
   }
   // Een sleutel in een auth-veld komt nooit in de doctor-uitvoer.
-  const lek = status({ METHOD: 'sk-ant-api03-DOCTORLEKLEK' });
+  const lek = status({ METHOD: ['sk', 'ant', 'api03', 'DOCTORLEKLEK'].join('-') });
   assert.equal(lek.ok, false);
   assert.ok(!lek.msg.includes('DOCTORLEKLEK'), lek.msg);
   const token = status({ METHOD: 'oauth_token' }, { CLAUDE_CODE_OAUTH_TOKEN: 'seat' });

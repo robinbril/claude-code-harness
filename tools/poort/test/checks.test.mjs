@@ -252,7 +252,7 @@ test('tests-affected: kernbestand = hele suite; module die geen test raakt = hel
   assert.match(bewust.stdout, /geen tests geraakt/);
 });
 
-test('tests-affected: route-test via app.main raakt de route-module (repro uit de Polpo-review)', () => {
+test('tests-affected: route-test via app.main raakt de route-module (regressie)', () => {
   const dir = pytestRepo();
   // Zoals FastAPI: de route-module wordt alleen door app.main geïmporteerd, de
   // test praat over HTTP met app.main en importeert de route nooit zelf.

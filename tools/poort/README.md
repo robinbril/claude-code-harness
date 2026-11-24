@@ -25,7 +25,7 @@ flowchart LR
 Je hebt dit nodig:
 
 - macOS of Linux. Op Windows werkt poort in WSL: de hooks en checks zijn shell-commando's
-- Leestoegang tot `Reforge-Recruitment/poort` op GitHub. Het is een repo van de organisatie: vraag Robin om toegang en accepteer de uitnodiging
+- Leestoegang tot `Reforge-Recruitment/poort` op GitHub. Het is een repo van de organisatie: vraag de eigenaar om toegang en accepteer de uitnodiging
 - Node.js 18 of nieuwer
 - git 2.38 of nieuwer, voor exacte conflictdetectie met `git merge-tree`
 - De tools van de checks die bij jouw repo horen, bijvoorbeeld `ruff` en `pre-commit` (`pipx install ruff pre-commit`) of de npm-dependencies van je webapp. `doctor` noemt wat ontbreekt; een check zonder zijn tool is rood, niet overgeslagen
