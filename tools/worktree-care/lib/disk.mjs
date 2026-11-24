@@ -16,8 +16,8 @@ export const level = (free, cfg) => (free < cfg.minFreeGB ? 'full' : free < cfg.
 
 export function pruneBuildCache(cfg, { lowDisk = false, dryRun = false } = {}) {
   const max = lowDisk ? cfg.buildCacheMaxGBLowDisk : cfg.buildCacheMaxGB;
+  if (dryRun) return `bouwcache zou tot ${max} GB gesnoeid worden`;
   const args = ['builder', 'prune', '--force', '--max-used-space', `${max}GB`];
-  if (dryRun) return `docker ${args.join(' ')}`;
   const r = run(dockerProgram(), args, { timeout: 300000 });
   if (r.missing) return 'docker staat niet op deze machine';
   if (r.code !== 0) return `bouwcache niet gesnoeid: ${r.timedOut ? 'docker gaf geen antwoord' : r.err.trim().split('\n').at(-1)}`;

@@ -5,7 +5,8 @@ import path from 'node:path';
 import { run } from './run.mjs';
 
 export const LABEL = 'dev.worktree-care.sweep';
-const IN_PROGRESS = 36;
+// "Operation now in progress" and "already in progress".
+const STOPPING = [36, 37];
 const xml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // The sweep is in nobody's way: lowest CPU and disk priority.
@@ -30,25 +31,32 @@ export function plist(care, state, env = process.env) {
 `;
 }
 
-const gone = (r) => /could not find service|no such process/i.test(r.err + r.out);
+// No task by that name, or no session of this user for a task to run in.
+const GONE = /could not find (service|domain)|domain does not support/i;
+const STOP_MAX = 25000;
+const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
-// Only launchd itself says whether the task is off. Stopping one that runs takes a moment.
-function bootout(target) {
-  const r = run('launchctl', ['bootout', target], { timeout: 30000 });
-  for (let i = 0; i < 10; i++) {
-    const now = run('launchctl', ['print', target], { timeout: 30000 });
-    if (now.code !== 0 && gone(now)) return;
-    if (r.code !== 0 && r.code !== IN_PROGRESS) break;
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
-  }
-  throw new Error(`de vaste taak staat nog aan, launchctl bootout faalde: ${r.err.trim() || (r.missing ? 'launchctl ontbreekt' : `exit ${r.code}`)}`);
+// Only launchd itself says whether the task is off. One that runs gets time to stop.
+function bootout(target, wait = STOP_MAX) {
+  const r = run('launchctl', ['bootout', target], { timeout: wait });
+  const until = Date.now() + (r.code === 0 || STOPPING.includes(r.code) ? wait : 0);
+  let now;
+  do {
+    now = run('launchctl', ['print', target], { timeout: 5000 });
+    if (now.code !== 0 && GONE.test(now.err + now.out)) return;
+    if (now.code !== 0) break;
+    pause(250);
+  } while (Date.now() < until);
+  const said = r.missing ? 'launchctl ontbreekt' : r.timedOut ? 'launchctl gaf geen antwoord' : r.err.trim() || `exit ${r.code}`;
+  if (now.code === 0) throw new Error(`de vaste taak staat nog aan, launchctl bootout: ${said}`);
+  throw new Error(`niet te bepalen of de vaste taak nog aan staat, launchctl bootout: ${said}; launchctl print: ${now.timedOut ? 'geen antwoord' : now.err.trim() || `exit ${now.code}`}`);
 }
 
-export function schedule(care, state, remove, out, platform = process.platform) {
+export function schedule(care, state, remove, out, { platform = process.platform, wait = STOP_MAX } = {}) {
   if (platform !== 'darwin') return out(`Zet dit in je crontab (crontab -e):\n17 */3 * * * nice -n 15 "${process.execPath}" "${care}" sweep --apply`);
   const file = path.join(os.homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
   const domain = `gui/${process.getuid()}`;
-  bootout(`${domain}/${LABEL}`);
+  bootout(`${domain}/${LABEL}`, wait);
   if (remove) {
     fs.rmSync(file, { force: true });
     return out('vaste taak weg');
