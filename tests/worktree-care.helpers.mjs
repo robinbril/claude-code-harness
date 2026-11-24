@@ -11,7 +11,7 @@ import { sweep } from '../tools/worktree-care/lib/sweep.mjs';
 export const DAY = 86400000;
 const SYNC = { subject: '^chore: push gate from ', paths: ['.poort/', 'gate.json'] };
 export const CFG = { ...DEFAULTS, syncCommits: [SYNC] };
-export const quiet = () => ({ at: Date.now(), procs: new Map(), paths: [], commands: [], pins: [] });
+export const quiet = () => ({ at: Date.now(), procs: new Map(), paths: [], mounts: [], commands: [], pins: [] });
 const BASE_IGNORE = 'node_modules/\n.venv/\n__pycache__/\n.pytest_cache/\ndist/\n.env\n.harness/\n.e2e/\ntest-results/\n.coverage*\n';
 
 // A remote, a main checkout on `main`, and one worktree on a pushed branch.

@@ -269,8 +269,8 @@ Elke subagent en elke sessie krijgt een eigen werkboom, met eigen dependencies e
 | `node tools/worktree-care/care.mjs schedule` | Elke drie uur, via launchd of een crontab-regel |
 | `node tools/worktree-care/care.mjs doctor` | Delen pnpm, uv en Playwright hun opslag tussen werkbomen |
 
-- **Weg** gaat een werkboom alleen als er niets verloren gaat: geen wijziging, geen onbekend bestand, geen genegeerd bestand dat niet herbouwbaar is, geen commit die op geen remote staat, geen vergrendeling, proces, sessie of container, en drie dagen stil na de merge (zeven als hij alleen gepusht is). De branch blijft.
-- **Slanker** wordt elke andere stille werkboom: alleen mappen die git negeert en die je kunt herbouwen, zoals `node_modules`, `.venv` en testcaches. Nooit `.harness/` of `.e2e/cache/`.
+- **Weg** gaat een werkboom alleen als er niets verloren gaat: geen wijziging, geen onbekend bestand, geen genegeerd bestand dat niet herbouwbaar is, geen commit die op geen remote staat, geen vergrendeling, proces, sessie of container, en drie dagen stil na de merge (zeven als hij alleen gepusht is). De branch blijft; een losse HEAD krijgt dertig dagen een ref onder `refs/worktree-care/`. Het log noemt branch, HEAD en ref, dus elke werkboom is terug te zetten. Een werkboom op een ander volume blijft staan.
+- **Slanker** wordt elke andere stille werkboom: alleen mappen die git negeert en die je kunt herbouwen, zoals `node_modules`, `.venv` en testcaches. Nooit `.harness/` of `.e2e/cache/`. Bouwuitvoer zoals `dist/` gaat alleen weg uit een werkboom zonder open werk.
 - **Geen antwoord** van git, ps, lsof of docker betekent: niets doen.
 - **Docker**: alleen de bouwcache, met een bovengrens. `defaultKeepStorage` in `daemon.json` is een ondergrens. Volumes, containers en images blijven staan.
 - **Meet met `df`.** `du` telt gedeelde blokken (APFS, btrfs) per werkboom mee.

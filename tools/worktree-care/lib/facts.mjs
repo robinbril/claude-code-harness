@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { git, list0, Unknown } from './run.mjs';
 import { ignored } from './folders.mjs';
-import { inside, lockHolder, userOf } from './busy.mjs';
+import { inside, lockHolder, real, userOf } from './busy.mjs';
 import { localCommits } from './commits.mjs';
 
 const BUSY_STATE = ['MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'BISECT_LOG', 'rebase-merge', 'rebase-apply', 'sequencer', 'index.lock'];
@@ -23,7 +23,7 @@ function lastActivity(wt, gitDir, files, cfg) {
     }
   }
   // Claude Code writes the transcripts of a session under the name of its folder.
-  const projects = path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'projects', wt.path.replace(/[^A-Za-z0-9]/g, '-'));
+  const projects = path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'projects', (wt.origin ?? wt.path).replace(/[^A-Za-z0-9]/g, '-'));
   if (fs.existsSync(projects)) for (const n of fs.readdirSync(projects)) if (n.endsWith('.jsonl')) times.push(mtime(path.join(projects, n)));
   return Math.max(...times);
 }
@@ -44,36 +44,33 @@ function hidden(dir) {
 }
 
 const low = (p) => (process.platform === 'linux' ? p : p.toLowerCase());
-const excluded = (p, cfg) => cfg.exclude.some((d) => [p, realOf(p)].some((q) => inside(low(q), low(d))));
-const realOf = (p) => {
-  try {
-    return fs.realpathSync.native(p);
-  } catch {
-    return p;
-  }
-};
+const excluded = (p, cfg) => cfg.exclude.some((d) => [p, real(p)].some((q) => inside(low(q), low(d))));
+
+const device = (p) => fs.statSync(p).dev;
 
 const finishedAgent = (agent, state) => (agent ? mtime(path.join(state, 'agents', agent.replace(/[^\w-]/g, ''))) : 0);
 
 // busySince: whoever worked here after that moment is at work; the rest need not be looked up.
 export function collect(wt, all, cfg, snap, state, busySince = Infinity) {
-  const base = { path: wt.path, branch: wt.branch, head: wt.head, main: wt.main, locked: wt.locked };
+  const origin = wt.origin ?? wt.path;
+  const base = { path: wt.path, origin, branch: wt.branch, head: wt.head, main: wt.main, locked: wt.locked };
   const hold = (why) => ({ ...base, hold: why });
   if (wt.isMain || wt.bare) return hold('hoofdcheckout');
   // ps and lsof write such a path differently: nobody would be seen at work in it.
-  if (!/^[\x20-\x5b\x5d-\x7e]+$/.test(wt.path)) return hold('bijzonder teken in het pad');
-  if (excluded(wt.path, cfg)) return hold('uitgesloten in de config');
+  if (!/^[\x20-\x5b\x5d-\x7e]+$/.test(origin)) return hold('bijzonder teken in het pad');
+  if (excluded(origin, cfg)) return hold('uitgesloten in de config');
   if (!fs.existsSync(path.join(wt.path, '.git'))) return hold('map bestaat niet meer (git worktree prune)');
   try {
     const gitDir = git(wt.path, 'rev-parse', '--absolute-git-dir').trim();
     // A .git file that points elsewhere belongs to another repository: not ours to judge.
     if (git(wt.path, 'config', '--default=files', '--get', 'extensions.refStorage').trim() !== 'files') return hold('logboek staat niet in bestanden');
     const back = fs.readFileSync(path.join(gitDir, 'gitdir'), 'utf8').trim();
-    const own = realOf(path.dirname(path.resolve(gitDir, back))) === realOf(wt.path);
-    if (!own || git(wt.path, 'rev-parse', '--show-toplevel').trim() !== realOf(wt.path)) return hold('git ziet hier een andere map');
+    const own = real(path.dirname(path.resolve(gitDir, back))) === real(wt.path);
+    if (!own || git(wt.path, 'rev-parse', '--show-toplevel').trim() !== real(wt.path)) return hold('git ziet hier een andere map');
+    if (device(wt.path) !== device(gitDir) || device(wt.path) !== device(wt.main)) return hold('staat op een ander volume dan de hoofdcheckout');
     const op = BUSY_STATE.find((n) => fs.existsSync(path.join(gitDir, n)));
     if (op) return hold(`git is hier bezig (${op})`);
-    const user = userOf(snap, wt.path);
+    const user = userOf(snap, wt.path) ?? (origin === wt.path ? null : userOf(snap, origin));
     if (user) return hold(user);
     const lock = wt.locked === null ? null : lockHolder(snap, wt.locked, mtime(path.join(gitDir, 'locked')));
     const seen = lastActivity(wt, gitDir, [], cfg);
@@ -82,6 +79,7 @@ export function collect(wt, all, cfg, snap, state, busySince = Infinity) {
     const ign = ignored(wt.path, wt.main);
     return {
       ...base,
+      gitDir,
       lock,
       agentDoneAt: finishedAgent(lock?.agent, state),
       tracked,
@@ -90,7 +88,7 @@ export function collect(wt, all, cfg, snap, state, busySince = Infinity) {
       ignored: ign.keep,
       output: ign.output,
       slim: ign.slim,
-      nested: all.filter((o) => o.path !== wt.path && inside(o.path, wt.path)).map((o) => o.path),
+      nested: all.filter((o) => o.path !== wt.path && (inside(o.path, wt.path) || inside(o.path, origin))).map((o) => o.path),
       submodules: fs.existsSync(path.join(gitDir, 'modules')),
       ...localCommits(wt.path, cfg, gitDir, wt.branch),
       activeAt: lastActivity(wt, gitDir, [...tracked, ...untracked], cfg),

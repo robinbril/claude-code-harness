@@ -27,6 +27,8 @@ export const DEFAULTS = {
   agentGraceHours: 0.5,
   // Automated commits that copy files from the base branch. Content is checked, not only the subject.
   syncCommits: [],
+  // The ref that keeps the commit of a removed detached worktree goes after this many days.
+  keepRefDays: 30,
   warnFreeGB: 40,
   minFreeGB: 15,
   buildCacheMaxGB: 20,
@@ -49,6 +51,18 @@ function place(file, p) {
   }
 }
 
+function checkSync(file, rule, i) {
+  const bad = (why) => new Error(`${file}: syncCommits[${i}] ${why}`);
+  const text = (x) => typeof x === 'string' && x !== '';
+  if (!text(rule?.subject)) throw bad('heeft geen subject (een regex op de eerste regel van de commit)');
+  if (!Array.isArray(rule.paths) || !rule.paths.length || !rule.paths.every(text)) throw bad('heeft geen paths (een lijst van bestanden en mappen/ die de commit mag raken)');
+  try {
+    new RegExp(rule.subject);
+  } catch (e) {
+    throw bad(`subject is geen geldige regex: ${e.message}`);
+  }
+}
+
 export function loadConfig(env = process.env) {
   const file = configFile(env);
   const own = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
@@ -59,6 +73,7 @@ export function loadConfig(env = process.env) {
     if (typeof v === 'number' && !(v >= 0)) throw new Error(`${file}: ${k} moet 0 of meer zijn`);
   }
   const cfg = { ...DEFAULTS, ...own };
+  cfg.syncCommits.forEach((r, i) => checkSync(file, r, i));
   if (cfg.minFreeGB > cfg.warnFreeGB) throw new Error(`${file}: minFreeGB is hoger dan warnFreeGB`);
   return { ...cfg, roots: cfg.roots.map(expandHome), exclude: cfg.exclude.map((p) => place(file, p)), pinnedBy: cfg.pinnedBy.map(expandHome) };
 }

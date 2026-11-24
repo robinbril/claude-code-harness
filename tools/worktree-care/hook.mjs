@@ -70,13 +70,13 @@ function agentEnd(event, cfg) {
   const mark = path.join(stateDir(), 'agents', id);
   fs.mkdirSync(path.dirname(mark), { recursive: true });
   fs.writeFileSync(mark, wt.path);
-  if (cfg.autoSweep) background(['tidy', wt.path, '--after', '20'], '/');
+  if (cfg.autoSweep) background(['tidy', wt.path, '--apply', '--after', '20'], '/');
   return 0;
 }
 
 function sessionEnd(event, cfg) {
   const dir = event.cwd && worktreesOf(event.cwd).find((w) => !w.isMain && (event.cwd === w.path || event.cwd.startsWith(`${w.path}/`)));
-  if (dir && cfg.autoSweep) background(['tidy', dir.path, '--after', '60'], '/');
+  if (dir && cfg.autoSweep) background(['tidy', dir.path, '--apply', '--after', '60'], '/');
   return 0;
 }
 

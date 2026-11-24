@@ -11,7 +11,7 @@ const unknown = (why) => new Unknown(why, { machine: true });
 
 export const inside = (p, dir) => p === dir || p.startsWith(`${dir}/`);
 
-const real = (p) => {
+export const real = (p) => {
   try {
     return fs.realpathSync.native(p);
   } catch {
@@ -69,22 +69,24 @@ export function dockerProgram() {
   return !onPath && fs.existsSync(own) ? own : 'docker';
 }
 
+const NONE = { mounts: [], dirs: [] };
+
 // Bind mounts of running containers. No daemon: nothing runs. No program but a daemon: no answer.
 function dockerMounts() {
   const docker = dockerProgram();
   const ps = run(docker, ['ps', '-q', '--no-trunc'], { timeout: DOCKER_MAX() });
   if (ps.missing) {
     if (SOCKETS().some((f) => fs.existsSync(f))) throw unknown('docker draait, maar het programma staat niet in PATH');
-    return [];
+    return NONE;
   }
   if (ps.timedOut) throw unknown('docker gaf geen antwoord');
   if (ps.code !== 0) {
-    if (/cannot connect|failed to connect|connection refused|no such file|not running/i.test(ps.err)) return [];
+    if (/cannot connect|failed to connect|connection refused|no such file|not running/i.test(ps.err)) return NONE;
     throw unknown(`docker ps faalde: ${ps.err.trim().slice(0, 120)}`);
   }
   const ids = ps.out.split('\n').filter(Boolean);
-  if (!ids.length) return [];
-  const ask = () => run(docker, ['inspect', '--format', '{{range .Mounts}}{{println .Source}}{{end}}{{println (index .Config.Labels "com.docker.compose.project.working_dir")}}', ...ids], { timeout: DOCKER_MAX() });
+  if (!ids.length) return NONE;
+  const ask = () => run(docker, ['inspect', '--format', '{{range .Mounts}}{{println "mount" .Source}}{{end}}{{println "dir" (index .Config.Labels "com.docker.compose.project.working_dir")}}', ...ids], { timeout: DOCKER_MAX() });
   // A container that stopped in between makes inspect fail: ask for what runs now.
   let r = ask();
   if (r.code === 1 && /no such object/i.test(r.err)) {
@@ -92,7 +94,8 @@ function dockerMounts() {
     r = ask();
   }
   if (r.code !== 0) throw unknown('docker inspect gaf geen antwoord');
-  return r.out.split('\n').map((l) => l.trim().replace(/^\/host_mnt(?=\/)/, '')).filter((l) => l.startsWith('/'));
+  const of = (word) => r.out.split('\n').filter((l) => l.startsWith(`${word} /`)).map((l) => l.slice(word.length + 1).trim().replace(/^\/host_mnt(?=\/)/, ''));
+  return { mounts: of('mount'), dirs: of('dir') };
 }
 
 // Claude Code keeps one file per session with its pid and folder.
@@ -116,12 +119,14 @@ export function snapshot(cfg = {}) {
   const at = Date.now();
   const procs = processes();
   const alive = (pid) => procs.has(Number(pid));
-  const paths = new Set([...openPaths(), ...dockerMounts(), ...sessionDirs(alive)]);
+  const docker = dockerMounts();
+  const paths = new Set([...openPaths(), ...docker.mounts, ...docker.dirs, ...sessionDirs(alive)]);
   return {
     at,
     procs,
     pins: pins(cfg.pinnedBy),
     paths: [...paths, ...[...paths].map(real)],
+    mounts: [...docker.mounts, ...docker.mounts.map(real)],
     commands: [...procs].filter(([pid]) => pid !== process.pid).map(([, p]) => p.command),
   };
 }
@@ -132,6 +137,9 @@ export function userOf(snap, dir) {
   const dirs = [...new Set([dir, real(dir)])];
   const at = snap.paths.find((p) => dirs.some((d) => inside(p, d)));
   if (at) return `een proces, sessie of container werkt in ${at}`;
+  // A container that mounts a folder above it sees this worktree too.
+  const above = snap.mounts.find((m) => m === '/' || dirs.some((d) => inside(d, m)));
+  if (above) return `een container heeft ${above} gemount`;
   // macOS shows /private/tmp and /tmp for the same folder.
   const names = dirs.flatMap((d) => [d, d.replace(/^\/private(?=\/)/, '')]);
   const re = new RegExp(`(^|file://|[\\s"'=:<>,;()\\\\])(${names.map(escape).join('|')})(/|[\\s"':<>,;()\\\\]|$)`);

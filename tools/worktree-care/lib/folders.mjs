@@ -14,7 +14,7 @@ const PROTECTED = /(^|\/)(\.git|\.harness|\.loops|\.supergoal|\.run)(\/|$)|(^|\/
 
 const has = (dir, name) => fs.existsSync(path.join(dir, name));
 
-// 'cache' and 'deps' may be slimmed. 'output' and 'link' may only vanish with the worktree.
+// 'cache' and 'deps' may be slimmed, 'build' too when there is no open work. 'output' and 'link' may only vanish with the worktree.
 // null means: not known to be rebuildable, so it keeps the worktree.
 export function classify(root, rel) {
   if (PROTECTED.test(rel)) return null;
@@ -27,7 +27,7 @@ export function classify(root, rel) {
   if (CACHES.has(name)) return 'cache';
   if (name === 'node_modules') return 'deps';
   if (name === '.venv' || name === 'venv') return has(abs, 'pyvenv.cfg') ? 'deps' : null;
-  if (BUILD.has(name)) return has(path.dirname(abs), 'package.json') || has(path.dirname(abs), 'pyproject.toml') ? 'deps' : null;
+  if (BUILD.has(name)) return has(path.dirname(abs), 'package.json') || has(path.dirname(abs), 'pyproject.toml') ? 'build' : null;
   if (TEST_OUTPUT.has(name) || E2E_OUTPUT.test(rel)) return 'output';
   return null;
 }
@@ -57,7 +57,7 @@ function cacheAbove(root, rel) {
   const parts = rel.split('/');
   for (let i = 1; i < parts.length; i++) {
     const dir = parts.slice(0, i).join('/');
-    if (['cache', 'deps'].includes(classify(root, dir)) && selfIgnored(path.join(root, dir))) return dir;
+    if (['cache', 'deps', 'build'].includes(classify(root, dir)) && selfIgnored(path.join(root, dir))) return dir;
   }
   return rel;
 }
@@ -89,7 +89,7 @@ export function ignored(root, main) {
   const result = { slim: [], keep: [], output: [] };
   for (const rel of new Set([...new Set(listed)].flatMap((r) => expand(root, r)))) {
     const kind = own.has(rel.toLowerCase()) ? null : classify(root, rel);
-    if (kind === 'cache' || kind === 'deps') result.slim.push({ rel, kind });
+    if (['cache', 'deps', 'build'].includes(kind)) result.slim.push({ rel, kind });
     else if (kind === 'output') result.output.push(rel);
     else if (!kind && !sameInMain(root, main, rel)) result.keep.push(rel);
   }

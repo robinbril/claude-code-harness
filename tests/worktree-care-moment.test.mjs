@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { git, tempDir, write } from './helpers.mjs';
+import { ROOT, GIT_ENV, git, tempDir, write } from './helpers.mjs';
 import { DAY, CFG, quiet, setup, gitDirOf, deps, later, go, kept, child, realSnap, fakeBin, withPath } from './worktree-care.helpers.mjs';
 import { snapshot } from '../tools/worktree-care/lib/busy.mjs';
 import { sweep, tidy } from '../tools/worktree-care/lib/sweep.mjs';
@@ -159,9 +159,24 @@ test('git gives no answer about one worktree: that one stays', () => {
   kept(s, go(s), /niet te bepalen/);
 });
 
+test('a container that mounts a folder above the worktree, such as the main checkout', () => {
+  const s = setup();
+  const under = path.join(s.main, '.claude/worktrees/a');
+  git(s.main, 'worktree', 'add', '-q', '-b', 'under', under);
+  const at = { ...s, wt: under };
+  const bin = fakeBin(s.top, 'docker', `[ "$1" = ps ] && echo abc || printf 'mount /host_mnt${s.main}\\ndir /elsewhere\\n'`);
+  withPath(bin, () => {
+    kept(at, go(at, { snap: realSnap }), /een container heeft .*main gemount/);
+    assert.equal(go(s, { snap: realSnap, apply: false }).action, 'remove');
+  });
+  // The folder of a compose project is no mount: it holds only itself.
+  fakeBin(s.top, 'docker', `[ "$1" = ps ] && echo abc || printf 'dir ${s.main}\\n'`);
+  withPath(bin, () => assert.equal(go(at, { snap: realSnap, apply: false }).action, 'remove'));
+});
+
 test('a container that mounts the worktree', () => {
   const s = setup();
-  const bin = fakeBin(s.top, 'docker', `[ "$1" = ps ] && echo abc || printf '/host_mnt${s.wt}/web\\n\\n'`);
+  const bin = fakeBin(s.top, 'docker', `[ "$1" = ps ] && echo abc || printf 'mount /host_mnt${s.wt}/web\\ndir \\n'`);
   withPath(bin, () => kept(s, go(s, { snap: realSnap }), /werkt in/));
 });
 
@@ -227,6 +242,9 @@ test('one repository without an answer does not stop the others', () => {
 
 // ---------- between the plan and the deed ----------
 
+// Where the worktree is while it is being removed.
+const movedOf = (s) => worktreesOf(s.main).find((w) => w.path.includes('worktree-care-trash')).path;
+
 // Runs fn at the moment the big folders have left and the facts are asked again.
 const onSecondLook = (fn) => {
   let n = 0;
@@ -237,22 +255,122 @@ const onSecondLook = (fn) => {
 };
 
 for (const [what, deed, why] of [
-  ['a new file', (s) => write(s.wt, 'new.md', 'mine'), /onbekende/],
-  ['a new file in a repo that hides untracked files', (s) => (git(s.main, 'config', 'status.showUntrackedFiles', 'no'), write(s.wt, 'new.md', 'mine')), /onbekende/],
-  ['a commit', (s) => (write(s.wt, 'own.txt', 'x'), git(s.wt, 'commit', '-qam', 'now')), /gebruikt|remote|stil/],
-  ['a lock', (s) => git(s.main, 'worktree', 'lock', s.wt), /vergrendeld/],
-  ['a new secret that git ignores', (s) => write(s.wt, '.env', 'K=1'), /genegeerd/],
-  ['an install', (s) => write(s.wt, '.venv/pyvenv.cfg', 'new'), /verscheen/],
+  ['a new file', (s, at) => write(at, 'new.md', 'mine'), /onbekende/],
+  ['a new file in a repo that hides untracked files', (s, at) => (git(s.main, 'config', 'status.showUntrackedFiles', 'no'), write(at, 'new.md', 'mine')), /onbekende/],
+  ['a commit', (s, at) => (write(at, 'own.txt', 'x'), git(at, 'commit', '-qam', 'now')), /gebruikt|remote|stil/],
+  ['a lock', (s, at) => git(s.main, 'worktree', 'lock', at), /vergrendeld/],
+  ['a new secret that git ignores', (s, at) => write(at, '.env', 'K=1'), /genegeerd/],
+  ['an install', (s, at) => write(at, '.venv/pyvenv.cfg', 'new'), /verscheen/],
 ]) {
   test(`${what} during the removal: the worktree stays and its folders come back`, () => {
     const s = setup();
     deps(s.wt);
-    const row = go(s, { snap: onSecondLook(() => deed(s)), days: what === 'a commit' ? 8 : 30 });
+    const row = go(s, { snap: onSecondLook(() => deed(s, movedOf(s))), days: what === 'a commit' ? 8 : 30 });
     kept(s, row, why);
     assert.ok(fs.existsSync(path.join(s.wt, 'web/node_modules/x/index.js')), 'node_modules');
     assert.ok(fs.existsSync(path.join(s.wt, '.venv/pyvenv.cfg')), '.venv');
   });
 }
+
+test('a process inside during the removal is seen where the worktree lies then', () => {
+  const s = setup();
+  deps(s.wt);
+  let n = 0;
+  const snap = () => (++n === 3 ? { ...quiet(), paths: [path.join(movedOf(s), 'web')] } : quiet());
+  kept(s, go(s, { snap }), /werkt in/);
+  assert.ok(fs.existsSync(path.join(s.wt, '.venv/pyvenv.cfg')));
+  assert.equal(git(s.wt, 'status', '--porcelain'), '');
+});
+
+test('a process that still names the old folder during the removal', () => {
+  const s = setup();
+  let n = 0;
+  kept(s, go(s, { snap: () => (++n === 3 ? { ...quiet(), commands: [`node ${s.wt}/web/x.js`] } : quiet()) }), /noemt deze map/);
+});
+
+test('what somebody writes to the old place during the removal stays there', () => {
+  const s = setup();
+  assert.equal(go(s, { snap: onSecondLook(() => write(s.wt, 'new.md', 'mine')) }).action, 'remove');
+  assert.equal(fs.readFileSync(path.join(s.wt, 'new.md'), 'utf8'), 'mine');
+});
+
+test('something else on the old place and the worktree must stay: it waits, and comes back later', () => {
+  const s = setup();
+  write(s.wt, 'web/node_modules/x.js', 'x');
+  const row = go(s, { snap: onSecondLook(() => (write(movedOf(s), 'new.md', 'mine'), write(s.wt, 'web/other.md', 'theirs'))) });
+  assert.equal(row.action, 'keep');
+  assert.match(row.why, /onbekende bestanden; op .* staat nu iets anders, de werkboom wacht in /);
+  assert.equal(fs.readFileSync(path.join(s.wt, 'web/other.md'), 'utf8'), 'theirs');
+  assert.ok(!fs.existsSync(path.join(s.wt, 'web/node_modules')));
+  assert.equal(fs.readFileSync(path.join(movedOf(s), 'new.md'), 'utf8'), 'mine');
+  // The process that took it ends; until then nobody touches it.
+  const common = path.join(s.main, '.git');
+  const waits = sweep({ repos: [{ common, dir: s.main }], cfg: CFG, state: s.state, apply: true, snap: quiet, now: later(90) }).find((r) => r.path.includes('worktree-care-trash'));
+  assert.match(waits.why, /wacht op terugzetten/);
+  const trash = path.join(common, 'worktree-care-trash');
+  for (const n of fs.readdirSync(trash)) fs.renameSync(path.join(trash, n), path.join(trash, n.replace(/^\d+/, '999999')));
+  git(s.main, 'worktree', 'repair', ...fs.readdirSync(trash).filter((n) => !n.endsWith('.from')).map((n) => path.join(trash, n)).filter((d) => fs.existsSync(path.join(d, '.git'))));
+  go(s, { days: 0 });
+  assert.ok(!fs.existsSync(path.join(s.wt, 'web/node_modules')), 'their folder stays theirs');
+  assert.equal(fs.readFileSync(path.join(movedOf(s), 'new.md'), 'utf8'), 'mine');
+  fs.rmSync(s.wt, { recursive: true });
+  kept(s, go(s, { days: 0 }), /./);
+  assert.ok(fs.existsSync(path.join(s.wt, 'web/node_modules/x.js')));
+  assert.equal(fs.readFileSync(path.join(s.wt, 'new.md'), 'utf8'), 'mine');
+  assert.deepEqual(fs.readdirSync(trash), []);
+});
+
+// A sweep in a process of its own that git stops dead at `git worktree <verb>`.
+function killedAt(s, verb, before = '') {
+  const bin = fakeBin(s.top, 'git', `case "$*" in *"worktree ${verb}"*) ${before} kill -9 $PPID; exit 1;; esac; exec "${realGit()}" "$@"`);
+  const code = `
+    import { sweep } from ${JSON.stringify(path.join(ROOT, 'tools/worktree-care/lib/sweep.mjs'))};
+    import { DEFAULTS } from ${JSON.stringify(path.join(ROOT, 'tools/worktree-care/lib/config.mjs'))};
+    const quiet = () => ({ at: 0, procs: new Map(), paths: [], mounts: [], commands: [], pins: [] });
+    sweep({ repos: [{ common: ${JSON.stringify(path.join(s.main, '.git'))}, dir: ${JSON.stringify(s.main)} }], cfg: DEFAULTS, state: ${JSON.stringify(s.state)}, apply: true, snap: quiet, now: () => Date.now() + 30 * 86400000 });`;
+  const r = spawnSync(process.execPath, ['--input-type=module', '-e', code], { env: { ...GIT_ENV, PATH: `${bin}${path.delimiter}${process.env.PATH}` } });
+  assert.equal(r.signal, 'SIGKILL');
+}
+const realGit = () => spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).stdout.trim();
+
+for (const [what, verb, before] of [
+  ['before git moved it', 'move', ''],
+  ['between the rename and the administration', 'move', 'eval "to=\\${$#}"; mv "$5" "$to";'],
+  ['after the move', 'remove', ''],
+  ['while git was deleting', 'remove', 'eval "at=\\${$#}"; rm -rf "$at/app.txt" "$at/web" "$at/.git";'],
+]) {
+  test(`a sweep killed ${what}: the next one puts everything back`, () => {
+    const s = setup();
+    deps(s.wt);
+    const head = git(s.wt, 'rev-parse', 'HEAD');
+    killedAt(s, verb, before);
+    kept(s, go(s, { days: 0 }), /./);
+    assert.equal(git(s.wt, 'status', '--porcelain'), '');
+    assert.equal(git(s.wt, 'rev-parse', 'HEAD'), head);
+    assert.ok(fs.existsSync(path.join(s.wt, 'web/node_modules/x/index.js')) && fs.existsSync(path.join(s.wt, '.venv/pyvenv.cfg')));
+    assert.deepEqual(fs.readdirSync(path.join(s.main, '.git/worktree-care-trash')), []);
+    assert.equal(worktreesOf(s.main).length, 2);
+  });
+}
+
+test('a worktree that cannot go back is never thrown away', () => {
+  const s = setup();
+  const deep = path.join(s.top, 'sub/wt');
+  fs.mkdirSync(path.dirname(deep));
+  git(s.main, 'worktree', 'move', s.wt, deep);
+  killedAt(s, 'remove', 'eval "at=\\${$#}"; rm -f "$at/.git";');
+  const trash = path.join(s.main, '.git/worktree-care-trash');
+  const tree = path.join(trash, fs.readdirSync(trash).find((n) => !n.endsWith('.from')));
+  fs.rmSync(path.dirname(deep), { recursive: true });
+  fs.writeFileSync(path.dirname(deep), 'a file now');
+  go(s, { days: 0 });
+  assert.ok(fs.existsSync(path.join(tree, 'app.txt')));
+  // The folder above it is back, or only missing: then it goes back too.
+  fs.rmSync(path.dirname(deep));
+  go(s, { days: 0 });
+  assert.equal(git(deep, 'status', '--porcelain'), '');
+  assert.deepEqual(fs.readdirSync(trash), []);
+});
 
 test('git refuses: the folders come back and the lock is set again', () => {
   const s = setup();
@@ -277,9 +395,9 @@ test('a sweep that was killed halfway: the folder goes back to the worktree that
   const s = setup();
   const trash = path.join(s.main, '.git/worktree-care-trash');
   write(trash, '999999-a/x/index.js', 'x');
-  write(trash, '999999-a.from', path.join(s.wt, 'web/node_modules'));
+  write(trash, '999999-a.from', JSON.stringify({ from: path.join(s.wt, 'web/node_modules') }));
   write(trash, '999999-b/x', 'x');
-  write(trash, '999999-b.from', path.join(s.top, 'gone/node_modules'));
+  write(trash, '999999-b.from', JSON.stringify({ from: path.join(s.top, 'gone/node_modules') }));
   go(s, { days: 0 });
   assert.ok(fs.existsSync(path.join(s.wt, 'web/node_modules/x/index.js')));
   assert.deepEqual(fs.readdirSync(trash), []);
@@ -289,9 +407,12 @@ test('trash of a killed sweep goes, of a running one stays', () => {
   const s = setup();
   const trash = path.join(s.main, '.git/worktree-care-trash');
   write(trash, '999999-a/x', 'x');
-  write(trash, `${process.ppid}-b/x`, 'x');
+  const mine = `${process.pid}-${Date.now().toString(36)}-b`;
+  write(trash, `${mine}/x`, 'x');
+  // This pid lives, but began long after that moment: it was given out again.
+  write(trash, `${process.pid}-a1-c/x`, 'x');
   go(s, { days: 0 });
-  assert.deepEqual(fs.readdirSync(trash), [`${process.ppid}-b`]);
+  assert.deepEqual(fs.readdirSync(trash), [mine]);
 });
 
 

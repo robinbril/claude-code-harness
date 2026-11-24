@@ -13,7 +13,7 @@ import { schedule } from './lib/schedule.mjs';
 const HELP = `worktree-care
 
   sweep [--apply] [--json]   wat zou er weggaan; met --apply gaat het weg
-  tidy <werkboom>            testcaches van één werkboom weg
+  tidy <werkboom> [--apply]  welke testcaches van één werkboom weg zouden gaan; met --apply gaan ze weg
   build-cache [--apply]      Docker-bouwcache terug onder de grens
   schedule [--remove]        elke drie uur sweep --apply (launchd of crontab)
   status                     vrije ruimte en grenzen
@@ -57,9 +57,9 @@ function cmdTidy(cfg, state) {
   const wait = Number(args[args.indexOf('--after') + 1]) || 0;
   if (args.includes('--after')) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, wait * 1000);
   if (!fs.existsSync(args[0] ?? '')) return 0;
-  const done = tidy({ dir: fs.realpathSync.native(args[0]), cfg, state });
-  out(`${done.length} testcaches weg`);
-  return 0;
+  const done = tidy({ dir: fs.realpathSync.native(args[0]), cfg, state, apply });
+  done.forEach(out);
+  return out(`${apply ? 'weg' : 'proef, niets gewijzigd'}: ${done.length} testcaches`);
 }
 
 function main() {

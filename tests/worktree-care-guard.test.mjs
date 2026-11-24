@@ -5,7 +5,8 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { GIT_ENV, ROOT, git, tempDir, write } from './helpers.mjs';
-import { CFG, setup, fakeBin, withPath } from './worktree-care.helpers.mjs';
+import { CFG, setup, fakeBin, withPath, quiet, later } from './worktree-care.helpers.mjs';
+import { sweep } from '../tools/worktree-care/lib/sweep.mjs';
 import { loadConfig } from '../tools/worktree-care/lib/config.mjs';
 import { takeLock } from '../tools/worktree-care/lib/lock.mjs';
 import { worktreesOf } from '../tools/worktree-care/lib/repos.mjs';
@@ -96,7 +97,7 @@ test('agent-end: marks the worktree of that agent and tidies it', () => {
   const agent = path.join(s.main, '.claude/worktrees/agent-a1b2');
   git(s.main, 'worktree', 'add', '-q', '-b', 'worktree-agent-a1b2', agent);
   const r = hook('agent-end', { agent_id: 'a1b2', cwd: s.main }, { cfg: { autoSweep: true } });
-  assert.match(r.stderr, /spawn: tidy .*agent-a1b2 --after/);
+  assert.match(r.stderr, /spawn: tidy .*agent-a1b2 --apply --after/);
   assert.ok(fs.existsSync(path.join(r.dir, 'state/agents/a1b2')));
   assert.equal(hook('agent-end', { agent_id: '../x', cwd: s.main }, { cfg: { autoSweep: true } }).stderr, '');
 });
@@ -140,6 +141,64 @@ test('release leaves a lock that is now somebody else\'s', () => {
   write(state, 'sweep.lock', JSON.stringify({ pid: process.ppid, at: Date.now() }));
   release();
   assert.ok(fs.existsSync(path.join(state, 'sweep.lock')));
+});
+
+test('config: a sync rule without paths, without subject or with a broken regex is refused by name', () => {
+  const dir = tempDir('care-sync-');
+  const load = (rule) => {
+    write(dir, 'c.json', JSON.stringify({ syncCommits: [rule] }));
+    return loadConfig({ WORKTREE_CARE_CONFIG: path.join(dir, 'c.json') });
+  };
+  for (const rule of [{ subject: '^x' }, { subject: '^x', paths: [] }, { subject: '^x', paths: 'a' }, { subject: '^x', paths: [1] }]) assert.throws(() => load(rule), /syncCommits\[0\] heeft geen paths/);
+  assert.throws(() => load({ paths: ['a'] }), /syncCommits\[0\] heeft geen subject/);
+  assert.throws(() => load({ subject: '(', paths: ['a'] }), /geen geldige regex/);
+  assert.equal(load({ subject: '^x', paths: ['a/'] }).syncCommits.length, 1);
+});
+
+const cli = (s, ...args) => spawnSync(process.execPath, [path.join(ROOT, 'tools/worktree-care/care.mjs'), ...args], { cwd: s.main, encoding: 'utf8', env: { ...GIT_ENV, WORKTREE_CARE_STATE: s.state, WORKTREE_CARE_CONFIG: path.join(s.top, 'c.json'), WORKTREE_CARE_DOCKER_SOCKET: path.join(s.top, 'none') } });
+
+test('cli: tidy is a trial run unless --apply', () => {
+  const s = setup();
+  write(s.wt, 'src/__pycache__/a.pyc', 'x');
+  assert.match(cli(s, 'tidy', s.wt).stdout, /src\/__pycache__\nproef, niets gewijzigd: 1 testcaches/);
+  assert.ok(fs.existsSync(path.join(s.wt, 'src/__pycache__')));
+  assert.match(cli(s, 'tidy', s.wt, '--apply').stdout, /weg: 1 testcaches/);
+  assert.ok(!fs.existsSync(path.join(s.wt, 'src/__pycache__')));
+});
+
+test('log: each line names branch, commit and the ref of a detached head', () => {
+  const s = setup();
+  const two = path.join(s.top, 'two');
+  git(s.main, 'worktree', 'add', '-q', '--detach', two);
+  const heads = [s.wt, two].map((d) => git(d, 'rev-parse', 'HEAD').trim());
+  const lines = [];
+  sweep({ repos: [{ common: path.join(s.main, '.git'), dir: s.main }], cfg: CFG, state: s.state, apply: true, snap: quiet, now: later(30), log: (l) => lines.push(l) });
+  assert.match(lines.find((l) => l.includes(s.wt)), new RegExp(`^remove .* branch feat/a  HEAD ${heads[0]}  schoon`));
+  const lone = lines.find((l) => l.includes(two));
+  assert.match(lone, new RegExp(`^remove .* los  HEAD ${heads[1]}  refs/worktree-care/\\d{8}-two-${heads[1].slice(0, 12)}  gemerged`));
+  assert.ok(git(s.main, 'rev-parse', /refs\/\S+/.exec(lone)[0]));
+});
+
+test('refs of removed worktrees go after the days in the config, and the log says which', () => {
+  const s = setup();
+  const head = git(s.main, 'rev-parse', 'HEAD').trim();
+  const day = (d) => new Date(Date.now() - d * 86400000).toISOString().slice(0, 10).replaceAll('-', '');
+  const [old, young, plain] = [`refs/worktree-care/${day(40)}-a-1`, `refs/worktree-care/${day(20)}-b-1`, 'refs/worktree-care/plain-1'];
+  for (const r of [old, young, plain]) git(s.main, 'update-ref', r, head);
+  const refs = () => git(s.main, 'for-each-ref', '--format=%(refname)', 'refs/worktree-care').split('\n').filter(Boolean).sort();
+  const lines = [];
+  const run = (apply, cfg = CFG) => sweep({ repos: [{ common: path.join(s.main, '.git'), dir: s.main }], cfg, state: s.state, apply, snap: quiet, log: (l) => lines.push(l) });
+  run(false);
+  assert.equal(refs().length, 3);
+  run(true);
+  assert.deepEqual(refs(), [young, plain].sort());
+  assert.ok(lines.filter((l) => l.startsWith(`ref    ${old}  HEAD ${head}  ouder dan 30 dagen`)).length === 2);
+  run(true, { ...CFG, keepRefDays: 10 });
+  assert.deepEqual(refs(), [plain]);
+  const before = new Date(Date.now() - 40 * 86400000);
+  fs.utimesSync(path.join(s.main, '.git', plain), before, before);
+  run(true);
+  assert.deepEqual(refs(), []);
 });
 
 test('cli: a sweep on one repository keeps the main checkout and reports', () => {

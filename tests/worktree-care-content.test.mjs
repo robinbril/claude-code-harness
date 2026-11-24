@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { GIT_ENV, git, write } from './helpers.mjs';
+import { GIT_ENV, git, write, tempDir } from './helpers.mjs';
 import { DAY, CFG, quiet, setup, gitDirOf, deps, later, go, kept, newGateOnBase, realSnap, fakeBin, withPath } from './worktree-care.helpers.mjs';
 import { loadConfig } from '../tools/worktree-care/lib/config.mjs';
 import { lockHolder } from '../tools/worktree-care/lib/busy.mjs';
@@ -47,9 +47,30 @@ test('a worktree with work is slimmed: rebuildable folders go, everything else s
   write(s.wt, 'app.txt', 'changed\n');
   const row = go(s);
   assert.equal(row.action, 'slim');
-  assert.deepEqual(row.done.sort(), ['.venv', 'src/__pycache__', 'web/dist', 'web/node_modules']);
-  for (const f of ['.e2e/cache/a.json', '.harness/t/spec.md', '.env', 'app.txt', 'web/package.json']) assert.ok(fs.existsSync(path.join(s.wt, f)), f);
+  assert.deepEqual(row.done.sort(), ['.venv', 'src/__pycache__', 'web/node_modules']);
+  for (const f of ['.e2e/cache/a.json', '.harness/t/spec.md', '.env', 'app.txt', 'web/package.json', 'web/dist/a.js']) assert.ok(fs.existsSync(path.join(s.wt, f)), f);
   assert.ok(!fs.existsSync(path.join(s.wt, 'web/node_modules')));
+});
+
+test('build output goes only from a worktree without open work', () => {
+  const makers = [null, (s) => write(s.wt, 'app.txt', 'changed\n'), (s) => write(s.wt, 'notes.md', 'x'), (s) => write(s.wt, '.env', 'A=1'), (s) => git(s.wt, 'update-index', '--skip-worktree', 'app.txt')];
+  for (const open of makers) {
+    const s = setup();
+    write(s.wt, 'web/dist/release.pdf', 'x');
+    write(s.wt, 'web/node_modules/x.js', 'x');
+    open?.(s);
+    // Two days: too soon to remove a clean one, long enough to slim.
+    const row = go(s, { days: 2 });
+    assert.deepEqual(row.done.sort(), open ? ['web/node_modules'] : ['web/dist', 'web/node_modules'], String(open));
+    assert.equal(fs.existsSync(path.join(s.wt, 'web/dist/release.pdf')), Boolean(open), String(open));
+  }
+});
+
+test('build output alone is no reason to slim a worktree with open work', () => {
+  const s = setup();
+  write(s.wt, 'web/dist/release.pdf', 'x');
+  write(s.wt, 'app.txt', 'changed\n');
+  assert.equal(go(s).action, 'keep');
 });
 
 test('slimming waits until the worktree is quiet, shorter when the disk is low', () => {
@@ -251,7 +272,7 @@ test('a detached head keeps its commit in a ref of its own', () => {
   git(s.main, 'branch', '-q', '-D', 'feat/a');
   assert.equal(go(s).action, 'remove');
   git(s.main, 'update-ref', '-d', 'refs/remotes/origin/feat/a');
-  assert.match(git(s.main, 'for-each-ref', '--contains', head), /refs\/worktree-care\/wt-/);
+  assert.match(git(s.main, 'for-each-ref', '--contains', head), /refs\/worktree-care\/\d{8}-wt-/);
 });
 
 test('exclude: a trailing slash, a link on the way and other case all count', () => {
@@ -512,6 +533,41 @@ test('submodule', () => {
   const s = setup();
   fs.mkdirSync(path.join(git(s.wt, 'rev-parse', '--absolute-git-dir').trim(), 'modules'));
   kept(s, go(s, { apply: false }), /^heeft submodules/);
+});
+
+// Another real volume, or null where this machine cannot make one.
+function otherVolume() {
+  const dir = tempDir('care-vol-');
+  if (process.platform === 'linux') {
+    if (fs.statSync('/dev/shm', { throwIfNoEntry: false })?.dev === fs.statSync(dir).dev || !fs.existsSync('/dev/shm')) return null;
+    const at = fs.mkdtempSync('/dev/shm/care-');
+    return { at, close: () => fs.rmSync(at, { recursive: true, force: true }) };
+  }
+  const image = path.join(dir, 'v.dmg');
+  const at = path.join(dir, 'mnt');
+  fs.mkdirSync(at);
+  if (spawnSync('hdiutil', ['create', '-size', '30m', '-fs', 'APFS', '-volname', 'care', image]).status !== 0) return null;
+  if (spawnSync('hdiutil', ['attach', '-nobrowse', '-mountpoint', at, image]).status !== 0) return null;
+  return { at: fs.realpathSync.native(at), close: () => spawnSync('hdiutil', ['detach', '-force', at]) };
+}
+
+test('a worktree on another volume stays, also a clean one without anything to slim', (t) => {
+  const vol = otherVolume();
+  if (!vol) return t.skip('geen tweede volume te maken');
+  try {
+    const s = setup();
+    const far = path.join(vol.at, 'wt');
+    git(s.main, 'worktree', 'add', '-q', '-b', 'far', far);
+    const at = { ...s, wt: far };
+    kept(at, go(at), /ander volume/);
+    deps(far);
+    kept(at, go(at), /ander volume/);
+    assert.ok(fs.existsSync(path.join(far, '.venv')));
+    // The one on the same volume went.
+    assert.ok(!fs.existsSync(s.wt));
+  } finally {
+    vol.close();
+  }
 });
 
 test('excluded path', () => {

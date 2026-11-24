@@ -17,13 +17,19 @@ export function losses(f) {
   ].filter(Boolean);
 }
 
+// Build output may hold what somebody made by hand: only from a worktree without open work.
+export function slimmable(f) {
+  const open = f.tracked.length || f.untracked.length || f.hidden.length || f.ignored.length;
+  return open ? f.slim.filter((s) => s.kind !== 'build') : f.slim;
+}
+
 export function decide(f, cfg, now, { lowDisk = false } = {}) {
   if (f.hold) return keep(f.hold);
   const idle = now - f.activeAt;
   if (f.lock?.live) {
     // The lock of a subagent carries the pid of its parent, which outlives it.
     const done = f.agentDoneAt && f.activeAt <= f.agentDoneAt + 120000 && now - f.agentDoneAt >= hours(cfg.agentGraceHours);
-    if (done && f.slim.length) return { action: 'slim', why: 'subagent is klaar; de vergrendeling blijft' };
+    if (done && slimmable(f).length) return { action: 'slim', why: 'subagent is klaar; de vergrendeling blijft' };
     return keep('vergrendeld door een levend proces');
   }
   const lost = losses(f);
@@ -31,5 +37,5 @@ export function decide(f, cfg, now, { lowDisk = false } = {}) {
   if (!lost.length && idle >= hours(wait)) return { action: 'remove', why: f.merged ? 'gemerged en schoon' : 'schoon, alles staat op een remote' };
   const why = lost.join('; ') || `pas ${Math.round(idle / hours(1))} uur stil`;
   const slimAfter = hours(lowDisk ? cfg.slimIdleHoursLowDisk : cfg.slimIdleHours);
-  return f.slim.length && idle >= slimAfter ? { action: 'slim', why } : keep(why);
+  return slimmable(f).length && idle >= slimAfter ? { action: 'slim', why } : keep(why);
 }
