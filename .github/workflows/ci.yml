@@ -23,14 +23,14 @@ jobs:
           sh -n skills/rea/scripts/run-rea.sh
           python3 -m py_compile skills/readme/scripts/make_svgs.py
           node --check skills/readme/scripts/render_readme.mjs
-          for f in hooks/*.js skills/render-proof/scripts/shoot.js skills/projectstructuur/tools/*.js tools/poort/poort.mjs .github/scripts/*.mjs; do
+          for f in hooks/*.js skills/render-proof/scripts/shoot.js skills/projectstructuur/tools/*.js tools/poort/poort.mjs tools/worktree-care/*.mjs tools/worktree-care/lib/*.mjs .github/scripts/*.mjs; do
             node --check "$f"
           done
       - name: README-afbeeldingen kloppen met assets/visuals.json
         run: |
           python3 skills/readme/scripts/make_svgs.py assets/visuals.json assets
           git diff --exit-code -- assets
-      - name: Gedragstests van hooks en supergoal
+      - name: Gedragstests van hooks, supergoal en worktree-care
         run: node --test tests/*.test.mjs
       - name: poort-tests
         working-directory: tools/poort

@@ -41,8 +41,12 @@ $hooksDst = Join-Path $claude 'claude-code-harness\hooks'
 New-Item -ItemType Directory -Force -Path $hooksDst | Out-Null
 Copy-Item (Join-Path $here 'hooks\verified-claim-guard.js') $hooksDst -Force
 Copy-Item (Join-Path $here 'hooks\commit-guard.js') $hooksDst -Force
-Write-Host "Hooks geplaatst in $hooksDst"
+$toolsDst = Join-Path $claude 'claude-code-harness\tools\worktree-care'
+if (Test-Path $toolsDst) { Remove-Item $toolsDst -Recurse -Force }
+New-Item -ItemType Directory -Force -Path (Split-Path $toolsDst) | Out-Null
+Copy-Item (Join-Path $here 'tools\worktree-care') $toolsDst -Recurse
+Write-Host "Hooks geplaatst in $hooksDst, worktree-care in $toolsDst"
 
 Write-Host ""
 Write-Host "Klaar. Herstart Claude Code. De skills triggeren vanzelf (of typ '/')."
-Write-Host "Optioneel: merge examples\settings.json in ~/.claude/settings.json om de twee hooks (commit-guard, verified-claim-guard) aan te zetten."
+Write-Host "Optioneel: merge examples\settings.json in ~/.claude/settings.json om de hooks (commit-guard, verified-claim-guard, worktree-care) aan te zetten."

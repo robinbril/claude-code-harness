@@ -1,9 +1,9 @@
 <p align="center"><img src="assets/banner.svg" alt="Dev Harness voor Claude Code: werkregels, skills, hooks en poort" width="100%"></p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/versie-1.18.0-5B50E6" alt="versie 1.18.0">
+<img src="https://img.shields.io/badge/versie-1.19.0-5B50E6" alt="versie 1.19.0">
 <img src="https://img.shields.io/badge/skills-51-111827" alt="51 skills">
-<img src="https://img.shields.io/badge/hooks-3-111827" alt="3 hooks">
+<img src="https://img.shields.io/badge/hooks-4-111827" alt="4 hooks">
 <img src="https://img.shields.io/badge/licentie-MIT-2ea44f" alt="licentie MIT">
 <a href="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml"><img src="https://github.com/robinbril/claude-code-harness/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
@@ -27,7 +27,7 @@ AI-coding agents falen voorspelbaar, en altijd op dezelfde vier manieren:
 |---|---|
 | **Werkregels** | Tien regels in `guidelines/CLAUDE.md`, bij elke sessie geladen: denken voor bouwen, minimale diffs, verplicht bewijs, modelrouting |
 | **51 skills** | Beproefde methodes per type werk, van root-cause debugging tot autonome build-loops. Claude kiest zelf, of jij roept aan met `/naam` |
-| **3 hooks** | Deterministische bewaking buiten het model om: secrets uit commits, geen klaar-claim zonder bewijs |
+| **4 hooks** | Deterministische bewaking buiten het model om: secrets uit commits, geen klaar-claim zonder bewijs, geen volle schijf door agents |
 | **poort** | Quality gate voor je eigen repo's: checks per commit en push, en een PR-gate die bewijs aan de exacte commit bindt |
 
 <img src="assets/zo-werkt-het.svg" alt="Prompt, werkregels, skill, hooks, bewijs" width="100%">
@@ -222,6 +222,7 @@ Deterministische scripts die op vaste momenten in Claude Code meedraaien, onafha
 | `guidelines` | `SessionStart` (plugin) | Laadt `guidelines/CLAUDE.md` als context, omdat een plugin geen eigen `CLAUDE.md` kan meeleveren |
 | `commit-guard` | `PreToolUse` op `git commit` | Blokkeert secrets, API-keys en temp-bestanden (`.env`, `*.tmp`, `*.bak`); waarschuwt bij e-mailadressen. Eigen patronen via `.harness-blocklist` |
 | `verified-claim-guard` | `Stop` | Blokkeert een klaar-claim na een muterende beurt zonder echte tool-observatie; `UNVERIFIED:` mag altijd |
+| `worktree-care` | `PreToolUse`, `PostToolUse`, `SubagentStop`, `SessionEnd` | Weigert builds, installaties, testruns en nieuwe werkbomen als de schijf bijna vol is. Ruimt zelf op zodra je `autoSweep` aanzet |
 
 Twee instellingen ontbreken bewust in `examples/settings.json`: `defaultMode: auto` slaat permissie-prompts over, en `remoteControlAtStartup` koppelt elke sessie aan Remote Control. Beide verdienen een eigen, bewuste keuze.
 
@@ -256,6 +257,25 @@ Installeren in een repo: `node <pad-naar-deze-harness>/tools/poort/poort.mjs ini
 | `node .poort/poort.mjs e2e --record` | E2E-stappen opnieuw opnemen na een bewuste UI-wijziging |
 
 E2E-opnames draaien op je eigen Claude-seat: geen API-keys, geen proxy. Details per check en profiel: [`tools/poort/README.md`](tools/poort/README.md).
+
+## worktree-care
+
+Elke subagent en elke sessie krijgt een eigen werkboom, met eigen dependencies en testcaches. Niemand ruimt ze op, tot de schijf vol is. `tools/worktree-care/` doet dat, zonder werk te verliezen.
+
+| Commando | Wat |
+|---|---|
+| `node tools/worktree-care/care.mjs sweep` | Laat zien wat weg zou gaan, met de reden per werkboom. Wijzigt niets |
+| `node tools/worktree-care/care.mjs sweep --apply` | Voert het uit |
+| `node tools/worktree-care/care.mjs schedule` | Elke drie uur, via launchd of een crontab-regel |
+| `node tools/worktree-care/care.mjs doctor` | Delen pnpm, uv en Playwright hun opslag tussen werkbomen |
+
+- **Weg** gaat een werkboom alleen als er niets verloren gaat: geen wijziging, geen onbekend bestand, geen genegeerd bestand dat niet herbouwbaar is, geen commit die op geen remote staat, geen vergrendeling, proces, sessie of container, en drie dagen stil na de merge (zeven als hij alleen gepusht is). De branch blijft; een losse HEAD krijgt dertig dagen een ref onder `refs/worktree-care/`. Het log noemt branch, HEAD en ref, dus elke werkboom is terug te zetten. Een werkboom op een ander volume blijft staan.
+- **Slanker** wordt elke andere stille werkboom: alleen mappen die git negeert en die je kunt herbouwen, zoals `node_modules`, `.venv` en testcaches. Nooit `.harness/` of `.e2e/cache/`. Bouwuitvoer zoals `dist/` gaat alleen weg uit een werkboom zonder open werk.
+- **Geen antwoord** van git, ps, lsof of docker betekent: niets doen.
+- **Docker**: alleen de bouwcache, met een bovengrens. `defaultKeepStorage` in `daemon.json` is een ondergrens. Volumes, containers en images blijven staan.
+- **Meet met `df`.** `du` telt gedeelde blokken (APFS, btrfs) per werkboom mee.
+
+Instellingen in `~/.config/worktree-care/config.json`; `roots` (waar je repo's staan) en `autoSweep: true` zetten het automatische deel aan. Alle sleutels staan in [`lib/config.mjs`](tools/worktree-care/lib/config.mjs).
 
 ## Onderhoud en CI
 

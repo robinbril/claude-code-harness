@@ -101,6 +101,7 @@ require constant clarification.
 
 - Delete, push, send or production deploy: first write
   `BLAST RADIUS: what dies, collateral scope, reversible?` and wait for a yes.
+- After tests and builds, clean up what you made: temp folders, containers, worktrees and caches.
 - Never commit or push on your own (skill `commit-discipline`).
 - The same correction given twice becomes a rule or a skill, not a third correction.
 

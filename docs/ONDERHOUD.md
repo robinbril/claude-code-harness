@@ -34,7 +34,7 @@ Lees docs/ONDERHOUD.md. Neem deze harness per onderwerp met mij door, volgens se
    | 6 | E2E-tests | `e2e`, `e2e-rules` |
    | 7 | Kwaliteitspoort | `tools/poort`: per repo `node tools/poort/poort.mjs init` |
    | 8 | Documenten en visuals | `office-docs`, `brandkit`, `data-visualization`, `powerbi`, `diagram-design`, `readme`, `humanizer` |
-   | 9 | Hooks | `guidelines`, `commit-guard`, `verified-claim-guard` |
+   | 9 | Hooks | `guidelines`, `commit-guard`, `verified-claim-guard`, `worktree-care` |
    | 10 | MCP-servers | `examples/mcp.json`: per server kiezen, zie README |
    | 11 | Werkregels in `guidelines/CLAUDE.md` | Per sectie kiezen |
    | 12 | Externe repo's, optioneel | [mattpocock/skills](https://github.com/mattpocock/skills) (TDD, specs, tickets), [morluto/rea](https://github.com/morluto/rea) (de motor achter skill `rea`; eigen MCP-server optioneel), [robinbril/infinite-agent-memory](https://github.com/robinbril/infinite-agent-memory) (blijvend geheugen) |
