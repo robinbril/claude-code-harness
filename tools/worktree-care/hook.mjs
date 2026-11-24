@@ -60,7 +60,7 @@ function guard(event, cfg) {
   if (now === 'low') return 0;
   process.stderr.write(
     `[worktree-care] Nog ${free.toFixed(1)} GB vrij, onder de vloer van ${cfg.minFreeGB} GB: ${what} start niet.\n` +
-      `${NEXT[sweep]}${sweep === 'off' ? '' : ' Blijft het vol:'} ${ASK}\n` +
+      `${NEXT[sweep]}${['off', 'failed'].includes(sweep) ? '' : ' Blijft het vol:'} ${ASK}\n` +
       `Wat er weg zou gaan (proef, wijzigt niets): node "${CARE}" sweep\n`,
   );
   return 2;

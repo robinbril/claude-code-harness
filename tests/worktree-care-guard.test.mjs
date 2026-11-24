@@ -81,7 +81,7 @@ test('guard: the message leaves cleaning up and getting past the floor to the us
   const again = hook('guard', bash('docker build .'), { free: '9', cfg: { autoSweep: true }, env: { STATE: on.dir } });
   assert.match(again.stderr, /minder dan een kwartier geleden/);
   const failed = hook('guard', bash('docker build .'), { free: '9', cfg: { autoSweep: true }, env: { WORKTREE_CARE_STATE: '/dev/null/x' } });
-  assert.match(failed.stderr, /staat aan maar kan niet starten/);
+  assert.match(failed.stderr, /staat aan maar kan niet starten\. De gebruiker/);
   for (const r of [off, on, again, failed]) {
     assert.match(r.stderr, /De gebruiker beslist wat er weg mag: ruim niet zelf op/);
     assert.equal(r.status, 2);
@@ -184,7 +184,7 @@ for (const [what, bootout, loaded, error] of [
 // print: what launchctl says about the task after the bootout.
 for (const [what, print, error] of [
   ['there is no session of this user', "echo 'Could not find domain for user gui: 501' >&2; exit 112", null],
-  ['this is no domain for tasks', "echo 'Could not print domain: 125: Domain does not support specified action' >&2; exit 125", null],
+  ['root asks, whose domain holds no tasks', "echo 'Could not print domain: 125: Domain does not support specified action' >&2; exit 125", /niet te bepalen.*does not support/],
   ['launchctl answers something else', "echo 'Input/output error' >&2; exit 5", /niet te bepalen of de vaste taak nog aan staat.*print: Input\/output error/],
 ]) {
   test(`schedule --remove: ${what}`, () => {

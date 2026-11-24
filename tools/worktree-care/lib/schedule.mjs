@@ -32,7 +32,8 @@ export function plist(care, state, env = process.env) {
 }
 
 // No task by that name, or no session of this user for a task to run in.
-const GONE = /could not find (service|domain)|domain does not support/i;
+// Root is told that its domain does not support the question: that says nothing about the user.
+const GONE = /could not find (service|domain)/i;
 const STOP_MAX = 25000;
 const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
