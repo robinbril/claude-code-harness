@@ -63,7 +63,7 @@ Eén detailpaneel rechts (Power BI's drill-through zonder paginawissel), één e
 | Vlak van de ouderdomsbalk | facturen, "vervallen op … · n dagen te laat" |
 | Week in de weekmarge | marge per opdracht met uren |
 
-Tekst is voor mensen: titel gelijk aan het aangeklikte label, "1 dag te laat", nooit een URL-pad of modelnaam in de formule. Esc sluit eerst het paneel. Een percentage, mediaan of p90 telt niet op uit regels: toon de invoer (teller, noemer, n) en de berekening. Niet doorklikbaar: voorspellingen (geen boeking).
+Tekst is voor mensen: titel gelijk aan het aangeklikte label, "1 dag te laat", nooit een URL-pad of modelnaam in de formule. Esc sluit eerst het paneel. Een percentage, mediaan of p90 telt niet op uit regels: toon bij een percentage teller, noemer en n, bij een mediaan of p90 de gesorteerde waarden (of hun verdeling) met n en de gebruikte methode. Niet doorklikbaar: voorspellingen (geen boeking).
 
 ## 5. Interactie in de grafiek
 
