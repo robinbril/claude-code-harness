@@ -118,7 +118,7 @@ Kleur hangt aan de ID of de reeksrol, nooit aan rang of richting. Een filter dat
 
 ## 8. Tabeltweeling en CSV
 
-Semantische `<table>` met `<caption class="sr-only">`, getallen rechts. CSV: puntkomma, decimale komma, geen duizendtallen, CRLF, BOM; zet een apostrof voor tekst die met `= + - @` of tab begint.
+Semantische `<table>` met `<caption class="sr-only">`, getallen rechts. CSV: puntkomma, decimale komma, geen duizendtallen, CRLF, BOM; zet elk veld tussen aanhalingstekens en verdubbel aanhalingstekens erin; zet een apostrof voor tekst die met `=`, `+`, `-`, `@`, tab, CR of LF begint. Excel kan die apostrof bij opslaan verwijderen; exporteer dus geen onvertrouwde tekst die iemand opnieuw opslaat en deelt.
 
 ## 9. Tests
 
@@ -126,7 +126,7 @@ Semantische `<table>` met `<caption class="sr-only">`, getallen rechts. CSV: pun
 - **Data**: injecteer een echte interface via provide/inject in plaats van modules te mocken.
 - **Pure modellen**: elke grens en tekst zonder renderer, tijd als argument.
 
-**Valkuil in scoped CSS.** `:global(html[data-theme-mode="dark"]) .x { }` compileert tot kaal `html[...] { }` en kleurt de hele pagina. Schrijf `html[data-theme-mode="dark"] .x { }`.
+**Valkuil in scoped CSS.** `:global(html[data-theme="dark"]) .x { }` compileert tot kaal `html[...] { }` en kleurt de hele pagina. Schrijf `html[data-theme="dark"] .x { }`.
 
 ## 10. Bewijs
 

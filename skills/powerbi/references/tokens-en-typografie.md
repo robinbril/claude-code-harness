@@ -2,7 +2,7 @@
 
 Wanneer lezen: bij elke kleur-, letter- of maatkeuze, bij een nieuw palet, bij donker thema, en bij het overzetten naar een ander product. De Power BI-look van 2026 is grotendeels Fluent 2-neutralen plus het klassieke Power BI-datapalet en discipline. Contrastwaarden: WCAG-luminantie ([W3C](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum.html)), nagerekend in het onderzoek. **[eigen keuze]** = geen Microsoft-waarde.
 
-Kleurvalidatie zelf gebeurt met de skill `dataviz` (`scripts/validate_palette.js` in die skill, licht en donker, tegen het echte oppervlak). Nooit op het oog.
+Kleurvalidatie zelf gebeurt met de skill `dataviz` (`scripts/validate_palette.js` in die skill, licht en donker, tegen het echte oppervlak). Nooit op het oog. `dataviz` zit in Claude Code en staat niet in deze repo. Ontbreekt hij, toets dan elke reeks met een contrastchecker (3:1 tegen het oppervlak) en elk paar met een simulatie van kleurenblindheid (protan, deutan, tritan), licht en donker, en zet de uitkomst in de kopcomment.
 
 ## Inhoud
 
@@ -77,9 +77,9 @@ Buren (standaard-paarlijst): CVD worst #118DFF↔#3B4FD8 ΔE 12.2 (deutan), PASS
 
 Gevolgen:
 - Licht: alles door op #ffffff.
-- Donker: indigo haalt op #16141f en #161c2b geen 3:1 (validator); op de Fluent-donkerstand (#1F1F1F, #292929) halen indigo én paars geen 3:1 (nagerekend). Regel: **zichtbare labels of een tabelweergave op elke kaart** (de relief-regel).
+- Donker: indigo haalt op #16141f en #161c2b geen 3:1 (validator); op de Fluent-donkerstand (#1F1F1F, #292929) halen indigo én paars geen 3:1 (nagerekend). Regel: **zichtbare labels of een tabelweergave op elke kaart** (de relief-regel). Dit is de enige uitzondering op de 3:1-regel en geldt alleen voor gevulde vlakken in donker. Lijnen in donker krijgen een lichtere stap van dezelfde tint die 3:1 haalt: bijvoorbeeld indigo #7A8BFF (4,82 op #292929) en paars #C77DDB (5,12), daarna de validator opnieuw.
 - Het zwakste paar is indigo met paars (ΔE 6,4 protan): kosten en netto. Die staan alleen samen in de resultaatbrug, waar elke staaf naam en bedrag draagt. Nergens naast elkaar zonder labels.
-- Een nieuwe set of een nieuw oppervlak: validator opnieuw, licht en donker, uitvoer in de kopcomment. Alternatieve sets die zonder WARN slagen: contrastrijk (licht #2063b0 #a87600 #176325 #c51f5d, donker #4682cc #bb881a #047745 #cd4787) en ingetogen (licht #505ba7 #aa7d25 #1e6321 #c467a4, donker #6673c1 #b48630 #297623 #c24976), volgorde marge, kosten, omzet, netto.
+- Een nieuwe set of een nieuw oppervlak: validator opnieuw, licht en donker, uitvoer in de kopcomment. Alternatieve sets die zonder WARN slagen op #ffffff, #16141f en #161c2b (hun donkergroen haalt op #1F1F1F en #292929 geen 3:1): contrastrijk (licht #2063b0 #a87600 #176325 #c51f5d, donker #4682cc #bb881a #047745 #cd4787) en ingetogen (licht #505ba7 #aa7d25 #1e6321 #c467a4, donker #6673c1 #b48630 #297623 #c24976), volgorde marge, kosten, omzet, netto.
 
 ## 4. Statuskleuren, afwijkingen en scenario's
 
@@ -158,8 +158,9 @@ Voor een nieuw project zonder eigen designsysteem. Herkomst per waarde in de sec
   --scenario-ac: #D6D6D6; --scenario-py: #7A7A7A; --scenario-pl: #D6D6D6; --scenario-fc: #D6D6D6;
   /* reeksen gelijk aan licht; indigo en paars onder 3:1: labels of tabelweergave verplicht */
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { /* zelfde waarden als [data-theme="dark"] */ } }
 ```
+
+De app zet bij het laden altijd `data-theme` (`light` of `dark`) op `<html>`, ook als de gebruiker het systeem volgt (lees `matchMedia('(prefers-color-scheme: dark)')` en luister naar wijzigingen). Tokens, scoped CSS en ECharts gebruiken alleen dit attribuut.
 
 ECharts leest geen CSS-variabelen: los ze op via het proefelement (`echarts-vue-implementatie.md`, sectie 4) en bouw de optie opnieuw bij een themawissel.
 

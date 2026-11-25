@@ -18,7 +18,7 @@ De keuze voor Apache ECharts is op 2026-10-09 nagetrokken tegen 20 bibliotheken 
 | `@tanstack/vue-query` | ^5 | | MIT | databronnen, caching |
 | `@tanstack/vue-virtual` | ^3.13 | 3.13.39 | MIT | lange lijsten |
 | `zod` | | | MIT | validatie van de bewaarde weergave |
-| `dataviz`-validator | skill | | | paletten licht en donker, uitvoer in de kopcomment |
+| `dataviz`-validator | skill (zie `tokens-en-typografie.md`) | | | paletten licht en donker, uitvoer in de kopcomment |
 
 **ECharts-opzet**: alleen `SVGRenderer`, `CustomChart` en `GridComponent`; gemeten 168 kB gzip (alles importeren: 383 kB). Elke grafiek is een custom series met `renderItem`; tooltip en legenda zijn HTML. `<VChart>` staat op `aria-hidden="true"` en de knoppenlaag is een sibling ervan. Houd dat zo: zet je ooit `AriaComponent` met `aria.enabled` aan, dan zet ECharts `role="img"` op de container, en volgens [WAI-ARIA](https://www.w3.org/TR/wai-aria-1.2/#img) worden alle kinderen daarvan presentational; zit de knoppenlaag erin, dan verdwijnt hij voor schermlezers. Arcering werkt zonder `AriaComponent`: de decal staat in de `renderItem`-stijl.
 
@@ -84,7 +84,7 @@ Nieuw in 6.0 (2025-07-30): standaardthema op design tokens (legenda standaard on
 
 Op volgorde van nut voor ons:
 1. **`echarts.registerCustomSeries(naam, renderItem)`**: registreer de brug, de IBCS-afwijkingsbrug, de dumbbell en de trap als benoemde series, zodat een tweede app ze hergebruikt met `renderItem: 'ibcsBrug'` ([patroon](https://github.com/apache/echarts-custom-series/tree/main/custom-series/barRange)). De officiële `@echarts-x/custom-*`-pakketten (bar-range, line-range, violin, contour, stage, segmented-doughnut, liquid-fill, word-cloud) bevatten geen waterfall, bullet of brug.
-2. **SSR** (`init(null, null, { renderer: 'svg', ssr: true })` + `renderToSVGString()`): dezelfde opties als SVG in een PDF- of e-mailrapport ([handbook SSR](https://echarts.apache.org/handbook/en/how-to/cross-platform/server/)). Let op: onze knoppenlaag en HTML-tooltip zitten niet in die SVG.
+2. **SSR** (`init(null, null, { renderer: 'svg', ssr: true, width: 600, height: 400 })` + `renderToSVGString()`): dezelfde opties als SVG in een PDF- of e-mailrapport ([handbook SSR](https://echarts.apache.org/handbook/en/how-to/cross-platform/server/)). Let op: onze knoppenlaag en HTML-tooltip zitten niet in die SVG.
 3. **`group` / `echarts.connect`**: gekoppelde hover tussen maand- en weekgrafiek; alleen zinvol als de HTML-tooltips dezelfde koppeling krijgen.
 4. **`axis.breaks`**: als één uitschietermaand de rest platdrukt.
 5. **`universalTransition`**: vloeiende overgang bij een typewissel in "Meer opties" (alleen met standaardseries; respecteer reduced motion).

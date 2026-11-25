@@ -55,7 +55,7 @@ Breedte: het onderzoek noemt 360 tot 420 px als eigen keuze (Microsoft publiceer
 - **Paneel**: modus dok (sticky rechterkolom) of blad (telefoon, `max-height: min(85dvh, 760px)`, greep, scrim, focus blijft binnen).
 - **Gesprek en aanvraag**: interfaces via provide/inject, zodat een test een eigen gesprek meegeeft. De ingang per visual verschijnt alleen als de pagina een aanvraag levert en de kaart een id heeft.
 - **Contextmodel**: levert zowel de verstuurde tekst als het blok "Wat de assistent ontvangt". Instructie: "Gebruik alleen getallen die hieronder staan en reken niet zelf. Zet achter elke bewering het nummer van de visual als bron, zoals [2]." Hooguit 5 klanten; niets persoonlijks dat niet al in de grafiek staat.
-- **Getallencontrole**: haalt bedragen (€, euro, k, mln) en percentages uit het antwoord en zoekt ze in de context, met de afronding die de schrijfwijze toelaat ("€ 1,23 mln" past op "€ 1.234.567", "36%" op "35,8%"). Jaartallen, aantallen en [n] tellen niet.
+- **Getallencontrole**: haalt bedragen (€, euro, k, mln), percentages, aantallen en jaartallen uit het antwoord en zoekt ze in de context, met de afronding die de schrijfwijze toelaat ("€ 1,23 mln" past op "€ 1.234.567", "36%" op "35,8%"). Alleen bronverwijzingen zoals [2] tellen niet.
 - **Bronnen**: vervangt [n] in de gerenderde tekst door knoppen die naar de visual springen, niet in code, links of knoppen.
 
 ## 7. Veelgemaakte fouten

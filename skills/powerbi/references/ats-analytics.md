@@ -17,7 +17,7 @@ Wanneer lezen: bij analytics in een applicant tracking system of recruitment-CRM
 | Kandidaatervaring | cNPS = % promoters (9-10) min % detractors (0-6), per fase, ook afgewezen kandidaten (snippet) | [AIHR](https://www.aihr.com/blog/candidate-nps/) |
 | ATS + finance | Bullhorn combineert ATS-data met pay/bill-data: marge, fill rates, pipeline (snippet) | [Bullhorn](https://www.bullhorn.com/products/reporting-analytics/) |
 
-Lessen **[eigen keuze]**: orden pagina's per zakelijke vraag (zoals Greenhouse zijn bibliotheek); maak de telbasis (cohort of activiteit) zichtbaar in slicer én subtitel; elke grafiek drillt naar een kandidatenlijst met de rechten van de gebruiker; stuur op SLA-signalen in plaats van ranglijsten; planning krijgt een eigen pagina; een vrije report builder is voor een eerste versie niet nodig.
+Lessen **[eigen keuze]**: orden pagina's per zakelijke vraag (zoals Greenhouse zijn bibliotheek); maak de telbasis (cohort of activiteit) zichtbaar in slicer én subtitel; elke grafiek drillt naar een kandidatenlijst met de rechten van de gebruiker, behalve diversiteitsgrafieken (nooit op kandidaatniveau); stuur op SLA-signalen in plaats van ranglijsten; planning krijgt een eigen pagina; een vrije report builder is voor een eerste versie niet nodig.
 
 ## 2. Vorm per vraag
 
@@ -104,7 +104,7 @@ Startprompts: "Vat de pipeline van deze week samen voor het teamoverleg.", "In w
 | Time to hire en time to fill door elkaar | Twee benoemde measures met definitie achter ⓘ |
 | Ranglijsten van recruiters, sorteren op prestatie, leaderboards | Teamtotalen, werkdruk vs capaciteit, alfabetisch, SLA-actielijst |
 | Diversiteit afleiden uit naam of foto (Ashby biedt "infer") | Alleen vrijwillig zelfgerapporteerd, met uitdrukkelijke toestemming |
-| Diversiteit voor kleine groepen of per kandidaat | Eigen drempel n ≥ 10 per cel, ook de aanvullende cel onderdrukken, apart recht [strenger dan Greenhouse's 5] |
+| Diversiteit voor kleine groepen of per kandidaat | Eigen drempel n ≥ 10 per cel, ook de aanvullende cel onderdrukken, apart recht, vaste periodes en geen vrij combineerbare filters (twee overlappende selecties van elkaar aftrekken onthult anders één persoon) [strenger dan Greenhouse's 5] |
 | Kandidaatgegevens in AI-payloads; de assistent laten ranken of beoordelen | Aggregaten; assistent beschrijft het proces |
 | Percentages zonder n ("1 van 2 is 50%") | Altijd n; onder de drempel geen percentage |
 | Amerikaanse tech-benchmarks als norm ([Gem](https://lp.gem.com/rs/972-IVV-330/images/Conversion_Rate_Benchmarks_Infographic.pdf), snippet) | Eigen PY en plan als referentielijn |

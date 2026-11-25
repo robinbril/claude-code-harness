@@ -8,7 +8,7 @@ Laad ze in deze volgorde, voor zover geïnstalleerd; geef een subagent deze lijs
 
 | Moment | Skill | Waarvoor |
 |---|---|---|
-| Vorm en kleur van elke grafiek | `dataviz` (meegeleverd, `scripts/validate_palette.js`) | vorm per vraag, kleur per taak, validator licht én donker, markmaten, hover, toegankelijkheid |
+| Vorm en kleur van elke grafiek | `dataviz` (in Claude Code, `scripts/validate_palette.js`) | vorm per vraag, kleur per taak, validator licht én donker, markmaten, hover, toegankelijkheid |
 | Welk grafiektype bij welke datarelatie | `data-visualization` | keuzegids (trend, samenstelling, rang, stroom, verschil) en anti-patronen |
 | Een bestaande pagina mooier maken | `redesign-existing-projects` | audit eerst, niets slopen |
 | Een nieuw scherm of nieuwe richting | `design-taste-frontend` | anti-slop richting, echte designsystemen, pre-flight check |
