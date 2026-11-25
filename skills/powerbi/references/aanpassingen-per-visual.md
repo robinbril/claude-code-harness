@@ -8,7 +8,7 @@ Vuistregel: **aanpassen hoort in de app, bij de visual zelf**. Bied alleen een o
 
 Vier groepen in een popover vanuit de visual-header:
 - **Grafiektype**: radio's, alleen de vormen die bij de vraag passen.
-- **Reeksen**: vinkjes; uitgeschakeld als de reeks vast ligt, niet past bij het type, de laatste is of het maximum bereikt is, met een uitlegregel.
+- **Reeksen**: vinkjes; uitgeschakeld als de reeks vast ligt, niet past bij het type of de laatste gekozen reeks is. Bij het maximum gaan alleen de niet-gekozen vinkjes uit, zodat je kunt wisselen. Met een uitlegregel.
 - **Kleuren**: radio's met kleurstalen, naam en omschrijving, uit gevalideerde sets.
 - **Arcering**: schakelaar, voor kleurenblindheid en print.
 - Plus "Standaard herstellen".
@@ -53,7 +53,7 @@ Eén detailpaneel rechts (Power BI's drill-through zonder paginawissel), één e
 
 - **URL**: `?opbouw=<soort>:<sleutel>`. Splits op de eerste `:`. Onbekend of kapot geeft geen paneel en geen fout. Dezelfde keuze nog eens sluit.
 - **Endpoint**: zelfde filters als de pagina; antwoord met `titel`, `subtitel`, `formule`, `totaal`, `bron`, `status`, `regels[{label, bedrag, aantal, detail}]`.
-- **Invariant**: het totaal komt uit dezelfde functie als het getal op het scherm en de regels tellen er op de cent op. Toets dat per soort in de backend en met een klikronde.
+- **Invariant**: het totaal komt uit dezelfde functie als het getal op het scherm en optelbare regels tellen er op de cent op. Toets dat per soort in de backend en met een klikronde.
 
 | Klikbaar | Regels in het paneel |
 |---|---|
@@ -63,7 +63,7 @@ Eén detailpaneel rechts (Power BI's drill-through zonder paginawissel), één e
 | Vlak van de ouderdomsbalk | facturen, "vervallen op … · n dagen te laat" |
 | Week in de weekmarge | marge per opdracht met uren |
 
-Tekst is voor mensen: titel gelijk aan het aangeklikte label, "1 dag te laat", nooit een URL-pad of modelnaam in de formule. Esc sluit eerst het paneel. Niet doorklikbaar, met reden: percentages (geen regels) en voorspellingen (geen boeking).
+Tekst is voor mensen: titel gelijk aan het aangeklikte label, "1 dag te laat", nooit een URL-pad of modelnaam in de formule. Esc sluit eerst het paneel. Een percentage, mediaan of p90 telt niet op uit regels: toon de invoer (teller, noemer, n) en de berekening. Niet doorklikbaar: voorspellingen (geen boeking).
 
 ## 5. Interactie in de grafiek
 

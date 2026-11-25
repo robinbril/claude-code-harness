@@ -6,7 +6,7 @@ user-invocable: true
 
 # /powerbi: rapporten die lezen als een goed Power BI-rapport
 
-De look van een goed Power BI-rapport in 2026 is geen visualgalerij maar discipline: Fluent 2-neutralen, een vast datapalet, 3-30-300-indeling, IBCS-notatie voor scenario's en afwijkingen, en per visual één vraag. Hier is die look gebouwd als eigen Vue 3-app met ECharts 6 custom series op de SVG-renderer: geen Power BI-embed, geen Power BI custom visuals. Deze skill is de huisstijl- en systeemlaag. Kleurvalidatie en basis-vormkeuze komen uit de skill `dataviz` (draai `validate_palette.js`, niet op het oog).
+De look van een goed Power BI-rapport in 2026 is geen visualgalerij maar discipline: Fluent 2-neutralen, een vast datapalet, 3-30-300-indeling, IBCS-notatie voor scenario's en afwijkingen, en per visual één vraag. Hier is die look gebouwd als eigen Vue 3-app met ECharts 6 custom series op de SVG-renderer: geen Power BI-embed, geen Power BI custom visuals. Deze skill is de huisstijl- en systeemlaag. Kleurvalidatie en basis-vormkeuze komen uit de skill `dataviz` (draai `validate_palette.js`, niet op het oog). Die skill zit in Claude Code; het alternatief staat in `references/tokens-en-typografie.md`.
 
 De naam "powerbi" is alleen de naam van deze skill. In de producten zelf: geen Power BI- of Microsoft-merk, geen Copilot-logo, -naam, -gradiënt of #464FEB. De assistent draagt het eigen merk van de app, nooit een orb, sterretje of toverstaf.
 
@@ -27,7 +27,7 @@ Verdieping per onderwerp staat in `references/` naast dit bestand (zie onderaan)
 5. **Ruilen, niet stapelen.** Tel kaarten voor en na; nooit meer dan één erbij zonder reden. Klaar als: bij elke nieuwe visual staat welke oude hij vervangt.
 6. **Kleur en tokens.** Categorieën in vaste volgorde uit de kleurset, kleur volgt de entiteit (klant-ID, reeks), nooit de rang. Sequentieel = één tint licht naar donker. Afwijking naar business-impact (hogere kosten = ongunstig). Nieuw palet of nieuw oppervlak? Eerst de `dataviz`-validator, licht en donker, uitvoer in de kopcomment van de code.
 7. **Bouwen met de primitieven** (implementatiekaart hieronder). Elke grafiek: een pure optiebouwer, tabeltweeling, toetsenbord = hover, legenda bij 2+ reeksen, directe labels selectief, tekst in tekstkleuren. Laad eerst de design-skills uit `references/mooi-ontwerpen.md` (sectie 1) en geef ze een subagent expliciet mee.
-7b. **Doorklikken en aanpassen.** Elk getal opent zijn opbouw in het zijpaneel (`?opbouw=<soort>:<sleutel>`), met een totaal uit dezelfde backendfunctie als de visual. Een optie per visual alleen als ze een vraag beter beantwoordt; wat je ziet staat in de URL, hoe je het ziet in localStorage. Klaar als: elk klikbaar getal een opbouw opent waarvan het totaal gelijk is aan het aangeklikte getal en de regels er op de cent op tellen (`references/aanpassingen-per-visual.md`).
+7b. **Doorklikken en aanpassen.** Elk getal opent zijn opbouw in het zijpaneel (`?opbouw=<soort>:<sleutel>`), met een totaal uit dezelfde backendfunctie als de visual. Een optie per visual alleen als ze een vraag beter beantwoordt; wat je ziet staat in de URL, hoe je het ziet in localStorage. Klaar als: elk klikbaar getal een opbouw opent waarvan het totaal gelijk is aan het aangeklikte getal en de regels er op de cent op tellen; bij een percentage, mediaan of p90 toont de opbouw de invoer en de berekening (`references/aanpassingen-per-visual.md`).
 8. **Realistische demo-data.** Een mooie visual met lelijke data wordt afgekeurd. Vul elke bucket, spreid bedragen, meerdere klanten, korte natuurlijke titels (`references/demo-data.md`).
 9. **Render en kijk.** Echte app, licht 1440, donker 1440, telefoon 375, met één login per run. Schrijf vooraf op wat je verwacht, lees dan de PNG. 0 consolefouten, geen horizontale scroll, geen labelbotsing. Loop daarna de rustkeuring af (`references/mooi-ontwerpen.md`, sectie 4: herhaling, kleur, plaatsing, getallen, doorklikken, labels, toetsenbord).
 10. **Bewijs.** Volledige unit-tests en typecheck, e2e voor de UI-wijziging, en een onafhankelijke keurder voor je "klaar" zegt (checklist onderaan).
@@ -72,7 +72,7 @@ Combineer gerust twee vormen in één visual (KPI + sparklijn, balk + ghost, kol
 
 ## Regels: een harde kern, de rest standaard
 
-Hard (geen uitzondering): het taalmodel rekent geen getallen; geen kandidaat- of diversiteitsdata in een AI-payload; null toont een reden, nooit 0; bestaande pagina's, nav-items en features niet weghalen; tekstcontrast minstens 4,5:1 en lijnen 3:1.
+Hard (geen uitzondering): het taalmodel rekent geen getallen; geen kandidaat- of diversiteitsdata in een AI-payload; null toont een reden, nooit 0; bestaande pagina's, nav-items en features niet weghalen; tekstcontrast minstens 4,5:1 en lijnen 3:1 (gevulde vlakken in donker: zie `references/tokens-en-typografie.md`).
 
 Al het andere hieronder is de standaard. Wijk af als de vraag, de data of de gebruiker erom vraagt, en zet de reden in één regel in de kopcomment. Twijfel je: bouw de standaard en noem de variant in de oplevering.
 
@@ -138,7 +138,7 @@ Recepten met code: `references/echarts-vue-implementatie.md`. Bibliotheken met v
 - Menu en secties uit één config.
 - Databronnen via provide/inject, zodat tests nep-bronnen injecteren in plaats van modules te mocken.
 - Backend: alleen opgeslagen data, nooit een live extern systeem bij het laden; elke null met reden. Een opbouw-endpoint levert de regels achter een getal.
-- Scoped CSS: schrijf `html[data-theme-mode="dark"] .x`, nooit `:global(html[...]) .x` (dat compileert tot kaal `html[...]` en kleurt de pagina).
+- Scoped CSS: schrijf `html[data-theme="dark"] .x`, nooit `:global(html[...]) .x` (dat compileert tot kaal `html[...]` en kleurt de pagina).
 
 ## Visual builder engine (Vue 3, pure SVG, zonder chartbibliotheek)
 
